@@ -241,7 +241,6 @@ body.smash-mode .block:hover{filter:brightness(1.5) saturate(1.5);outline:2px da
     <!-- Alt satır: kontrol butonları -->
     <div id="ctrl-row">
       <button class="ctrl-btn" id="btn-undo-game" title="Geri"><span>↩</span><span class="cb-label">GERİ</span></button>
-      <button class="ctrl-btn danger" id="btn-new-game" title="Yeni Oyun"><span>🔄</span><span class="cb-label">YENİ</span></button>
       <button class="ctrl-btn" id="btn-pause" title="Duraklat"><span>⏸</span><span class="cb-label">DURAKLAT</span></button>
       <button class="ctrl-btn" id="btn-sound" title="Ses"><span id="sound-icon">🔊</span><span class="cb-label">SES</span></button>
       <button class="ctrl-btn" id="btn-howto-ig" title="Nasıl oynanır?"><span>❓</span><span class="cb-label">NASIL</span></button>
@@ -386,13 +385,6 @@ document.getElementById('btn-undo-game').addEventListener('click',()=>{
   active=false;
   saveGame();
   document.getElementById('ov-start').classList.add('show');
-});
-document.getElementById('btn-new-game').addEventListener('click',()=>{
-  clearSave();
-  // Başlangıç ekranındaki "Devam Et" butonunu kaldır
-  const rb=document.getElementById('btn-resume-save');
-  if(rb)rb.remove();
-  startGame();
 });
 
 // ================================================================
@@ -696,8 +688,13 @@ function doHoldMerge(){
     updateHUD();
 
     if(newV>=TARGETS[targetIdx]){
-      // Hedef aşıldı — önce sinematik, sonra showLC
-      setTimeout(()=>celebrateTarget(savedHC.r, savedHC.c, newV),200);
+      if(newV>TARGETS[targetIdx]){
+        // Hedefi AŞTI — sinematik patlama, sonra showLC
+        setTimeout(()=>celebrateTarget(savedHC.r, savedHC.c, newV),200);
+      } else {
+        // Hedefle TAM EŞIT — kare kalır, normal level clear
+        setTimeout(()=>showLC(newV),380);
+      }
       busy=false;
       return;
     }
@@ -882,6 +879,9 @@ function celebrateTarget(r, c, val){
     screenFlash(); screenFlash();
     spawnStars();
     sfxWin();
+
+    // Orijinal bloğu DOM ve grid'den tamamen kaldır
+    el.remove(); delete BE[`${r}-${c}`]; G[r][c]=0;
 
     // Klon temizle
     setTimeout(()=>clone.remove(),100);
