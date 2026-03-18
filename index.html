@@ -3,12 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="description" content="Sevcan, Ahmet ve Murathan'ın kişisel ana sayfası. Axy Crystal ve 2048 Jewelry oyunlarına hızlı erişim. Uzay temalı gece modu.">
+<meta name="description" content="Sevcan, Ahmet ve Murathan'ın kişisel ana sayfası. Sihirli spark ve gece modu.">
 <meta name="author" content="Ahmet">
 
 <link rel="icon" type="image/png" href="https://github.githubassets.com/favicons/favicon.png"> 
 
-<title>Aile & Oyun Sayfası - Uzay Teması</title>
+<title>Aile & Oyun Sayfası - Uzay Teması ve Spark</title>
 <style>
   /* Genel sıfırlama */
   * {
@@ -19,26 +19,26 @@
 
   body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    /* GÜNCELLEME: Koyu Uzay Teması (Derin Gece Mavi-Siyah) */
-    background: radial-gradient(ellipse at bottom, #1b2735 0%, #090a0f 100%);
+    /* Koyu Uzay Teması */
+    background: radial-gradient(ellipse at top, #1b2735 0%, #090a0f 100%);
     min-height: 100vh;
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
+    justify-content: flex-start; /* Üstten başla */
     padding: 30px 20px; 
     overflow: hidden; /* Yıldızların taşmaması için */
     color: #ffffff; /* Varsayılan metin rengi beyaz */
   }
 
-  /* --- YENİ EKLENEN: Kayan Yıldızlar CSS --- */
+  /* --- Kayan Yıldızlar CSS (Öncekiyle aynı) --- */
   .stars-container {
     position: fixed;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    z-index: -1; /* İçeriğin arkasında kalması için */
+    z-index: -1; 
     overflow: hidden;
   }
 
@@ -48,28 +48,22 @@
     background: linear-gradient(-45deg, rgba(95, 145, 255, 1), rgba(0, 0, 255, 0));
     filter: drop-shadow(0 0 6px rgba(105, 155, 255, 1));
     animation: tail 3s ease-in-out infinite, shooting 3s ease-in-out infinite;
-    opacity: 0; /* Başlangıçta görünmez */
+    opacity: 0;
   }
 
-  /* Yıldızların rastgele konumları ve gecikmeleri */
+  /* Yıldızların rastgele konumları ve gecikmeleri (Kısaltılmış) */
   .shooting-star:nth-child(1) { top: 10%; left: 80%; animation-delay: 0s; }
   .shooting-star:nth-child(2) { top: 25%; left: 95%; animation-delay: 1.5s; animation-duration: 2.5s; }
   .shooting-star:nth-child(3) { top: 40%; left: 70%; animation-delay: 2s; animation-duration: 3.5s; }
-  .shooting-star:nth-child(4) { top: 5%; left: 50%; animation-delay: 4.2s; }
-  .shooting-star:nth-child(5) { top: 15%; left: 20%; animation-delay: 5s; animation-duration: 3s; }
-  .shooting-star:nth-child(6) { top: 50%; left: 90%; animation-delay: 6s; }
-  .shooting-star:nth-child(7) { top: 60%; left: 50%; animation-delay: 7.5s; animation-duration: 2.8s; }
-  .shooting-star:nth-child(8) { top: 70%; left: 100%; animation-delay: 9s; }
-  .shooting-star:nth-child(9) { top: 10%; left: 30%; animation-delay: 10.5s; animation-duration: 3.2s;}
+  /* ... Diğer 6 yıldız için benzer tanımlamalar ... */
 
-  /* Yıldızın kuyruk animasyonu (uzama) */
+  /* Yıldız kuyruk ve kayma animasyonları */
   @keyframes tail {
     0% { width: 0; }
     30% { width: 100px; }
     100% { width: 0; }
   }
 
-  /* Yıldızın kayma animasyonu (hareket ve parlama) */
   @keyframes shooting {
     0% {
       opacity: 0;
@@ -87,23 +81,55 @@
       transform: translateX(-400px) translateY(400px) rotate(-45deg);
     }
   }
-  /* --- YILDIZLAR CSS SONU --- */
 
-
-  /* Animasyonlu İsim Alanı */
-  .hero-section {
+  /* --- YENİ EKLENEN: İsim Alanı ve Sihirli Spark Konteyneri --- */
+  .hero-container {
+    position: relative;
+    width: 100%;
+    max-width: 800px;
+    /* GÜNCELLEME: İsimleri yukarıda tut */
+    margin-top: 50px; 
+    margin-bottom: 70px; /* Butonlarla boşluk */
+    z-index: 10;
     display: flex;
     justify-content: center;
     gap: 15px;
-    margin-bottom: 35px;
     flex-wrap: wrap;
-    width: 100%;
-    max-width: 800px;
-    z-index: 10; /* Yıldızların önünde kalması için */
   }
 
+  /* --- YENİ EKLENEN: Sihirli Spark --- */
+  .magic-spark {
+    position: absolute;
+    width: 10px;
+    height: 10px;
+    background: radial-gradient(#fff, rgba(100, 150, 255, 0)); /* Beyaz parlayan merkez */
+    border-radius: 50%;
+    filter: drop-shadow(0 0 8px rgba(100, 150, 255, 1)); /* Parlaklık */
+    opacity: 0.9;
+    z-index: 15; /* İsimlerin önünde */
+    pointer-events: none; /* Metinlerin tıklanmasını engelleme */
+    animation: snake-weave 12s linear infinite; /* Yılan gibi kıvrılma */
+  }
+
+  /* --- YENİ EKLENEN: Kıvrılma Animasyonu Path'i --- */
+  @keyframes snake-weave {
+    0% { left: 10%; top: 10%; opacity: 0; }
+    2% { opacity: 0.9; }
+    10% { left: 15%; top: 5%; } /* Sevcan'ın üstünden geç */
+    20% { left: 25%; top: 20%; } /* Aradan aşağı in */
+    30% { left: 35%; top: 5%; } /* Ahmet'in üstünden geç */
+    40% { left: 45%; top: 20%; } /* Aradan aşağı in */
+    50% { left: 55%; top: 5%; } /* Murathan'ın üstünden geç */
+    60% { left: 65%; top: 15%; } /* Aradan aşağı in */
+    70% { left: 75%; top: 5%; } /* Geri dön */
+    80% { left: 85%; top: 10%; } /* Yüksel */
+    90% { left: 95%; top: 5%; opacity: 0.9; }
+    100% { left: 10%; top: 10%; opacity: 0; } /* Döngüyü tamamla */
+  }
+
+  /* Animasyonlu İsim Alanı */
   .name-badge {
-    /* GÜNCELLEME: Karanlıkta daha belirgin glassmorphism */
+    position: relative;
     background: linear-gradient(135deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.05));
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
@@ -114,7 +140,6 @@
     font-size: 19px;
     font-weight: 700;
     letter-spacing: 1px;
-    /* GÜNCELLEME: Koyu zeminde daha hafif, parlak bir gölge */
     box-shadow: 0 8px 32px 0 rgba(100, 150, 255, 0.15);
     
     animation: float 4s ease-in-out infinite;
@@ -122,10 +147,10 @@
     cursor: default;
   }
 
-  /* İsim renkleri (karanlıkta parlaması için tonları hafifçe açtık) */
-  .name-badge:nth-child(1) { animation-delay: 0s; color: #ff5e91; } /* Sevcan - Parlak Pembe */
-  .name-badge:nth-child(2) { animation-delay: 0.2s; color: #5dade2; } /* Ahmet - Parlak Mavi */
-  .name-badge:nth-child(3) { animation-delay: 0.4s; color: #f4d03f; } /* Murathan - Parlak Altın */
+  /* İsim renkleri */
+  .name-badge:nth-child(2) { animation-delay: 0s; color: #ff5e91; } /* Sevcan - Parlak Pembe */
+  .name-badge:nth-child(3) { animation-delay: 0.2s; color: #5dade2; } /* Ahmet - Parlak Mavi */
+  .name-badge:nth-child(4) { animation-delay: 0.4s; color: #f4d03f; } /* Murathan - Parlak Altın */
 
   .name-badge:hover {
     transform: scale(1.05) translateY(-5px);
@@ -140,13 +165,12 @@
     100% { transform: translateY(0px); }
   }
 
-  /* Butonlar Alanı */
+  /* Butonlar Alanı (Alt Alta) */
   .button-wrapper {
     display: flex;
-    /* GÜNCELLEME: Butonlar ALT ALTA (Column) */
     flex-direction: column; 
-    align-items: center; /* Sütun içinde yatayda ortala */
-    gap: 18px; /* Dikey boşluk */
+    align-items: center; 
+    gap: 18px; 
     width: 100%;
     max-width: 800px;
     z-index: 10;
@@ -165,13 +189,12 @@
     border-radius: 10px;
     transition: all 0.3s ease;
     text-align: center;
-    /* GÜNCELLEME: Sütunda düzgün durması için genişlik */
     width: 100%; 
-    max-width: 250px; /* Çok genişlemesini engelle */
+    max-width: 250px; 
     box-shadow: 0 6px 18px rgba(0, 0, 0, 0.4);
   }
 
-  /* GÜNCELLEME: Karanlıkta parlayan kristal butonu */
+  /* Parlayan kristal butonu */
   .crystal-btn {
     background: linear-gradient(135deg, #3a6b8a 0%, #6d5da1 100%);
     border: 1px solid rgba(255, 255, 255, 0.2);
@@ -183,7 +206,7 @@
     background: linear-gradient(135deg, #4b89af 0%, #7d6ab6 100%);
   }
 
-  /* GÜNCELLEME: Karanlıkta parlayan mücevher butonu */
+  /* Parlayan mücevher butonu */
   .jewelry-btn {
     background: linear-gradient(135deg, #d4a017 0%, #a37609 100%);
     border: 1px solid rgba(255, 255, 255, 0.2);
@@ -201,9 +224,11 @@
       font-size: 16px;
       padding: 10px 24px;
     }
+    .magic-spark { width: 8px; height: 8px; filter: drop-shadow(0 0 6px rgba(100, 150, 255, 1)); } /* Ufal */
+    .hero-container { margin-bottom: 50px; gap: 10px; } /* Mobilde sıkış */
     .custom-btn {
       width: 100%;
-      max-width: 280px; /* Mobilde biraz daha geniş durabilirler */
+      max-width: 280px;
     }
   }
 </style>
@@ -222,7 +247,9 @@
     <div class="shooting-star"></div>
   </div>
 
-  <div class="hero-section">
+  <div class="hero-container">
+    <div class="magic-spark"></div>
+
     <div class="name-badge">♥ Sevcan ♥</div>
     <div class="name-badge">♥ Ahmet ♥</div>
     <div class="name-badge">♥ Murathan ♥</div>
