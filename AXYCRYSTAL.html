@@ -463,371 +463,755 @@ body.smash-mode .block:hover{filter:brightness(1.5) saturate(1.5);outline:2px da
 </div>
 
 <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
-// ================================================================
-// CONFIG
-// ================================================================
-const COLS=5, ROWS=7;
-const PU_COST={hint:40,undo:50,smash:50,shuffle:80,bomb:120,freeze:60};
-// Sabit spawn pool — oyun boyunca değişmez, score arttıkça havuz genişler
-const BASE_POOL=[2,2,4,4,4,8,8,16,16];
-// Hedef değerleri — 32768'den ~3 milyara uzanır
-const TARGETS=[2048,4096,8192,16384,32768,65536,131072,262144,524288,1048576,2097152,4194304,8388608,16777216,33554432,67108864,134217728,268435456,536870912,1073741824];
+// ════════════════════════════════════════════════════════════════════
+// AXY CRYSTAL — Merge Edition v2.0
+// Yazar: Ahmet GÜNEŞ • 2026
+//
+// NASIL ÇALIŞIR? (Genel Akış)
+//   1. Oyun başlayınca initGrid() 5×7 = 35 hücreyi rastgele doldurur.
+//   2. Oyuncu bir taşa basılı tutar (175ms eşik) → beginHold() BFS ile
+//      8-yön komşu eşdeğer taşları bulur ve parlatır.
+//   3. Parmak kaldırılınca → doHoldMerge() tüm taşları merkeze uçurur,
+//      yeni değeri hesaplar, puan/coin günceller.
+//   4. Gravity düşer → boşluklar spawn ile dolar → checkGO() kontrol.
+//   5. Hedef değerine ulaşılırsa animasyon → yeni bölüm.
+// ════════════════════════════════════════════════════════════════════
 
-// Büyük sayıları kısalt: 131072 → "128K", 1048576 → "1M" vb.
-function fmtTarget(v){
-  if(v>=1073741824) return (v/1073741824).toFixed(v%1073741824===0?0:1)+'G';
-  if(v>=1048576)    return (v/1048576).toFixed(v%1048576===0?0:1)+'M';
-  if(v>=1024)       return (v/1024).toFixed(v%1024===0?0:1)+'K';
+
+// ════════════════════════════════════════════════════════════════════
+// BÖLÜM 1 — SABİTLER VE YAPILANDIRMA
+// Neden const? Oyun boyunca değişmeyecek değerler const ile tanımlanır.
+// Bu hem hatayı önler hem de kodun niyetini açıkça ifade eder.
+// ════════════════════════════════════════════════════════════════════
+
+const COLS = 5;   // Izgara sütun sayısı
+const ROWS = 7;   // Izgara satır sayısı — 5×7=35 hücre toplam
+
+// Power-up maliyetleri: coin sistemi bunlara göre çalışır.
+// Nesne (object) kullandık çünkü her anahtarı id olarak buton seçiminde kullanıyoruz.
+const PU_COST = {
+  hint:   40,  // Değiştir — komşu iki taşın yerini değiştirir
+  undo:   50,  // Geri Al  — son hamleyi tamamen geri alır
+  smash:  50,  // Yok Et   — tek taşı patlatır
+  shuffle: 80, // Karıştır — tüm taşları yeniden rastgele dağıtır
+  bomb:  120,  // Bomba    — 3×3 alanı siler
+  freeze: 60,  // Dondur   — bir sonraki spawn turunu atlar
+};
+
+// Hedef dizisi: her bölümde bir sonraki değere ulaşmak gerekir.
+// Değerler 2K'dan başlar, 1G'a kadar ×2 artarak gider (20 bölüm).
+// Math.pow(2,11)=2048, Math.pow(2,30)=1073741824
+const TARGETS = [
+  2048, 4096, 8192, 16384, 32768, 65536, 131072, 262144, 524288,
+  1048576, 2097152, 4194304, 8388608, 16777216, 33554432, 67108864,
+  134217728, 268435456, 536870912, 1073741824
+];
+
+// VCLS: her sayısal değeri CSS sınıfına eşler.
+// Neden nesne? Array'e göre O(1) erişim — her frame'de çağrılır.
+const VCLS = {
+  2:'bv2', 4:'bv4', 8:'bv8', 16:'bv16', 32:'bv32', 64:'bv64',
+  128:'bv128', 256:'bv256', 512:'bv512', 1024:'bv1024',
+  2048:'bv2048', 4096:'bv4096', 8192:'bv8192', 16384:'bv16384', 32768:'bv32768',
+  65536:'bv65536', 131072:'bv131072', 262144:'bv262144', 524288:'bv524288',
+  1048576:'bv1048576', 2097152:'bv2097152', 4194304:'bv4194304'
+};
+
+// 4M üstü değerler için döngüsel renk sınıfları (sonsuz bölüm desteği)
+const HIGH_CLS = ['bv524288','bv1048576','bv2097152','bv4194304'];
+
+// localStorage anahtarı: oyun kaydı bu isimle saklanır
+const SAVE_KEY = 'axydrop_autosave';
+
+
+// ════════════════════════════════════════════════════════════════════
+// BÖLÜM 2 — OYUN DURUMU (STATE)
+// Neden let? Bu değerler oyun sırasında sürekli değişir.
+// Tüm state tek yerde toplandı — neyin nerede değiştiğini takip etmek kolaylaşır.
+// ════════════════════════════════════════════════════════════════════
+
+let G = [];          // 2B dizi: G[satır][sütun] = taşın değeri (0 = boş)
+let score = 0;       // Toplam puan
+let coins = 30;      // Başlangıç coini — power-up satın almak için
+let targetIdx = 0;   // TARGETS dizisindeki aktif hedefin indeksi
+
+// Power-up durum bayrakları: hangi mod aktif?
+let smashOn = false;     // Yok Et modu — tıklanan taşı siler
+let smashCharges = 0;    // Kalan yok etme hakkı (şu an 1 kullanılıyor)
+let bombOn = false;      // Bomba modu — tıklanan çevresini siler
+let freezeActive = false;// true iken bir sonraki spawn atlanır
+let swapOn = false;      // Değiştir modu — iki taşın yerini değiştirir
+let swapFirst = null;    // Swap'ta ilk seçilen taşın konumu {r, c}
+
+let soundOn = true;      // Ses açık/kapalı
+let gameStartTime = 0;   // Oyun başlangıç zamanı (ms) — spawn dengeleme için
+let hist = [];           // Geri alma yığını — son 12 hamle saklanır
+let active = false;      // Oyun aktif mi? (false iken dokunuşlar görmezden gelinir)
+let busy = false;        // Animasyon çalışıyor mu? (true iken yeni hamle engellenir)
+
+// BE (Block Elements): DOM'daki her taş elementini hızlı bulmak için harita.
+// Anahtar formatı: "satır-sütun" → örn. "3-2"
+// Neden nesne? DOM'da getElementById yerine O(1) erişim sağlar.
+const BE = {};
+
+// Hold (basılı tutma) mekanizması değişkenleri
+let holdTimer = null;   // setTimeout referansı — 175ms dolduğunda merge başlar
+let holdCell = null;    // Şu an basılı tutulan taşın konumu {r, c}
+let holdMatches = [];   // BFS ile bulunan eşleşen komşu taşlar [{r,c}, ...]
+const HOLD_MS = 175;    // Kaç ms basılı tutulursa hold sayılır
+                        // 175ms: mobilde yanlışlıkla merge'i önler
+
+// Bonus ve uyarı sistemi değişkenleri
+let lastMergeCount = 0;         // Son mergedeki taş sayısı — bonus taş tetikler
+let warnShownThisRound = false; // Tıkanma uyarısı bu turda gösterildi mi?
+
+// Merge önizleme badge'i için DOM referansı
+let mergePreviewEl = null;
+
+
+// ════════════════════════════════════════════════════════════════════
+// BÖLÜM 3 — YARDIMCI FONKSİYONLAR
+// Küçük, tek işli yardımcılar — diğer her yerde kullanılır.
+// ════════════════════════════════════════════════════════════════════
+
+/**
+ * Büyük sayıları kısa metne çevirir.
+ * Neden? 1048576 yerine "1M" göstermek grid'de yer kazandırır.
+ * Örnekler: 2048→"2K", 131072→"128K", 1048576→"1M", 1073741824→"1G"
+ */
+function fmtTarget(v) {
+  if (v >= 1073741824) return (v/1073741824).toFixed(v%1073741824===0?0:1) + 'G';
+  if (v >= 1048576)    return (v/1048576).toFixed(v%1048576===0?0:1)    + 'M';
+  if (v >= 1024)       return (v/1024).toFixed(v%1024===0?0:1)          + 'K';
   return v.toLocaleString('tr');
 }
 
-// ================================================================
-// STATE
-// ================================================================
-let G=[]; // G[r][c]=value|0
-let score=0, coins=30;
-let targetIdx=0; // TARGETS dizisindeki mevcut hedef
-let smashOn=false, smashCharges=0;
-let bombOn=false;          // bomb mode aktif mi
-let freezeActive=false;    // bir sonraki spawn atlanacak mı
-let soundOn=true;
-let gameStartTime=0; // spawn dengeleme için
-let hist=[];
-let active=false, busy=false;
-const BE={}; // block elements "r-c"->el
+/**
+ * Sayısal taş değerini CSS sınıfına çevirir.
+ * 4M üstü değerler döngüsel olarak HIGH_CLS listesinden alınır.
+ * log2 hesabı: 2^exp = v → exp = log2(v), modulo ile döngü yapılır.
+ */
+function vcls(v) {
+  if (VCLS[v]) return VCLS[v];
+  const exp = Math.floor(Math.log2(v));
+  return HIGH_CLS[exp % HIGH_CLS.length];
+}
 
-// ── HOLD STATE ──
-let holdTimer=null;
-let holdCell=null;        // {r,c} currently held
-let holdMatches=[];       // [{r,c}] neighbours matching held value
-const HOLD_MS=175;        // ms to confirm a hold (175ms — mobilde yanlışlıkla merge önlenir)
+/**
+ * Taş değerine göre yazı boyutu döndürür.
+ * Kısa string (ör. "2") büyük font, uzun string (ör. "128K") küçük font.
+ * Neden? Taş kutusuna sığması için.
+ */
+function fsize(v) {
+  const s = fmtTarget(v);
+  if (s.length >= 6) return '.52rem';
+  if (s.length >= 4) return '.72rem';
+  if (s.length >= 3) return '.92rem';
+  return '1.22rem';
+}
 
-// ================================================================
-// AUDIO
-// ================================================================
-let AC, masterGain;
-function getAC(){
-  if(!AC){
-    AC=new(window.AudioContext||window.webkitAudioContext)();
-    // Compressor — clip'i önler, sesi dolgun tutar
-    const comp=AC.createDynamicsCompressor();
-    comp.threshold.value=-6;
-    comp.knee.value=3;
-    comp.ratio.value=4;
-    comp.attack.value=0.003;
-    comp.release.value=0.1;
+/**
+ * Fisher-Yates karıştırma algoritması.
+ * Neden bu algoritma? Her permütasyon eşit olasılıklı — gerçekten rastgele.
+ * Sonu başına kaydırarak değiş tokuş yapar.
+ */
+function rng(a) {
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]]; // ES6 destructuring ile yer değiştir
+  }
+  return a;
+}
+
+/**
+ * İki hücrenin 8-yönlü (diagonal dahil) komşu olup olmadığını kontrol eder.
+ * |r1-r2|<=1 ve |c1-c2|<=1 → en fazla 1 adım uzakta demek.
+ * Aynı hücre komşu sayılmaz (son koşul).
+ */
+function isAdj(r1, c1, r2, c2) {
+  return Math.abs(r1-r2) <= 1 && Math.abs(c1-c2) <= 1 && !(r1===r2 && c1===c2);
+}
+
+/**
+ * Bir hücrenin tüm geçerli komşularını döndürür.
+ * Grid sınırlarını aşmayan 8 yön kontrol edilir.
+ */
+function nbrs(r, c) {
+  const res = [];
+  for (let dr = -1; dr <= 1; dr++) {
+    for (let dc = -1; dc <= 1; dc++) {
+      if (!dr && !dc) continue; // Kendisi değil
+      const nr = r + dr, nc = c + dc;
+      if (nr >= 0 && nr < ROWS && nc >= 0 && nc < COLS) res.push([nr, nc]);
+    }
+  }
+  return res;
+}
+
+
+// ════════════════════════════════════════════════════════════════════
+// BÖLÜM 4 — SES SİSTEMİ (Web Audio API)
+// Neden Web Audio API? <audio> elementinin aksine, kod ile dinamik
+// frekans ve dalga formu üretilebilir — ses dosyası gerekmez.
+// ════════════════════════════════════════════════════════════════════
+
+let AC, masterGain; // AudioContext ve ana ses seviyesi düğümü
+
+/**
+ * AudioContext'i ilk kullanımda oluşturur (lazy init).
+ * Neden lazy? Tarayıcılar kullanıcı etkileşimi olmadan ses çalmayı engeller.
+ * Compressor: ani ses patlamalarını önler (limiter gibi çalışır).
+ */
+function getAC() {
+  if (!AC) {
+    AC = new (window.AudioContext || window.webkitAudioContext)();
+    const comp = AC.createDynamicsCompressor();
+    comp.threshold.value = -6;  // -6dB üstünde sıkıştır
+    comp.knee.value = 3;
+    comp.ratio.value = 4;       // 4:1 sıkıştırma oranı
+    comp.attack.value = 0.003;  // 3ms hızlı tepki
+    comp.release.value = 0.1;
     comp.connect(AC.destination);
-    // Master gain
-    masterGain=AC.createGain();
-    masterGain.gain.value=2.2; // 2.2x amplifikasyon
+    masterGain = AC.createGain();
+    masterGain.gain.value = 2.2; // Genel ses seviyesi (2.2x amplifikasyon)
     masterGain.connect(comp);
   }
   return AC;
 }
-function tone(f,t,d,v=0.9){
-  if(!soundOn)return;
-  try{
-    const c=getAC();
-    const o=c.createOscillator();
-    const g=c.createGain();
+
+/**
+ * Tek bir ton çalar.
+ * @param {number} f    - Frekans (Hz) — 440=La, 523=Do, vb.
+ * @param {string} t    - Dalga formu: 'sine'(yumuşak), 'triangle'(metalik), 'sawtooth'(sert)
+ * @param {number} d    - Süre (saniye)
+ * @param {number} v    - Başlangıç ses seviyesi (0-1)
+ *
+ * exponentialRampToValueAtTime: ses logaritmik olarak azalır —
+ * doğrusal azalma kulağa tuhaf gelir, doğal fade bu şekilde çalışır.
+ */
+function tone(f, t, d, v = 0.9) {
+  if (!soundOn) return;
+  try {
+    const c = getAC();
+    const o = c.createOscillator();
+    const g = c.createGain();
     o.connect(g);
     g.connect(masterGain);
-    o.type=t;
-    o.frequency.value=f;
-    g.gain.setValueAtTime(v,c.currentTime);
-    g.gain.exponentialRampToValueAtTime(0.001,c.currentTime+d);
+    o.type = t;
+    o.frequency.value = f;
+    g.gain.setValueAtTime(v, c.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001, c.currentTime + d);
     o.start();
-    o.stop(c.currentTime+d+.05);
-  }catch(e){}
+    o.stop(c.currentTime + d + 0.05);
+  } catch(e) {}
 }
-function sfxSel(){tone(440,'sine',.1,.6);}
-function sfxMerge(v){const f=180+Math.log2(v)*42;tone(f,'triangle',.22,.9);setTimeout(()=>tone(f*1.5,'sine',.14,.6),75);}
-function sfxDrop(){tone(260,'sine',.08,.5);}
-function sfxSmash(){tone(200,'sawtooth',.2,.95);setTimeout(()=>tone(100,'sawtooth',.22,.7),50);}
-function sfxWin(){[523,659,784,1047].forEach((f,i)=>setTimeout(()=>tone(f,'triangle',.22,.9),i*90));}
-function sfxGO(){[392,330,261,196].forEach((f,i)=>setTimeout(()=>tone(f,'triangle',.38,.7),i*120));}
-document.addEventListener('click',()=>{try{getAC();}catch(e){}},{once:true});
-document.getElementById('btn-sound').addEventListener('click',()=>{
-  soundOn=!soundOn;
-  if(masterGain) masterGain.gain.value=soundOn?2.2:0;
-  document.getElementById('sound-icon').textContent=soundOn?'🔊':'🔇';
+
+// Kısa efekt fonksiyonları — her eylem için özel ses tasarımı
+function sfxSel()      { tone(440, 'sine', .1, .6); }
+function sfxDrop()     { tone(260, 'sine', .08, .5); }
+function sfxSmash()    { tone(200, 'sawtooth', .2, .95); setTimeout(()=>tone(100,'sawtooth',.22,.7), 50); }
+function sfxGO()       { [392,330,261,196].forEach((f,i)=>setTimeout(()=>tone(f,'triangle',.38,.7),i*120)); }
+
+/**
+ * Merge sesi: taşın değerine göre frekans hesaplanır.
+ * Yüksek değer = yüksek frekans (daha tiz ses) — başarı hissi verir.
+ * log2(v)*42: her kat iki katına çıkış = müzikal oktav arişi simüle eder.
+ */
+function sfxMerge(v) {
+  const f = 180 + Math.log2(v) * 42;
+  tone(f, 'triangle', .22, .9);
+  setTimeout(() => tone(f * 1.5, 'sine', .14, .6), 75);
+}
+
+/**
+ * Kazanma fanfaresi: yükselen 7 nota.
+ * Do-Mi-Sol-Do armonisi — evrensel "başarı" ses deseni.
+ */
+function sfxWin() {
+  [523, 659, 784, 1047].forEach((f, i) => setTimeout(() => tone(f, 'triangle', .22, .9), i * 90));
+}
+
+// AudioContext kullanıcı etkileşimi gerektirdiğinden ilk tıklamada başlat
+document.addEventListener('click', () => { try { getAC(); } catch(e) {} }, { once: true });
+
+// Ses aç/kapat butonu
+document.getElementById('btn-sound').addEventListener('click', () => {
+  soundOn = !soundOn;
+  if (masterGain) masterGain.gain.value = soundOn ? 2.2 : 0;
+  document.getElementById('sound-icon').textContent = soundOn ? '🔊' : '🔇';
 });
-document.getElementById('btn-undo-game').addEventListener('click',()=>{
-  // Başlangıç ekranına dön
-  cancelHold();
-  active=false;
-  saveGame();
-  document.getElementById('ov-start').classList.add('show');
-});
 
-// ================================================================
-// STARS BG
-// ================================================================
-const cv=document.getElementById('stars'),sc=cv.getContext('2d');
-let stars=[];
-function rcv(){cv.width=innerWidth;cv.height=innerHeight;}
-function istars(){stars=[];for(let i=0;i<140;i++)stars.push({x:Math.random()*cv.width,y:Math.random()*cv.height,r:Math.random()*1.3+.3,spd:Math.random()*.5+.1,op:Math.random()*.6+.2,tw:Math.random()*Math.PI*2,ts:Math.random()*.04+.01});}
-function dstars(){sc.clearRect(0,0,cv.width,cv.height);stars.forEach(s=>{s.y+=s.spd;s.tw+=s.ts;if(s.y>cv.height+4){s.y=-4;s.x=Math.random()*cv.width;}const a=s.op*(.5+.5*Math.sin(s.tw));sc.beginPath();sc.arc(s.x,s.y,s.r,0,Math.PI*2);sc.fillStyle=`rgba(180,220,255,${a})`;sc.fill();});requestAnimationFrame(dstars);}
-rcv();istars();dstars();
-window.addEventListener('resize',()=>{rcv();istars();fitLayout();});
 
-// ================================================================
-// LAYOUT
-// ================================================================
-function fitLayout(){
-  const vw=innerWidth, vh=innerHeight;
+// ════════════════════════════════════════════════════════════════════
+// BÖLÜM 5 — ARKA PLAN YILDIZLARI
+// Canvas 2D API ile 140 tane animasyonlu yıldız çizilir.
+// requestAnimationFrame: ekran yenileme hızıyla senkron — 60fps için ideal.
+// ════════════════════════════════════════════════════════════════════
 
-  // Gerçek DOM yüksekliklerini ölç
-  const headerEl=document.getElementById('header');
-  const puEl=document.getElementById('powerups');
-  const headerH=headerEl ? headerEl.getBoundingClientRect().height : 68;
-  const puH=puEl ? puEl.getBoundingClientRect().height : 62;
+const cv = document.getElementById('stars');
+const sc = cv.getContext('2d');
+let stars = [];
 
-  // App padding (top+bottom) + gap'ler (header+grid+pu = 2 gap)
-  const appPadV=14;   // top 8 + bottom 6
-  const gapsV=6*2;    // 2 gap between 3 elements
-  const gwPad=14;     // grid-wrap padding top+bottom (7*2)
-
-  const availH=vh - headerH - puH - appPadV - gapsV - gwPad;
-  const availW=vw - 20 - gwPad; // app padding + grid-wrap padding
-
-  const gap=Math.max(4, Math.round(Math.min(vw,vh)*0.012));
-  const byH=Math.floor((availH - gap*(ROWS-1)) / ROWS);
-  const byW=Math.floor((availW - gap*(COLS-1)) / COLS);
-  const sz=Math.max(32, Math.min(byH, byW, 80));
-
-  document.documentElement.style.setProperty('--cs', sz+'px');
-  document.documentElement.style.setProperty('--cg', gap+'px');
-  if(active) rebuildDOM();
+/** Canvas boyutunu ekrana sığdır */
+function rcv() {
+  cv.width = innerWidth;
+  cv.height = innerHeight;
 }
 
-// ================================================================
-// VALUE HELPERS
-// ================================================================
-const VCLS={
-  2:'bv2',4:'bv4',8:'bv8',16:'bv16',32:'bv32',64:'bv64',
-  128:'bv128',256:'bv256',512:'bv512',1024:'bv1024',
-  2048:'bv2048',4096:'bv4096',8192:'bv8192',16384:'bv16384',32768:'bv32768',
-  65536:'bv65536',131072:'bv131072',262144:'bv262144',524288:'bv524288',
-  1048576:'bv1048576',2097152:'bv2097152',4194304:'bv4194304'
-};
-const HIGH_CLS=['bv524288','bv1048576','bv2097152','bv4194304'];
-function vcls(v){
-  if(VCLS[v]) return VCLS[v];
-  const exp=Math.floor(Math.log2(v));
-  return HIGH_CLS[exp%HIGH_CLS.length];
-}
-function fsize(v){
-  // fmtTarget sonrası karakter sayısına göre ayarla
-  const s=fmtTarget(v);
-  if(s.length>=6) return'.52rem';
-  if(s.length>=4) return'.72rem';
-  if(s.length>=3) return'.92rem';
-  return'1.22rem';
-}
-
-// ================================================================
-// GRID INIT
-// ================================================================
-function initGrid(){
-  G=Array.from({length:ROWS},()=>Array(COLS).fill(0));
-  // Başlangıç grid'i: hedeften bağımsız, geniş ve karışık değerler
-  // 2K hedefinde 2-4-8-16-32-64 karışık gelsin, monoton olmasın
-  for(let r=0;r<ROWS;r++) for(let c=0;c<COLS;c++) G[r][c]=rspawnInit();
-}
-function rspawnInit(){
-  // Bölüm çiftlerine göre sabit spawn bandı
-  const bands=[
-    [1,4],  // B1-2  (2K-4K):    2–16
-    [1,4],
-    [1,5],  // B3-4  (8K-16K):   2–32
-    [1,5],
-    [1,6],  // B5-6  (32K-64K):  2–64
-    [1,6],
-    [1,7],  // B7-8  (128K-256K):2–128
-    [1,7],
-    [1,8],  // B9-10 (512K-1M):  2–256
-    [1,8],
-    [1,9],  // B11+  (2M+):      2–512
-  ];
-  const band=bands[Math.min(targetIdx,bands.length-1)];
-  const lo=band[0], hi=band[1];
-  const pool=[];
-  for(let e=lo;e<=hi;e++){
-    const v=Math.pow(2,e);
-    const w=Math.max(1,hi-e+3);
-    for(let i=0;i<w;i++) pool.push(v);
+/** 140 yıldız oluştur — her birinin konumu, hızı, parlaklığı rastgele */
+function istars() {
+  stars = [];
+  for (let i = 0; i < 140; i++) {
+    stars.push({
+      x: Math.random() * cv.width,
+      y: Math.random() * cv.height,
+      r: Math.random() * 1.3 + 0.3,    // Yarıçap
+      spd: Math.random() * 0.5 + 0.1,  // Düşme hızı
+      op: Math.random() * 0.6 + 0.2,   // Temel opaklık
+      tw: Math.random() * Math.PI * 2,  // Titreşim fazı (sinüs için)
+      ts: Math.random() * 0.04 + 0.01, // Titreşim hızı
+    });
   }
-  return pool[Math.floor(Math.random()*pool.length)];
 }
-function rspawn(){
+
+/**
+ * Her frame yıldızları çiz ve aşağı kaydır.
+ * sin(tw) ile opaklık titreşir → "twinkle" efekti.
+ * Ekranın altına çıkınca üstten yeniden başlar.
+ */
+function dstars() {
+  sc.clearRect(0, 0, cv.width, cv.height);
+  stars.forEach(s => {
+    s.y += s.spd;
+    s.tw += s.ts;
+    if (s.y > cv.height + 4) { s.y = -4; s.x = Math.random() * cv.width; }
+    const a = s.op * (0.5 + 0.5 * Math.sin(s.tw));
+    sc.beginPath();
+    sc.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+    sc.fillStyle = `rgba(180,220,255,${a})`;
+    sc.fill();
+  });
+  requestAnimationFrame(dstars);
+}
+
+rcv(); istars(); dstars();
+window.addEventListener('resize', () => { rcv(); istars(); fitLayout(); });
+
+
+// ════════════════════════════════════════════════════════════════════
+// BÖLÜM 6 — LAYOUT (Duyarlı Boyutlandırma)
+// Grid hücre boyutu ekran boyutuna göre dinamik hesaplanır.
+// CSS değişkenleri --cs ve --cg gerçek zamanlı güncellenir.
+// ════════════════════════════════════════════════════════════════════
+
+function fitLayout() {
+  const vw = innerWidth, vh = innerHeight;
+
+  // Gerçek DOM yüksekliklerini ölç (tahmini değil)
+  const headerEl = document.getElementById('header');
+  const puEl = document.getElementById('powerups');
+  const headerH = headerEl ? headerEl.getBoundingClientRect().height : 68;
+  const puH = puEl ? puEl.getBoundingClientRect().height : 62;
+
+  const appPadV = 14;  // Üst+alt padding (px)
+  const gapsV = 12;    // Header-grid ve grid-powerups arasındaki boşluklar
+  const gwPad = 14;    // Grid wrapper'ın iç dolgusu (üst+alt)
+
+  const availH = vh - headerH - puH - appPadV - gapsV - gwPad;
+  const availW = vw - 20 - gwPad;
+
+  // Hem yüksekliğe hem genişliğe sığdırmak için küçük olanı al
+  const gap = Math.max(4, Math.round(Math.min(vw, vh) * 0.012));
+  const byH = Math.floor((availH - gap * (ROWS - 1)) / ROWS);
+  const byW = Math.floor((availW - gap * (COLS - 1)) / COLS);
+  const sz = Math.max(32, Math.min(byH, byW, 80)); // 32px min, 80px max
+
+  document.documentElement.style.setProperty('--cs', sz + 'px');
+  document.documentElement.style.setProperty('--cg', gap + 'px');
+
+  // Grid DOM'u boyutla birlikte yeniden konumlandır
+  if (active) rebuildDOM();
+}
+
+
+// ════════════════════════════════════════════════════════════════════
+// BÖLÜM 7 — GRID BAŞLATMA VE SPAWN
+// G matrisi oyunun tek gerçek kaynağı — DOM her zaman G'den türetilir.
+// ════════════════════════════════════════════════════════════════════
+
+/** Grid matrisini sıfırlar ve başlangıç taşlarını yerleştirir */
+function initGrid() {
+  G = Array.from({length: ROWS}, () => Array(COLS).fill(0));
+  for (let r = 0; r < ROWS; r++)
+    for (let c = 0; c < COLS; c++)
+      G[r][c] = rspawnInit();
+}
+
+/**
+ * Oyun başlangıcındaki taş değerlerini üretir.
+ * Her bölüm çifti için farklı bir üst sınır tanımlanmıştır:
+ * - B1-2 (2K-4K): 2-16, B3-4 (8K-16K): 2-32, B5-6 (32K-64K): 2-64 ...
+ *
+ * Alt değerlere yüksek ağırlık verilir (w = hi-e+3):
+ * e=1(değer 2) için w=hi-1+3, e=hi için w=3 → küçükler çok daha sık gelir.
+ */
+function rspawnInit() {
+  // [lo, hi]: log2 cinsinden alt ve üst sınır
+  const bands = [
+    [1,4], [1,4],  // B1-2:  2–16
+    [1,5], [1,5],  // B3-4:  2–32
+    [1,6], [1,6],  // B5-6:  2–64
+    [1,7], [1,7],  // B7-8:  2–128
+    [1,8], [1,8],  // B9-10: 2–256
+    [1,9],         // B11+:  2–512
+  ];
+  const band = bands[Math.min(targetIdx, bands.length - 1)];
+  const lo = band[0], hi = band[1];
+
+  const pool = [];
+  for (let e = lo; e <= hi; e++) {
+    const v = Math.pow(2, e);
+    const w = Math.max(1, hi - e + 3); // Küçük değerlere daha yüksek ağırlık
+    for (let i = 0; i < w; i++) pool.push(v);
+  }
+  return pool[Math.floor(Math.random() * pool.length)];
+}
+
+/**
+ * Merge sonrası spawn: 3 katmanlı ağırlıklı sistem.
+ *
+ * KATMAN 1 — BASE (~%65): 2,4,8,16 — her zaman dominant
+ *   Bu taşlar "oyunun oksijeni" — strateji bunlar üzerine kurulur.
+ *
+ * KATMAN 2 — KÖPRÜ (~%10): midLow — base ile mid arasındaki geçiş
+ *   Ani değer sıçramalarını önler, doğal akış sağlar.
+ *
+ * KATMAN 3 — MID (~%9): hedefe bağlı orta değer
+ *   Bölüm ilerledikçe bu katman büyür — zorluk artışı buradan gelir.
+ *
+ * KATMAN 4 — HIGH (~%5): nadir yüksek değer
+ *   "Ödül hissi" yaratır — oyuncu beklenmedik büyük taş görür.
+ *
+ * Ek korumalar:
+ * - Grid %75+ doluysa sadece 2,4,8 → tıkanmayı önler
+ * - %30 ihtimalle grid'deki en çok olan değerden spawn et → merge fırsatı
+ */
+function rspawn() {
   const target = TARGETS[targetIdx];
 
-  // ── GRID DOLULUK KONTROLÜ ─────────────────────────────────────
-  let filledCells=0;
-  for(let r=0;r<ROWS;r++) for(let c=0;c<COLS;c++) if(G[r][c]) filledCells++;
-  const fillRate = filledCells / (ROWS*COLS);
-  if(fillRate >= 0.75) return [2,2,4,4,8][Math.floor(Math.random()*5)];
+  // — Doluluk koruması: grid çok doluysa sadece küçük değerler —
+  let filledCells = 0;
+  for (let r = 0; r < ROWS; r++)
+    for (let c = 0; c < COLS; c++)
+      if (G[r][c]) filledCells++;
+  const fillRate = filledCells / (ROWS * COLS);
+  if (fillRate >= 0.75) return [2, 2, 4, 4, 8][Math.floor(Math.random() * 5)];
 
-  // ── KURTARICI SPAWN: merge yapılabilecek komşu yok mu? ────────
-  // %30 ihtimalle grid'deki mevcut değerlerden birini ver (birleştirebilsin)
-  if(Math.random()<0.30){
-    const existing=[];
-    for(let r=0;r<ROWS;r++) for(let c=0;c<COLS;c++) if(G[r][c]) existing.push(G[r][c]);
-    if(existing.length>0){
-      // En çok tekrar eden değeri bul — en birleştirilebilir olanı
-      const freq={};
-      existing.forEach(v=>freq[v]=(freq[v]||0)+1);
-      const sorted=Object.entries(freq).sort((a,b)=>b[1]-a[1]);
-      // İlk 3 en çok tekrar edenden rastgele seç
-      const candidates=sorted.slice(0,3).map(([v])=>+v);
-      return candidates[Math.floor(Math.random()*candidates.length)];
+  // — Kurtarıcı spawn: mevcut değerlerden birini ver (%30 ihtimal) —
+  // Grid'de hangi değer çoksa onu spawn et → oyuncuya merge fırsatı
+  if (Math.random() < 0.30) {
+    const existing = [];
+    for (let r = 0; r < ROWS; r++)
+      for (let c = 0; c < COLS; c++)
+        if (G[r][c]) existing.push(G[r][c]);
+    if (existing.length > 0) {
+      const freq = {};
+      existing.forEach(v => freq[v] = (freq[v] || 0) + 1);
+      // En çok tekrar eden 3 değerden rastgele seç
+      const candidates = Object.entries(freq)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 3)
+        .map(([v]) => +v);
+      return candidates[Math.floor(Math.random() * candidates.length)];
     }
   }
 
-  // ── 3 KATMANLI AĞIRLIK SİSTEMİ ───────────────────────────────
-  // Katman 1 — BASE (%70): 2-4-8-16, her zaman dominant
-  // Katman 2 — MID  (%25): hedefe bağlı orta değerler
-  // Katman 3 — HIGH (%5):  nadir yüksek değer (ödül hissi)
-  //
-  // Grok'un band yapısı: targetIdx'e göre orta katman büyür
-  const bands=[
-    {max:2,  midDiv:16, highDiv:8},   // B1-3  (2K-8K)
-    {max:5,  midDiv:12, highDiv:6},   // B4-6  (16K-64K)
-    {max:9,  midDiv:8,  highDiv:4},   // B7-10 (128K-1M)
-    {max:999,midDiv:6,  highDiv:3},   // B11+
+  // — Band seçimi: bölüme göre orta ve yüksek değer eşiklerini belirle —
+  const bands = [
+    {max:2,  midDiv:16, highDiv:8},   // B1-3:  2K-8K hedefi
+    {max:5,  midDiv:12, highDiv:6},   // B4-6:  16K-64K hedefi
+    {max:9,  midDiv:8,  highDiv:4},   // B7-10: 128K-1M hedefi
+    {max:999,midDiv:6,  highDiv:3},   // B11+:  2M+ hedefi
   ];
-  const band = bands.find(b=>targetIdx<=b.max) || bands[bands.length-1];
-  const midVal  = Math.max(8,  Math.floor(target/band.midDiv));
-  const highVal = Math.max(16, Math.floor(target/band.highDiv));
-  // ikiye kuvvetine yuvarla
-  const snap=(v)=>Math.pow(2,Math.round(Math.log2(v)));
-  const mid  = snap(midVal);
-  const high = snap(highVal);
+  const band = bands.find(b => targetIdx <= b.max) || bands[bands.length - 1];
 
-  // Havuz — sabit ağırlıklar + mid arası değerler için köprü
-  const midLow = snap(Math.max(32, mid/4));  // mid ile base arasındaki köprü
-  const pool=[
+  // snap: herhangi bir sayıyı en yakın 2'nin kuvvetine yuvarlar
+  // Örn: 170 → 128 (2^7). log2(170)≈7.4 → round→7 → 2^7=128
+  const snap = v => Math.pow(2, Math.round(Math.log2(v)));
+  const mid    = snap(Math.max(8,  Math.floor(target / band.midDiv)));
+  const high   = snap(Math.max(16, Math.floor(target / band.highDiv)));
+  const midLow = snap(Math.max(32, mid / 4)); // Köprü değeri
+
+  // Havuz: her değer kendi ağırlığı kadar tekrar eklenir
+  // Toplam ~124 eleman → Math.random() * 124 ile ağırlıklı seçim
+  const pool = [
     ...Array(38).fill(2),
     ...Array(28).fill(4),
     ...Array(16).fill(8),
-    ...Array(9).fill(16),    // BASE ~65%
-    ...Array(14).fill(midLow), // MID-alt köprü ~10%
-    ...Array(12).fill(mid),    // MID ~9%
-    ...Array(7).fill(high),    // HIGH ~5%
+    ...Array(9).fill(16),      // BASE  ~%65
+    ...Array(14).fill(midLow), // KÖPRÜ ~%10
+    ...Array(12).fill(mid),    // MID   ~%9
+    ...Array(7).fill(high),    // HIGH  ~%5
   ];
 
-  return pool[Math.floor(Math.random()*pool.length)];
-}
-function rng(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
-
-// ================================================================
-// BONUS TILE — hedefin 1/4'ü değerinde şaşaalı spawn
-// ================================================================
-function spawnBonusTile(r,c,v){
-  // Normal blok oluştur
-  const el=mkBlock(r,c,v);
-  if(!el) return;
-  // Parlak giriş: büyük scale + ışıltı
-  el.style.transform='scale(0) rotate(-15deg)';
-  el.style.opacity='0';
-  el.style.transition='none';
-  el.style.zIndex='15';
-  el.style.boxShadow=`0 0 0 4px #ff4500, 0 0 40px rgba(255,69,0,.9), 0 0 80px rgba(255,140,0,.6)`;
-  el.getBoundingClientRect(); // reflow
-  el.style.transition='transform .45s cubic-bezier(.34,1.56,.64,1), opacity .2s ease, box-shadow .4s ease';
-  el.style.transform='scale(1.15) rotate(0deg)';
-  el.style.opacity='1';
-  setTimeout(()=>{
-    el.style.transform='scale(1)';
-    el.style.boxShadow='';
-    el.style.zIndex='';
-    setTimeout(()=>{ el.style.transition=''; },300);
-  },350);
-  // Parçacık + float
-  spawnPtcl(r,c,v,5);
-  spawnFloat(r,c,`🔥${fmtTarget(v)}`);
-  // Fiery ses: dramatik iniş + ateş tonları
-  tone(120,'sawtooth',.08,.7);
-  setTimeout(()=>tone(180,'sawtooth',.1,.6),60);
-  setTimeout(()=>tone(440,'triangle',.15,.8),140);
-  setTimeout(()=>tone(660,'triangle',.12,.7),240);
-  setTimeout(()=>tone(880,'sine',.18,.9),340);
-  setTimeout(()=>tone(1100,'sine',.2,.8),440);
-  if(navigator.vibrate) navigator.vibrate([20,10,30,10,40]);
+  return pool[Math.floor(Math.random() * pool.length)];
 }
 
-// freeze göstergesini güncelle
-function updateFreezeInd(){
-  const fi=document.getElementById('freeze-ind');
-  if(fi) fi.style.display=freezeActive?'flex':'none';
+/**
+ * Boş hücreleri yeni taşlarla doldurur.
+ * @returns {number} Tüm spawn animasyonlarının bitmesi için gereken ms
+ *
+ * Neden ms döndürüyor?
+ * Spawn animasyonları async (setTimeout). Caller bu süreyi bekleyerek
+ * sonraki gravity'yi çalıştırır — yoksa DOM ve G matrisi uyumsuz kalır.
+ *
+ * Bonus taş: 10+ taş patlayınca %30 ihtimalle hedefin 1/4'ü değerinde
+ * özel efektli taş çıkar (bkz. spawnBonusTile).
+ */
+function spawnTiles() {
+  // Freeze aktifse bu turu atla
+  if (freezeActive) {
+    freezeActive = false;
+    updateFreezeInd();
+    const fbtn = document.getElementById('pu-freeze');
+    if (fbtn) { fbtn.classList.remove('active'); fbtn.querySelector('.pu-icon').textContent = '❄️'; }
+    spawnFloat(-1, -1, '❄ SPAWN DURDURULDU');
+    return 0;
+  }
+
+  let totalSpawned = 0;
+
+  // Bonus taş kontrolü: büyük merge → %30 ihtimalle özel taş
+  const totalEmpty = [];
+  for (let r = 0; r < ROWS; r++)
+    for (let c = 0; c < COLS; c++)
+      if (!G[r][c]) totalEmpty.push({r, c});
+
+  const bonusVal = TARGETS[targetIdx] / 4; // Hedefin 1/4'ü değerinde
+  const doBonus = lastMergeCount >= 10 && totalEmpty.length >= 3
+                  && Math.random() < 0.30 && bonusVal >= 2;
+  lastMergeCount = 0; // Sayacı sıfırla
+
+  let bonusCell = null;
+  if (doBonus) {
+    bonusCell = totalEmpty[Math.floor(Math.random() * totalEmpty.length)];
+    G[bonusCell.r][bonusCell.c] = bonusVal; // G'ye hemen yaz
+  }
+
+  // Her boş hücre için spawn — sütun sütun, yukarıdan aşağıya
+  for (let c = 0; c < COLS; c++) {
+    const empty = [];
+    for (let r = 0; r < ROWS; r++) if (!G[r][c]) empty.push(r);
+    if (!empty.length) continue;
+
+    empty.forEach((r, i) => {
+      const val = rspawn();
+      G[r][c] = val; // G'ye anında yaz — timing sorununu önler
+      const delay = totalSpawned * 40;
+      setTimeout(() => { mkBlock(r, c, val, 'a-drop'); sfxDrop(); }, delay);
+      totalSpawned++;
+    });
+  }
+
+  // Bonus taş özel animasyonla çıkar
+  if (doBonus && bonusCell) {
+    const {r: br, c: bc} = bonusCell;
+    const delay = totalSpawned * 40 + 80;
+    setTimeout(() => spawnBonusTile(br, bc, bonusVal), delay);
+    totalSpawned += 2;
+  }
+
+  return totalSpawned > 0 ? totalSpawned * 40 + 60 : 0;
 }
 
-// ================================================================
-// BLOCK DOM
-// ================================================================
-function bpos(r,c){
-  const sz=parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--cs'))||62;
-  const gp=parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--cg'))||6;
-  return{left:c*(sz+gp),top:r*(sz+gp)};
+/**
+ * Bonus taş: büyük merge ödülü olarak gelir.
+ * Normal spawn animasyonu yerine özel scale+glow+ses ile belirer.
+ * Ateş rengi (turuncu glow) normal taşlardan ayırt edilmesini sağlar.
+ */
+function spawnBonusTile(r, c, v) {
+  const el = mkBlock(r, c, v);
+  if (!el) return;
+
+  // Sıfırdan büyümeye başlar (scale 0 → 1.15 → 1)
+  el.style.transform = 'scale(0) rotate(-15deg)';
+  el.style.opacity = '0';
+  el.style.transition = 'none';
+  el.style.zIndex = '15';
+  el.style.boxShadow = '0 0 0 4px #ff4500, 0 0 40px rgba(255,69,0,.9), 0 0 80px rgba(255,140,0,.6)';
+  el.getBoundingClientRect(); // Force reflow: transition öncesi stil değişikliği için gerekli
+  el.style.transition = 'transform .45s cubic-bezier(.34,1.56,.64,1), opacity .2s ease, box-shadow .4s ease';
+  el.style.transform = 'scale(1.15) rotate(0deg)';
+  el.style.opacity = '1';
+
+  setTimeout(() => {
+    el.style.transform = 'scale(1)';
+    el.style.boxShadow = '';
+    el.style.zIndex = '';
+    setTimeout(() => { el.style.transition = ''; }, 300);
+  }, 350);
+
+  spawnPtcl(r, c, v, 5);
+  spawnFloat(r, c, `🔥${fmtTarget(v)}`);
+
+  // Fiery ses: alçak sawtooth → yükselen triangle → tiz sine
+  tone(120, 'sawtooth', .08, .7);
+  setTimeout(() => tone(180, 'sawtooth', .1, .6), 60);
+  setTimeout(() => tone(440, 'triangle', .15, .8), 140);
+  setTimeout(() => tone(660, 'triangle', .12, .7), 240);
+  setTimeout(() => tone(880, 'sine', .18, .9), 340);
+  setTimeout(() => tone(1100, 'sine', .2, .8), 440);
+  if (navigator.vibrate) navigator.vibrate([20, 10, 30, 10, 40]);
 }
-function mkBlock(r,c,v,anim){
-  const key=`${r}-${c}`;
-  if(BE[key]){BE[key].remove();delete BE[key];}
-  const el=document.createElement('div');
-  el.className=`block ${vcls(v)}`;
-  if(anim)el.classList.add(anim);
-  const p=bpos(r,c);
-  el.style.cssText=`left:${p.left}px;top:${p.top}px;`;
-  el.dataset.r=r;el.dataset.c=c;el.dataset.v=v;
-  const n=document.createElement('div');n.className='bnum';n.textContent=fmtTarget(v);n.style.fontSize=fsize(v);
+
+/** Freeze göstergesini (❄ ikonu) günceller */
+function updateFreezeInd() {
+  const fi = document.getElementById('freeze-ind');
+  if (fi) fi.style.display = freezeActive ? 'flex' : 'none';
+}
+
+
+// ════════════════════════════════════════════════════════════════════
+// BÖLÜM 8 — DOM YÖNETİMİ
+// BE haritası ile G matrisi senkron tutulur.
+// KURAL: G değişince BE güncellenir — asla tersi değil.
+// Ghost sorunu: BE'den sil = anında, DOM'dan sil = animasyon sonrası.
+// ════════════════════════════════════════════════════════════════════
+
+/**
+ * Bir hücrenin piksel konumunu hesaplar.
+ * CSS değişkenleri --cs (hücre boyutu) ve --cg (boşluk) kullanılır.
+ * position:absolute ile grid içinde tam konuma yerleştirilir.
+ */
+function bpos(r, c) {
+  const sz = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--cs')) || 62;
+  const gp = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--cg')) || 6;
+  return { left: c * (sz + gp), top: r * (sz + gp) };
+}
+
+/**
+ * Yeni bir taş DOM elementi oluşturur ve BE haritasına ekler.
+ * @param {string} anim - CSS animasyon sınıfı (ör. 'a-drop', 'a-merge')
+ * @returns {HTMLElement} Oluşturulan element
+ *
+ * Neden dataset.r/c/v?
+ * Event handler içinde closure kullanmak yerine DOM'dan okumak,
+ * DOM ve G matrisi arasındaki senkron sorununu önler.
+ */
+function mkBlock(r, c, v, anim) {
+  const key = `${r}-${c}`;
+  // Varsa eski elementi temizle (double render önlemi)
+  if (BE[key]) { BE[key].remove(); delete BE[key]; }
+
+  const el = document.createElement('div');
+  el.className = `block ${vcls(v)}`;
+  if (anim) el.classList.add(anim);
+
+  const p = bpos(r, c);
+  el.style.cssText = `left:${p.left}px;top:${p.top}px;`;
+  el.dataset.r = r;
+  el.dataset.c = c;
+  el.dataset.v = v;
+
+  const n = document.createElement('div');
+  n.className = 'bnum';
+  n.textContent = fmtTarget(v);
+  n.style.fontSize = fsize(v);
   el.appendChild(n);
-  el.addEventListener('pointerdown',e=>{ e.preventDefault(); onBDown(parseInt(el.dataset.r),parseInt(el.dataset.c)); });
-  // pointerup is handled at grid level, not block level
+
+  // Pointer eventi blok üzerinde dinle, ama pointerup grid seviyesinde
+  el.addEventListener('pointerdown', e => {
+    e.preventDefault();
+    onBDown(parseInt(el.dataset.r), parseInt(el.dataset.c));
+  });
+
   document.getElementById('grid').appendChild(el);
-  BE[key]=el;
-  if(anim)setTimeout(()=>el.classList.remove(anim),350);
+  BE[key] = el;
+
+  if (anim) setTimeout(() => el.classList.remove(anim), 350);
   return el;
 }
-function rmBlock(r,c){const k=`${r}-${c}`;if(BE[k]){BE[k].remove();delete BE[k];}}
-function mvBlock(fr,fc,tr,tc){
-  const k=`${fr}-${fc}`,el=BE[k];if(!el)return;
-  const p=bpos(tr,tc);
-  el.classList.add('a-grav');
-  el.style.left=p.left+'px';el.style.top=p.top+'px';
-  el.dataset.r=tr;el.dataset.c=tc;
-  delete BE[k];BE[`${tr}-${tc}`]=el;
-  setTimeout(()=>el.classList.remove('a-grav'),220);
-}
-function rebuildDOM(){
-  // Tüm BE elementlerini kaldır (a-vanish dahil — hepsini temizle)
-  Object.keys(BE).forEach(k=>{
-    if(BE[k]&&BE[k].parentNode) BE[k].remove();
-    delete BE[k];
-  });
-  // DOM'da kaçan ghost elementleri de temizle
-  document.querySelectorAll('#grid .block').forEach(el=>el.remove());
-  for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++)if(G[r][c])mkBlock(r,c,G[r][c]);
+
+/** Bir taşı BE ve DOM'dan siler */
+function rmBlock(r, c) {
+  const k = `${r}-${c}`;
+  if (BE[k]) { BE[k].remove(); delete BE[k]; }
 }
 
-// ================================================================
-// GRAVITY
-// ================================================================
-function applyGravity(anim=true){
-  // magnet-fly elementleri animasyon süreci içinde — onlara dokunma
-  // Sadece a-grav kalıntılarını temizle
-  Object.values(BE).forEach(el=>{
-    if(!el.classList.contains('magnet-fly')){
-      el.style.transform='';
-      el.style.opacity='';
+/**
+ * Bir taşı animasyonla başka konuma taşır.
+ * BE haritası anında güncellenir, CSS transition ile kayma görsel.
+ * a-grav sınıfı 220ms sonra kaldırılır (transition süresiyle eşleşir).
+ */
+function mvBlock(fr, fc, tr, tc) {
+  const k = `${fr}-${fc}`;
+  const el = BE[k];
+  if (!el) return;
+
+  const p = bpos(tr, tc);
+  el.classList.add('a-grav');
+  el.style.left = p.left + 'px';
+  el.style.top = p.top + 'px';
+  el.dataset.r = tr;
+  el.dataset.c = tc;
+  delete BE[k];
+  BE[`${tr}-${tc}`] = el;
+  setTimeout(() => el.classList.remove('a-grav'), 220);
+}
+
+/**
+ * Tüm DOM'u G matrisinden yeniden oluşturur.
+ * Ne zaman çağrılır? Undo, shuffle, resize gibi toplu değişimlerde.
+ * Hem BE'den hem DOM'dan temizler (ghost önlemi).
+ */
+function rebuildDOM() {
+  Object.keys(BE).forEach(k => {
+    if (BE[k] && BE[k].parentNode) BE[k].remove();
+    delete BE[k];
+  });
+  // DOM'da sahipsiz kalan ghost elementleri de temizle
+  document.querySelectorAll('#grid .block').forEach(el => el.remove());
+  for (let r = 0; r < ROWS; r++)
+    for (let c = 0; c < COLS; c++)
+      if (G[r][c]) mkBlock(r, c, G[r][c]);
+}
+
+
+// ════════════════════════════════════════════════════════════════════
+// BÖLÜM 9 — YERÇEKİMİ (GRAVITY)
+// Boşalan hücreler olunca üstteki taşlar aşağı kayar.
+// Her sütun bağımsız işlenir — sütun bazlı düşme gerçekleşir.
+// ════════════════════════════════════════════════════════════════════
+
+/**
+ * Tüm sütunlarda yerçekimi uygular.
+ * @param {boolean} anim - true: animasyonlu (mvBlock), false: anlık
+ * @returns {boolean} Herhangi bir taş hareket etti mi?
+ *
+ * ALGORİTMA: Her sütunda alttan başla, boş olmayan taşları
+ * bir sonraki boş konuma (wr = write row) yazdır.
+ * Bu "aşağı sıkıştırma" mantığıdır.
+ */
+function applyGravity(anim = true) {
+  // magnet-fly animasyonu çalışan elementlere dokunma — ghost'u önler
+  Object.values(BE).forEach(el => {
+    if (!el.classList.contains('magnet-fly')) {
+      el.style.transform = '';
+      el.style.opacity = '';
     }
   });
-  let moved=false;
-  for(let c=0;c<COLS;c++){
-    let wr=ROWS-1;
-    for(let r=ROWS-1;r>=0;r--){
-      if(G[r][c]){
-        if(r!==wr){if(anim)mvBlock(r,c,wr,c);G[wr][c]=G[r][c];G[r][c]=0;moved=true;}
+
+  let moved = false;
+  for (let c = 0; c < COLS; c++) {
+    let wr = ROWS - 1; // Yazılacak satır (alttan başlar)
+    for (let r = ROWS - 1; r >= 0; r--) {
+      if (G[r][c]) {
+        if (r !== wr) {
+          if (anim) mvBlock(r, c, wr, c);
+          G[wr][c] = G[r][c];
+          G[r][c] = 0;
+          moved = true;
+        }
         wr--;
       }
     }
@@ -835,88 +1219,39 @@ function applyGravity(anim=true){
   return moved;
 }
 
-// ================================================================
-// SPAWN — tüm boş hücreleri doldur (üstten gravity ile)
-// ================================================================
-// Bonus taş sayacı: son büyük merge'den sonra tetiklenir
-let lastMergeCount=0; // doHoldMerge'den güncellenir
-let warnShownThisRound=false; // tıkanma uyarısı gösterildi mi
-function spawnTiles(){
-  // Freeze aktifse bu turu spawn atla
-  if(freezeActive){
-    freezeActive=false;
-    updateFreezeInd();
-    const fbtn=document.getElementById('pu-freeze');
-    if(fbtn){fbtn.classList.remove('active');fbtn.querySelector('.pu-icon').textContent='❄️';}
-    spawnFloat(-1,-1,'❄ SPAWN DURDURULDU');
-    return 0; // ms cinsinden bekleme süresi
-  }
-  let totalSpawned=0;
 
-  // %20 ihtimalle bonus taş: hedefin 1/4'ü değerinde, şaşaalı
-  // En az 3 boş hücre varsa tetikle (grid çok doluyken çıkmasın)
-  const totalEmpty=[];
-  for(let r=0;r<ROWS;r++) for(let c=0;c<COLS;c++) if(!G[r][c]) totalEmpty.push({r,c});
-  const bonusVal=TARGETS[targetIdx]/4;
-  // Bonus taş: sadece 10+ taş patladıktan sonra, %30 ihtimalle
-  const doBonus = lastMergeCount>=10 && totalEmpty.length>=3 && Math.random()<0.30 && bonusVal>=2;
-  lastMergeCount=0; // sıfırla
-  let bonusCell=null;
-  if(doBonus){
-    // Rastgele boş bir hücre seç
-    bonusCell=totalEmpty[Math.floor(Math.random()*totalEmpty.length)];
-    G[bonusCell.r][bonusCell.c]=bonusVal;
-  }
+// ════════════════════════════════════════════════════════════════════
+// BÖLÜM 10 — MERGE ÖNİZLEME BADGE'İ
+// Hold sırasında merkez taşın üstünde çıkan bilgi kartı.
+// Merge sonucunu, taş sayısını ve puanı gösterir.
+// ════════════════════════════════════════════════════════════════════
 
-  for(let c=0;c<COLS;c++){
-    const empty=[];
-    for(let r=0;r<ROWS;r++) if(!G[r][c]) empty.push(r);
-    if(!empty.length) continue;
-    empty.forEach((r,i)=>{
-      const val=rspawn();
-      G[r][c]=val;
-      const delay=totalSpawned*40;
-      setTimeout(()=>{ mkBlock(r,c,val,'a-drop'); sfxDrop(); }, delay);
-      totalSpawned++;
-    });
-  }
-
-  // Bonus taşı ayrıca ekle — özel animasyon
-  if(doBonus&&bonusCell){
-    const {r:br,c:bc}=bonusCell;
-    const delay=totalSpawned*40+80;
-    setTimeout(()=>spawnBonusTile(br,bc,bonusVal), delay);
-    totalSpawned+=2; // biraz ekstra bekleme
-  }
-
-  return totalSpawned>0 ? totalSpawned*40+60 : 0;
-}
-
-// ================================================================
-// ADJACENCY
-// ================================================================
-function isAdj(r1,c1,r2,c2){return Math.abs(r1-r2)<=1&&Math.abs(c1-c2)<=1&&!(r1===r2&&c1===c2);}
-
-// ================================================================
-// MERGE ÖNİZLEME
-// ================================================================
-let mergePreviewEl=null;
-function showMergePreview(r,c,totalTiles,newV){
+/**
+ * Merge önizleme badge'ini gösterir.
+ * @param {number} r,c         - Merkez taşın konumu
+ * @param {number} totalTiles  - Toplam birleşecek taş sayısı (merkez dahil)
+ * @param {number} newV        - Merge sonucu oluşacak değer
+ *
+ * Renk combo seviyesine göre:
+ * 8+ taş → turuncu (#fb923c), 5+ → mor (#c084fc), diğer → mavi (#00b4ff)
+ */
+function showMergePreview(r, c, totalTiles, newV) {
   hideMergePreview();
-  const el=BE[`${r}-${c}`];
-  if(!el) return;
-  const rect=el.getBoundingClientRect();
+  const el = BE[`${r}-${c}`];
+  if (!el) return;
 
-  const badge=document.createElement('div');
-  badge.id='merge-preview';
-  // Combo rengini belirle
-  const isBig=totalTiles>=8;
-  const isMid=totalTiles>=5;
-  const col=isBig?'#fb923c':isMid?'#c084fc':'#00b4ff';
-  badge.style.cssText=`
+  const rect = el.getBoundingClientRect();
+  const badge = document.createElement('div');
+  badge.id = 'merge-preview';
+
+  const isBig = totalTiles >= 8;
+  const isMid = totalTiles >= 5;
+  const col = isBig ? '#fb923c' : isMid ? '#c084fc' : '#00b4ff';
+
+  badge.style.cssText = `
     position:fixed;
-    left:${rect.left+rect.width/2}px;
-    top:${rect.top-8}px;
+    left:${rect.left + rect.width/2}px;
+    top:${rect.top - 8}px;
     transform:translate(-50%,-100%);
     background:rgba(5,10,35,.95);
     border:1.5px solid ${col};
@@ -929,15 +1264,19 @@ function showMergePreview(r,c,totalTiles,newV){
     animation:preview-pop .15s cubic-bezier(.34,1.56,.64,1);
     white-space:nowrap;
   `;
-  const count=totalTiles-1;
-  const logV=Math.log2(newV);
-  const comboBonus=count>=8?2.0:count>=5?1.5:count>=3?1.2:1.0;
-  const pts=Math.round(logV*totalTiles*comboBonus);
-  const comboLabel=comboBonus>=2.0?'🔥 COMBO ×8+':comboBonus>=1.5?'⚡ COMBO ×5+':comboBonus>=1.2?'✨ COMBO ×3+':'';
 
-  badge.innerHTML=`
+  // Puan hesabı (doHoldMerge ile aynı formül — önizlemede tutarlılık)
+  const count = totalTiles - 1;
+  const logV = Math.log2(newV);
+  const comboBonus = count >= 8 ? 2.0 : count >= 5 ? 1.5 : count >= 3 ? 1.2 : 1.0;
+  const pts = Math.round(logV * totalTiles * comboBonus);
+  const comboLabel = comboBonus >= 2.0 ? '🔥 COMBO ×8+' :
+                     comboBonus >= 1.5 ? '⚡ COMBO ×5+' :
+                     comboBonus >= 1.2 ? '✨ COMBO ×3+' : '';
+
+  badge.innerHTML = `
     <div style="font-family:'Orbitron',sans-serif;font-size:16px;font-weight:900;color:${col};line-height:1;letter-spacing:.04em;">${fmtTarget(newV)}</div>
-    ${comboLabel?`<div style="font-family:'Nunito',sans-serif;font-size:9px;font-weight:900;color:${col};opacity:.9;margin-top:2px;letter-spacing:.05em;">${comboLabel}</div>`:''}
+    ${comboLabel ? `<div style="font-family:'Nunito',sans-serif;font-size:9px;font-weight:900;color:${col};opacity:.9;margin-top:2px;letter-spacing:.05em;">${comboLabel}</div>` : ''}
     <div style="border-top:1px solid rgba(255,255,255,.12);margin:4px 0 3px;"></div>
     <div style="display:flex;gap:8px;align-items:center;justify-content:center;font-family:'Nunito',sans-serif;font-size:9px;font-weight:800;color:rgba(180,210,255,.7);">
       <span>🔷 ${totalTiles} taş</span>
@@ -945,1192 +1284,1510 @@ function showMergePreview(r,c,totalTiles,newV){
       <span style="color:#34d399;">🪙 +1</span>
     </div>
   `;
+
   document.body.appendChild(badge);
-  mergePreviewEl=badge;
-}
-function hideMergePreview(){
-  if(mergePreviewEl){mergePreviewEl.remove();mergePreviewEl=null;}
+  mergePreviewEl = badge;
 }
 
-// ================================================================
-// HOLD MECHANIC
-// Press → highlight matching neighbours → release → magnet merge
-// ================================================================
-function onBDown(r,c){
-  if(!active||busy)return;
-  const v=G[r][c]; if(!v)return;
-  if(bombOn){doBomb(r,c);return;}
-  if(smashOn){doSmash(r,c);return;}
-  if(swapOn){doSwap(r,c);return;}
+/** Merge önizleme badge'ini gizler ve DOM'dan kaldırır */
+function hideMergePreview() {
+  if (mergePreviewEl) { mergePreviewEl.remove(); mergePreviewEl = null; }
+}
+
+
+// ════════════════════════════════════════════════════════════════════
+// BÖLÜM 11 — HOLD MEKANİĞİ (MERGE SİSTEMİ)
+// Oyunun özü: basılı tut → eşleşenleri BFS ile bul → bırak → birleş.
+// ════════════════════════════════════════════════════════════════════
+
+/**
+ * Taşa dokunulduğunda çağrılır.
+ * Aktif power-up moduna göre farklı işlemler yönlendirilir.
+ */
+function onBDown(r, c) {
+  if (!active || busy) return;
+  const v = G[r][c];
+  if (!v) return;
+
+  if (bombOn)  { doBomb(r, c);  return; }
+  if (smashOn) { doSmash(r, c); return; }
+  if (swapOn)  { doSwap(r, c);  return; }
+
   cancelHold();
-  beginHold(r,c);
+  beginHold(r, c);
 }
 
-function onGridUp(){
-  if(!active||busy)return;
-  if(smashOn)return;
-  if(swapOn)return; // swap modunda pointerup'ı yoksay — doSwap tıklama ile çalışır
-  clearTimeout(holdTimer); holdTimer=null;
-  if(holdCell&&holdMatches.length>0){
+/**
+ * Parmak kaldırıldığında çağrılır.
+ * Hold varsa merge yap, yoksa iptal et.
+ */
+function onGridUp() {
+  if (!active || busy) return;
+  if (smashOn) return;
+  if (swapOn) return; // Swap tıklama ile çalışır, pointerup'ı yok say
+
+  clearTimeout(holdTimer);
+  holdTimer = null;
+
+  if (holdCell && holdMatches.length > 0) {
     doHoldMerge();
   } else {
     cancelHold();
   }
 }
 
-function cancelHold(){
-  clearTimeout(holdTimer); holdTimer=null;
+/** Hold ve önizleme iptal — tüm visual state'leri temizler */
+function cancelHold() {
+  clearTimeout(holdTimer);
+  holdTimer = null;
   hideMergePreview();
-  if(holdCell){
-    const ce=BE[`${holdCell.r}-${holdCell.c}`];
-    if(ce)ce.classList.remove('holding');
+
+  if (holdCell) {
+    const ce = BE[`${holdCell.r}-${holdCell.c}`];
+    if (ce) ce.classList.remove('holding');
   }
-  holdMatches.forEach(({r,c})=>{
-    const e=BE[`${r}-${c}`]; if(e)e.classList.remove('hold-match');
+
+  holdMatches.forEach(({r, c}) => {
+    const e = BE[`${r}-${c}`];
+    if (e) e.classList.remove('hold-match');
   });
-  holdCell=null; holdMatches=[];
-  // swapFirst'ü burada temizleme — swap modu kendi akışında yönetir
+
+  holdCell = null;
+  holdMatches = [];
+  // Not: swapFirst burada temizlenmez — swap kendi akışında yönetir
 }
 
-function beginHold(r,c){
-  if(!active||busy)return;
-  const v=G[r][c]; if(!v)return;
-  holdCell={r,c};
-  holdMatches=[];
+/**
+ * Hold başlatır: BFS ile tüm bağlı eşdeğer taşları bulur.
+ *
+ * BFS (Breadth-First Search) neden?
+ * Sadece 8-yön komşu olan zincirleri bulmak için ideal.
+ * DFS de çalışırdı ama BFS merkeze daha yakın taşları önce bulur.
+ *
+ * Ziyaret kümesi (visited Set): tekrar ziyareti önler → sonsuz döngüden korur.
+ */
+function beginHold(r, c) {
+  if (!active || busy) return;
+  const v = G[r][c];
+  if (!v) return;
 
-  // BFS — tüm bağlı (8-yön) aynı değerli taşları bul
-  const visited=new Set();
-  const queue=[{r,c}];
+  holdCell = {r, c};
+  holdMatches = [];
+
+  const visited = new Set();
+  const queue = [{r, c}];
   visited.add(`${r}-${c}`);
-  while(queue.length){
-    const {r:qr,c:qc}=queue.shift();
-    for(let dr=-1;dr<=1;dr++) for(let dc=-1;dc<=1;dc++){
-      if(!dr&&!dc)continue;
-      const nr=qr+dr, nc=qc+dc;
-      const key=`${nr}-${nc}`;
-      if(nr>=0&&nr<ROWS&&nc>=0&&nc<COLS&&!visited.has(key)&&G[nr][nc]===v){
-        visited.add(key);
-        holdMatches.push({r:nr,c:nc});
-        queue.push({r:nr,c:nc});
+
+  while (queue.length) {
+    const {r: qr, c: qc} = queue.shift();
+    for (let dr = -1; dr <= 1; dr++) {
+      for (let dc = -1; dc <= 1; dc++) {
+        if (!dr && !dc) continue;
+        const nr = qr + dr, nc = qc + dc;
+        const key = `${nr}-${nc}`;
+        if (nr >= 0 && nr < ROWS && nc >= 0 && nc < COLS
+            && !visited.has(key) && G[nr][nc] === v) {
+          visited.add(key);
+          holdMatches.push({r: nr, c: nc});
+          queue.push({r: nr, c: nc});
+        }
       }
     }
   }
 
-  // görsel
-  const ce=BE[`${r}-${c}`]; if(ce)ce.classList.add('holding');
-  holdMatches.forEach(({r:mr,c:mc})=>{
-    const me=BE[`${mr}-${mc}`]; if(me)me.classList.add('hold-match');
+  // Görseller: merkez "holding", eşleşenler "hold-match"
+  const ce = BE[`${r}-${c}`];
+  if (ce) ce.classList.add('holding');
+  holdMatches.forEach(({r: mr, c: mc}) => {
+    const me = BE[`${mr}-${mc}`];
+    if (me) me.classList.add('hold-match');
   });
 
-  // Merge önizlemesi — merkez taşın üstünde sonuç göster
-  if(holdMatches.length>0){
-    const totalTiles=holdMatches.length+1;
-    const newV=G[r][c]*Math.pow(2,Math.ceil(totalTiles/2));
-    showMergePreview(r,c,totalTiles,newV);
+  // Merge önizlemesi: sonuç değerini ve puanı göster
+  if (holdMatches.length > 0) {
+    const totalTiles = holdMatches.length + 1;
+    const newV = G[r][c] * Math.pow(2, Math.ceil(totalTiles / 2));
+    showMergePreview(r, c, totalTiles, newV);
   }
 
-  if(holdMatches.length>0&&navigator.vibrate)navigator.vibrate(25);
-  tone(300+holdMatches.length*40,'sine',.12,.18);
+  if (holdMatches.length > 0 && navigator.vibrate) navigator.vibrate(25);
+  tone(300 + holdMatches.length * 40, 'sine', .12, .18);
 }
 
-function doHoldMerge(){
-  if(!holdCell||holdMatches.length===0)return;
+/**
+ * Merge gerçekleştirir.
+ *
+ * MERGE FORMÜLÜ: newV = baseV × 2^ceil(N/2)
+ * N = toplam taş sayısı (merkez dahil)
+ * 2 taş → ×2, 3 taş → ×4, 5 taş → ×8, 13 taş → ×128
+ *
+ * TIMING SORUNU ÇÖZÜMÜ:
+ * G ve BE ANINDA güncellenir → gravity doğru çalışır.
+ * DOM kaldırma 260ms gecikmeli → magnet animasyonu tamamlanır.
+ * Sonraki adımlar 250ms + delay ile sıralanır.
+ *
+ * PUANLAMA: log2(newV) × (count+1) × comboBonus
+ * log2 kullanmak neden? Değer ne kadar büyük olursa olsun
+ * orantılı puan verir — milyonlara çıkmaz ama adil büyür.
+ */
+function doHoldMerge() {
+  if (!holdCell || holdMatches.length === 0) return;
   hideMergePreview();
-  const {r:cr,c:cc}=holdCell;
-  const count=holdMatches.length;       // komşu sayısı (merkez hariç)
-  const totalTiles=count+1;             // toplam birleşen taş (merkez dahil)
-  const baseV=G[cr][cc];
-  // Orijinal oyun formülü: val × 2^ceil(N/2)
-  // 2 taş → ×2^1=×2, 13 taş → ×2^7=×128 → 16×128=2048 ✓
-  const newV=baseV * Math.pow(2, Math.ceil(totalTiles/2));
-  saveHist();
-  busy=true;
 
-  const cEl=BE[`${cr}-${cc}`];
-  const cRect=cEl?cEl.getBoundingClientRect():null;
+  const {r: cr, c: cc} = holdCell;
+  const count = holdMatches.length;          // Merkez hariç komşu sayısı
+  const totalTiles = count + 1;              // Toplam birleşen taş
+  const baseV = G[cr][cc];
+  const newV = baseV * Math.pow(2, Math.ceil(totalTiles / 2));
 
-  holdMatches.forEach(({r,c})=>{
-    const el=BE[`${r}-${c}`]; if(!el)return;
+  saveHist(); // Geri alma için anlık snapshot
+  busy = true;
+
+  const cEl = BE[`${cr}-${cc}`];
+  const cRect = cEl ? cEl.getBoundingClientRect() : null;
+
+  // Eşleşen taşları merkeze uçur
+  holdMatches.forEach(({r, c}) => {
+    const el = BE[`${r}-${c}`];
+    if (!el) return;
+
     el.classList.remove('hold-match');
     el.classList.add('magnet-fly');
-    if(cRect){
-      const eRect=el.getBoundingClientRect();
-      const dx=cRect.left-eRect.left, dy=cRect.top-eRect.top;
-      el.getBoundingClientRect(); // force reflow
-      el.style.transform=`translate(${dx}px,${dy}px) scale(0.25)`;
-      el.style.opacity='0';
+
+    if (cRect) {
+      const eRect = el.getBoundingClientRect();
+      const dx = cRect.left - eRect.left;
+      const dy = cRect.top - eRect.top;
+      el.getBoundingClientRect(); // Force reflow — transition'ın tetiklenmesi için
+      el.style.transform = `translate(${dx}px,${dy}px) scale(0.25)`;
+      el.style.opacity = '0';
     }
-    // BE'den hemen sil — gravity bu hücreyi boş görsün
+
+    // BE'den hemen sil → gravity bu hücreyi boş sayar
     delete BE[`${r}-${c}`];
-    G[r][c]=0;
+    G[r][c] = 0;
     // DOM'dan animasyon bittikten sonra kaldır
-    setTimeout(()=>{ if(el.parentNode) el.remove(); }, 260);
+    setTimeout(() => { if (el.parentNode) el.remove(); }, 260);
   });
 
-  // snapshot and clear hold state BEFORE timeout
-  const savedHC={r:cr,c:cc};
-  holdCell=null; holdMatches=[];
+  const savedHC = {r: cr, c: cc};
+  holdCell = null;
+  holdMatches = [];
 
-  setTimeout(()=>{
-    const el2=BE[`${savedHC.r}-${savedHC.c}`];
-    if(el2){
-      el2.classList.remove('holding');
-      // magnet-fly ve transform kalıntısını temizle
-      el2.classList.remove('magnet-fly');
-      el2.style.transform='';
-      el2.style.opacity='';
-      el2.className=`block ${vcls(newV)} a-merge`;
-      el2.querySelector('.bnum').textContent=fmtTarget(newV);
-      el2.querySelector('.bnum').style.fontSize=fsize(newV);
-      el2.dataset.v=newV;
-      setTimeout(()=>el2.classList.remove('a-merge'),350);
+  // 250ms: magnet animasyonunun çoğu bitmeli
+  setTimeout(() => {
+    const el2 = BE[`${savedHC.r}-${savedHC.c}`];
+    if (el2) {
+      el2.classList.remove('holding', 'magnet-fly');
+      el2.style.transform = '';
+      el2.style.opacity = '';
+      el2.className = `block ${vcls(newV)} a-merge`;
+      el2.querySelector('.bnum').textContent = fmtTarget(newV);
+      el2.querySelector('.bnum').style.fontSize = fsize(newV);
+      el2.dataset.v = newV;
+      setTimeout(() => el2.classList.remove('a-merge'), 350);
     }
-    G[savedHC.r][savedHC.c]=newV;
-    lastMergeCount=count+1; // toplam birleşen taş sayısını kaydet
-    // PUANLAMA: log2(newV) × (count+1) × combo bonus
-    // Örnek: 16 taşı (4 adet) → log2(64)×5 = 6×5=30 puan
-    // 26 adet 16 taşı → log2(newV≈262144) × 27 = 18×27 = 486 puan (9M değil)
+
+    G[savedHC.r][savedHC.c] = newV;
+    lastMergeCount = count + 1; // Bonus taş için takip
+
+    // Puanlama
     const logV = Math.log2(newV);
-    const comboBonus = count>=8 ? 2.0 : count>=5 ? 1.5 : count>=3 ? 1.2 : 1.0;
-    const mergeScore = Math.round(logV * (count+1) * comboBonus);
+    const comboBonus = count >= 8 ? 2.0 : count >= 5 ? 1.5 : count >= 3 ? 1.2 : 1.0;
+    const mergeScore = Math.round(logV * (count + 1) * comboBonus);
     score += mergeScore;
-    coins+=1;
+    coins += 1;
+
     sfxMerge(newV);
-    spawnPtcl(savedHC.r,savedHC.c,newV,count);
-    if(comboBonus>1.0){
-      spawnComboLabel(savedHC.r,savedHC.c,comboBonus,count);
+    spawnPtcl(savedHC.r, savedHC.c, newV, count);
+
+    if (comboBonus > 1.0) {
+      spawnComboLabel(savedHC.r, savedHC.c, comboBonus, count);
       screenFlash();
-    } else if(count>=3){
+    } else if (count >= 3) {
       screenFlash();
     }
-    spawnFloat(savedHC.r,savedHC.c,`+${mergeScore.toLocaleString('tr')}`);
+
+    spawnFloat(savedHC.r, savedHC.c, `+${mergeScore.toLocaleString('tr')}`);
     updateHUD();
 
-    if(newV>=TARGETS[targetIdx]){
-      if(newV>TARGETS[targetIdx]){
-        // Hedefi AŞTI — sinematik patlama, sonra showLC
-        setTimeout(()=>celebrateTarget(savedHC.r, savedHC.c, newV),200);
+    // Hedef kontrolü
+    if (newV >= TARGETS[targetIdx]) {
+      if (newV > TARGETS[targetIdx]) {
+        // Hedefi aştı → sinematik patlama
+        setTimeout(() => celebrateTarget(savedHC.r, savedHC.c, newV), 200);
       } else {
-        // Hedefle TAM EŞIT — kare kalır, normal level clear
-        setTimeout(()=>showLC(newV),380);
+        // Tam eşit → normal level clear
+        setTimeout(() => showLC(newV), 380);
       }
-      busy=false;
+      busy = false;
       return;
     }
-    setTimeout(()=>{
-      const moved=applyGravity(true);
-      setTimeout(()=>{
-        const spawnDelay=spawnTiles();
-        setTimeout(()=>{
+
+    // Normal akış: gravity → spawn → gravity → kontrol
+    setTimeout(() => {
+      const moved = applyGravity(true);
+      setTimeout(() => {
+        const spawnDelay = spawnTiles();
+        setTimeout(() => {
           applyGravity(true);
-          setTimeout(()=>{busy=false;checkGO();},150);
-        }, spawnDelay+60);
-      },moved?180:0);
-    },150);
-  },250);
+          // Başarılı merge tamamlandı — uyarı sayacını sıfırla
+          setTimeout(() => { busy = false; warnShownThisRound = false; checkGO(); }, 150);
+        }, spawnDelay + 60);
+      }, moved ? 180 : 0);
+    }, 150);
+  }, 250);
 }
 
-// ================================================================
-// ================================================================
-// BOMB — 3×3 alan temizle
-// ================================================================
-function doBomb(r,c){
-  if(!bombOn)return;
+
+// ════════════════════════════════════════════════════════════════════
+// BÖLÜM 12 — POWER-UP AKSIYONLARI
+// Her power-up kendi fonksiyonunda izole — bağımsız test edilebilir.
+// ════════════════════════════════════════════════════════════════════
+
+/**
+ * BOMBA: Tıklanan hücrenin 3×3 alanındaki tüm taşları siler.
+ * G matrisi ANINDA sıfırlanır → gravity ve spawn doğru çalışır.
+ * DOM kaldırma gecikmeli → a-vanish animasyonu görünür.
+ * busy=true → animasyon sırasında yeni hamle engellenmiş olur.
+ */
+function doBomb(r, c) {
+  if (!bombOn) return;
   saveHist();
-  coins-=PU_COST.bomb;
-  bombOn=false;
+  coins -= PU_COST.bomb;
+  bombOn = false;
   document.body.classList.remove('bomb-mode');
-  const bbtn=document.getElementById('pu-bomb');
+  const bbtn = document.getElementById('pu-bomb');
   bbtn.classList.remove('active');
-  bbtn.querySelector('.pu-icon').textContent='💣';
+  bbtn.querySelector('.pu-icon').textContent = '💣';
 
-  // 3×3 alandaki tüm blokları patlat
-  const targets=[];
-  for(let dr=-1;dr<=1;dr++)for(let dc=-1;dc<=1;dc++){
-    const nr=r+dr,nc=c+dc;
-    if(nr>=0&&nr<ROWS&&nc>=0&&nc<COLS&&G[nr][nc]) targets.push({r:nr,c:nc});
-  }
+  // 3×3 alanı bul (grid sınırlarına dikkat)
+  const targets = [];
+  for (let dr = -1; dr <= 1; dr++)
+    for (let dc = -1; dc <= 1; dc++) {
+      const nr = r + dr, nc = c + dc;
+      if (nr >= 0 && nr < ROWS && nc >= 0 && nc < COLS && G[nr][nc])
+        targets.push({r: nr, c: nc});
+    }
 
-  // G matrisini HEMEN sıfırla (DOM animasyonu gecikmeli ama mantık anında)
-  targets.forEach(({r:tr,c:tc})=>{
-    G[tr][tc]=0;
+  // G'yi hemen sıfırla
+  targets.forEach(({r: tr, c: tc}) => { G[tr][tc] = 0; });
+
+  busy = true;
+  targets.forEach(({r: tr, c: tc}, i) => {
+    const el = BE[`${tr}-${tc}`];
+    delete BE[`${tr}-${tc}`]; // BE'den anında sil
+    setTimeout(() => {
+      if (el) {
+        el.classList.add('a-vanish');
+        setTimeout(() => { if (el.parentNode) el.remove(); }, 260);
+      }
+      spawnPtcl(tr, tc, 4); // Görsel efekt için sabit değer
+    }, i * 35);
   });
 
-  // DOM animasyonları gecikmeli, BE'den hemen sil
-  busy=true;
-  targets.forEach(({r:tr,c:tc},i)=>{
-    // BE'den hemen sil — gravity doğru çalışsın
-    const el=BE[`${tr}-${tc}`];
-    delete BE[`${tr}-${tc}`];
-    setTimeout(()=>{
-      if(el){el.classList.add('a-vanish');setTimeout(()=>{ if(el.parentNode) el.remove(); },260);}
-      spawnPtcl(tr,tc,4);
-    },i*35);
-  });
-
-  sfxSmash();screenFlash();screenFlash();
-  if(targets.length>0) spawnComboLabel(r,c,3,targets.length-1);
+  sfxSmash(); screenFlash(); screenFlash();
+  if (targets.length > 0) spawnComboLabel(r, c, 3, targets.length - 1);
   updateHUD();
 
-  // Tüm vanish animasyonları bittikten sonra gravity+spawn
-  const vanishWait = targets.length*35 + 320; // son vanish + 260ms animasyon
-  setTimeout(()=>{
+  // Tüm vanish animasyonları bittikten sonra devam et
+  // targets.length*35ms (cascade) + 320ms (a-vanish süresi)
+  const vanishWait = targets.length * 35 + 320;
+  setTimeout(() => {
     applyGravity(true);
-    setTimeout(()=>{
-      const sd=spawnTiles();
-      setTimeout(()=>{
+    setTimeout(() => {
+      const sd = spawnTiles();
+      setTimeout(() => {
         applyGravity(true);
-        setTimeout(()=>{busy=false;checkGO();},150);
-      },sd+60);
-    },180);
+        setTimeout(() => { busy = false; warnShownThisRound = false; checkGO(); }, 150);
+      }, sd + 60);
+    }, 180);
   }, vanishWait);
 }
 
+/**
+ * YOK ET: Tek bir taşı siler.
+ * doSmash ile doBomb arasındaki fark: sadece 1 hücre, anlık.
+ */
+function doSmash(r, c) {
+  if (!smashOn) return;
+  saveHist();
+  coins -= PU_COST.smash;
+  smashOn = false; smashCharges = 0;
+  document.body.classList.remove('smash-mode');
+  const smashBtn = document.getElementById('pu-smash');
+  smashBtn.classList.remove('active');
+  smashBtn.querySelector('.pu-icon').textContent = '🔨';
+  smashBtn.querySelector('.pu-cost').textContent = '🪙50';
 
-function cancelSwap(){
-  swapOn=false; swapFirst=null;
-  const btn=document.getElementById('pu-hint');
-  if(btn) btn.classList.remove('active');
-  // selected class temizle
-  Object.values(BE).forEach(e=>e.classList.remove('selected'));
+  sfxSmash();
+  spawnPtcl(r, c, G[r][c]);
+
+  const el = BE[`${r}-${c}`];
+  delete BE[`${r}-${c}`]; // Hemen sil
+  G[r][c] = 0;
+  if (el) {
+    el.classList.add('a-vanish');
+    setTimeout(() => { if (el.parentNode) el.remove(); }, 260);
+  }
+  updateHUD();
+
+  setTimeout(() => {
+    applyGravity(true);
+    setTimeout(() => {
+      const sd = spawnTiles();
+      setTimeout(() => {
+        applyGravity(true);
+        setTimeout(() => { warnShownThisRound = false; checkGO(); }, 150);
+      }, sd + 60);
+    }, 180);
+  }, 80);
 }
 
-// ================================================================
-// SWAP — temas eden iki taşın yerini değiştir
-// ================================================================
-function doSwap(r,c){
-  if(!swapOn)return;
-  const btn=document.getElementById('pu-hint');
+/**
+ * DEĞİŞTİR (SWAP): İki komşu taşın yerini değiştirir.
+ * İki aşamalı: 1) İlk taşı seç, 2) Komşu taşı seç → yer değiştir.
+ * isAdj kontrolü: sadece 8-yön komşular swap yapabilir.
+ */
+function doSwap(r, c) {
+  if (!swapOn) return;
+  const btn = document.getElementById('pu-hint');
 
-  if(!swapFirst){
-    // İlk taş seçildi — highlight et
-    swapFirst={r,c};
-    const el=BE[`${r}-${c}`];
-    if(el) el.classList.add('selected');
-    tone(440,'sine',.1,.5);
+  if (!swapFirst) {
+    // İlk taş seçimi
+    swapFirst = {r, c};
+    const el = BE[`${r}-${c}`];
+    if (el) el.classList.add('selected');
+    tone(440, 'sine', .1, .5);
     return;
   }
 
-  // İkinci taş — komşu kontrolü (8-yön temas)
-  const {r:r1,c:c1}=swapFirst;
-  if(r===r1&&c===c1){
-    // Aynı taşa tekrar basıldı — seçimi iptal et
-    const el=BE[`${r1}-${c1}`];if(el)el.classList.remove('selected');
-    swapFirst=null;
-    return;
-  }
-  if(!isAdj(r1,c1,r,c)){
-    // Temas etmiyor — eski seçimi kaldır, yeniyi seç
-    const el=BE[`${r1}-${c1}`];if(el)el.classList.remove('selected');
-    swapFirst={r,c};
-    const el2=BE[`${r}-${c}`];if(el2)el2.classList.add('selected');
-    tone(300,'sine',.08,.3);
+  const {r: r1, c: c1} = swapFirst;
+
+  if (r === r1 && c === c1) {
+    // Aynı taşa tekrar basıldı → seçimi iptal
+    const el = BE[`${r1}-${c1}`];
+    if (el) el.classList.remove('selected');
+    swapFirst = null;
     return;
   }
 
-  // Geçerli swap — uygula
+  if (!isAdj(r1, c1, r, c)) {
+    // Komşu değil → seçimi yeni taşa kaydır
+    const el = BE[`${r1}-${c1}`];
+    if (el) el.classList.remove('selected');
+    swapFirst = {r, c};
+    const el2 = BE[`${r}-${c}`];
+    if (el2) el2.classList.add('selected');
+    tone(300, 'sine', .08, .3);
+    return;
+  }
+
+  // Geçerli swap
   saveHist();
-  coins-=PU_COST.hint; updateHUD();
-  swapOn=false; swapFirst=null;
+  coins -= PU_COST.hint;
+  updateHUD();
+  swapOn = false; swapFirst = null;
   btn.classList.remove('active');
 
-  // Grid değerlerini değiştir
-  const tmp=G[r1][c1]; G[r1][c1]=G[r][c]; G[r][c]=tmp;
+  // G matrisinde yer değiştir
+  const tmp = G[r1][c1];
+  G[r1][c1] = G[r][c];
+  G[r][c] = tmp;
 
-  // DOM — animasyonlu yer değiştirme
-  const el1=BE[`${r1}-${c1}`], el2=BE[`${r}-${c}`];
-  if(el1&&el2){
+  // DOM'da animasyonlu yer değiştir
+  const el1 = BE[`${r1}-${c1}`], el2 = BE[`${r}-${c}`];
+  if (el1 && el2) {
     el1.classList.remove('selected');
-    const p1=bpos(r1,c1), p2=bpos(r,c);
-    // el1 → p2 konumuna, el2 → p1 konumuna
-    [el1,el2].forEach(e=>{e.classList.add('a-grav');});
-    el1.style.left=p2.left+'px'; el1.style.top=p2.top+'px';
-    el1.dataset.r=r; el1.dataset.c=c;
-    el2.style.left=p1.left+'px'; el2.style.top=p1.top+'px';
-    el2.dataset.r=r1; el2.dataset.c=c1;
+    const p1 = bpos(r1, c1), p2 = bpos(r, c);
+    [el1, el2].forEach(e => e.classList.add('a-grav'));
+    el1.style.left = p2.left + 'px'; el1.style.top = p2.top + 'px';
+    el1.dataset.r = r; el1.dataset.c = c;
+    el2.style.left = p1.left + 'px'; el2.style.top = p1.top + 'px';
+    el2.dataset.r = r1; el2.dataset.c = c1;
     delete BE[`${r1}-${c1}`]; delete BE[`${r}-${c}`];
-    BE[`${r}-${c}`]=el1; BE[`${r1}-${c1}`]=el2;
-    setTimeout(()=>{el1.classList.remove('a-grav');el2.classList.remove('a-grav');},220);
+    BE[`${r}-${c}`] = el1; BE[`${r1}-${c1}`] = el2;
+    setTimeout(() => { el1.classList.remove('a-grav'); el2.classList.remove('a-grav'); }, 220);
   }
 
-  tone(660,'triangle',.1,.6); setTimeout(()=>tone(880,'triangle',.1,.5),80);
-  spawnFloat(r,c,'🔄');
+  tone(660, 'triangle', .1, .6);
+  setTimeout(() => tone(880, 'triangle', .1, .5), 80);
+  spawnFloat(r, c, '🔄');
 }
 
-function doSmash(r,c){
-  if(!smashOn)return;
-  saveHist();
-  coins-=PU_COST.smash;
-  smashOn=false; smashCharges=0;
-  document.body.classList.remove('smash-mode');
-  const smashBtn=document.getElementById('pu-smash');
-  smashBtn.classList.remove('active');
-  smashBtn.querySelector('.pu-icon').textContent='🔨';
-  smashBtn.querySelector('.pu-cost').textContent='🪙50';
-  sfxSmash();spawnPtcl(r,c,G[r][c]);
-  const el=BE[`${r}-${c}`];
-  delete BE[`${r}-${c}`]; // BE'den hemen sil
-  G[r][c]=0;
-  if(el){el.classList.add('a-vanish');setTimeout(()=>{ if(el.parentNode) el.remove(); },260);}
-  updateHUD();
-  setTimeout(()=>{
-    applyGravity(true);
-    setTimeout(()=>{
-      const sd=spawnTiles();
-      setTimeout(()=>{
-        applyGravity(true);
-        setTimeout(()=>checkGO(),150);
-      },sd+60);
-    },180);
-  },80);
+/** cancelSwap: Swap modunu iptal eder, seçili taşları temizler */
+function cancelSwap() {
+  swapOn = false; swapFirst = null;
+  const btn = document.getElementById('pu-hint');
+  if (btn) btn.classList.remove('active');
+  Object.values(BE).forEach(e => e.classList.remove('selected'));
 }
 
-// ================================================================
-// BEST SCORE
-// ================================================================
-function saveBest(s){
-  const list=getBests();
-  const now=new Date();
-  const pad=n=>String(n).padStart(2,'0');
-  const dt=`${now.getFullYear()}.${pad(now.getMonth()+1)}.${pad(now.getDate())} ${pad(now.getHours())}:${pad(now.getMinutes())}`;
-  list.push({s,dt});
-  list.sort((a,b)=>b.s-a.s);
-  list.splice(5);
-  localStorage.setItem('axydrop_bests',JSON.stringify(list));
+
+// ════════════════════════════════════════════════════════════════════
+// BÖLÜM 13 — SKOR VE EN YÜKSEK PUAN
+// localStorage ile kalıcı — tarayıcı kapansa bile korunur.
+// ════════════════════════════════════════════════════════════════════
+
+/**
+ * Yeni skoru listeye ekler, top-5'i tutar.
+ * @returns {boolean} Bu skor yeni #1 mi?
+ *
+ * Neden JSON? localStorage sadece string saklayabilir.
+ * JSON.stringify/parse ile nesne ↔ string dönüşümü yapılır.
+ */
+function saveBest(s) {
+  const list = getBests();
+  const now = new Date();
+  const pad = n => String(n).padStart(2, '0');
+  const dt = `${now.getFullYear()}.${pad(now.getMonth()+1)}.${pad(now.getDate())} ${pad(now.getHours())}:${pad(now.getMinutes())}`;
+  list.push({s, dt});
+  list.sort((a, b) => b.s - a.s);
+  list.splice(5); // Sadece ilk 5'i tut
+  localStorage.setItem('axydrop_bests', JSON.stringify(list));
   updateBestShort();
-  return list[0].s===s && list.filter(x=>x.s===s).length===1; // true if new #1
+  return list[0].s === s && list.filter(x => x.s === s).length === 1;
 }
-function getBests(){
-  try{return JSON.parse(localStorage.getItem('axydrop_bests')||'[]');}catch(e){return[];}
+
+/** localStorage'dan skor listesini okur, hata varsa boş dizi döner */
+function getBests() {
+  try { return JSON.parse(localStorage.getItem('axydrop_bests') || '[]'); }
+  catch(e) { return []; }
 }
-function updateBestShort(){
-  const list=getBests();
-  const el=document.getElementById('best-short');
-  if(el) el.textContent=list.length?list[0].s.toLocaleString('tr'):'---';
+
+/** Header'daki en yüksek skoru günceller */
+function updateBestShort() {
+  const list = getBests();
+  const el = document.getElementById('best-short');
+  if (el) el.textContent = list.length ? list[0].s.toLocaleString('tr') : '---';
 }
-function toggleBestPanel(){
-  const panel=document.getElementById('best-panel');
-  const showing=panel.style.display!=='none';
-  if(showing){panel.style.display='none';return;}
-  const list=getBests();
-  const medals=['🥇','🥈','🥉','4.','5.'];
-  document.getElementById('bp-list').innerHTML=list.length
-    ? list.map((b,i)=>`
+
+/** En yüksek skor panelini aç/kapat */
+function toggleBestPanel() {
+  const panel = document.getElementById('best-panel');
+  const showing = panel.style.display !== 'none';
+  if (showing) { panel.style.display = 'none'; return; }
+
+  const list = getBests();
+  const medals = ['🥇','🥈','🥉','4.','5.'];
+  document.getElementById('bp-list').innerHTML = list.length
+    ? list.map((b, i) => `
         <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;">
-          <span style="font-family:'Orbitron',sans-serif;font-size:12px;font-weight:700;color:${i===0?'#fbbf24':i===1?'#94a3b8':i===2?'#cd7f32':'rgba(180,210,255,.6)'};">${medals[i]} ${b.s.toLocaleString('tr')}</span>
+          <span style="font-family:'Orbitron',sans-serif;font-size:12px;font-weight:700;
+            color:${i===0?'#fbbf24':i===1?'#94a3b8':i===2?'#cd7f32':'rgba(180,210,255,.6)'};">
+            ${medals[i]} ${b.s.toLocaleString('tr')}
+          </span>
           <span style="font-size:9px;color:rgba(180,210,255,.4);">${b.dt}</span>
         </div>`).join('')
     : '<div style="font-size:12px;color:rgba(180,210,255,.4);">Henüz kayıt yok</div>';
-  panel.style.display='block';
-  // click outside to close
-  setTimeout(()=>document.addEventListener('click',closeBestOnce,{once:true}),50);
-}
-function closeBestOnce(e){
-  const panel=document.getElementById('best-panel');
-  if(!panel.contains(e.target)&&e.target.id!=='rank-btn')panel.style.display='none';
+
+  panel.style.display = 'block';
+  setTimeout(() => document.addEventListener('click', closeBestOnce, {once: true}), 50);
 }
 
-// ================================================================
-// HEDEF SİNEMATİĞİ — kare havaya fırlayıp patlar, sonra showLC
-// ================================================================
-function celebrateTarget(r, c, val){
-  const el=BE[`${r}-${c}`];
-  if(!el){ showLC(val); return; }
+function closeBestOnce(e) {
+  const panel = document.getElementById('best-panel');
+  if (!panel.contains(e.target) && e.target.id !== 'rank-btn')
+    panel.style.display = 'none';
+}
 
-  const gwRect=document.getElementById('grid-wrap').getBoundingClientRect();
-  const elRect=el.getBoundingClientRect();
 
-  // 1) Kareyi grid'den kopar, body'ye taşı (fixed pozisyon)
-  const clone=el.cloneNode(true);
-  clone.style.cssText=`
-    position:fixed;
-    left:${elRect.left}px;
-    top:${elRect.top}px;
-    width:${elRect.width}px;
-    height:${elRect.height}px;
-    z-index:500;
-    pointer-events:none;
-    transition:none;
-    border-radius:12px;
+// ════════════════════════════════════════════════════════════════════
+// BÖLÜM 14 — HEDEF KUTLAMASI VE BÖLÜM GEÇİŞİ
+// ════════════════════════════════════════════════════════════════════
+
+/**
+ * Hedefi aşan taş için sinematik kutlama.
+ * 3 faz: 1) Havaya fırla + büyü, 2) Titret, 3) Patla → showLC
+ *
+ * clone.cloneNode(true): taşın görsel kopyası body'ye taşınır —
+ * grid'in dışına çıkabilmek için position:fixed kullanılır.
+ * force reflow (el.getBoundingClientRect()): CSS transition'ın
+ * başlangıç durumunu "görmesi" için zorunlu.
+ */
+function celebrateTarget(r, c, val) {
+  const el = BE[`${r}-${c}`];
+  if (!el) { showLC(val); return; }
+
+  const gwRect = document.getElementById('grid-wrap').getBoundingClientRect();
+  const elRect = el.getBoundingClientRect();
+
+  // Klonu body'ye taşı
+  const clone = el.cloneNode(true);
+  clone.style.cssText = `
+    position:fixed; left:${elRect.left}px; top:${elRect.top}px;
+    width:${elRect.width}px; height:${elRect.height}px;
+    z-index:500; pointer-events:none; transition:none; border-radius:12px;
   `;
   document.body.appendChild(clone);
+  el.style.opacity = '0'; // Orijinali gizle
 
-  // Orijinali gizle
-  el.style.opacity='0';
+  const targetTop = gwRect.top + gwRect.height * 0.18;
+  const targetLeft = gwRect.left + gwRect.width/2 - elRect.width;
 
-  // 2) Faz 1: yukarı fırlama + büyüme (400ms)
-  const cx=elRect.left+elRect.width/2;
-  const cy=elRect.top+elRect.height/2;
-  const targetTop=gwRect.top + gwRect.height*0.18;
-  const targetLeft=gwRect.left+gwRect.width/2 - elRect.width;
-
-  requestAnimationFrame(()=>{
-    clone.style.transition='left .4s cubic-bezier(.22,1,.36,1), top .4s cubic-bezier(.22,1,.36,1), transform .4s cubic-bezier(.22,1,.36,1), box-shadow .4s';
-    clone.style.left=targetLeft+'px';
-    clone.style.top=targetTop+'px';
-    clone.style.transform='scale(2.2) rotate(-6deg)';
-    clone.style.boxShadow=`0 0 60px rgba(251,191,36,.9), 0 0 120px rgba(251,191,36,.5)`;
-    clone.style.zIndex='501';
+  // Faz 1: Yukarı fırla
+  requestAnimationFrame(() => {
+    clone.style.transition = 'left .4s cubic-bezier(.22,1,.36,1), top .4s cubic-bezier(.22,1,.36,1), transform .4s cubic-bezier(.22,1,.36,1), box-shadow .4s';
+    clone.style.left = targetLeft + 'px';
+    clone.style.top = targetTop + 'px';
+    clone.style.transform = 'scale(2.2) rotate(-6deg)';
+    clone.style.boxShadow = '0 0 60px rgba(251,191,36,.9), 0 0 120px rgba(251,191,36,.5)';
+    clone.style.zIndex = '501';
   });
 
-  // 3) Faz 2: titreme (600ms sonra)
-  setTimeout(()=>{
-    clone.style.transition='transform .08s ease';
-    let shakes=0;
-    const shakeInt=setInterval(()=>{
+  // Faz 2: Titret
+  setTimeout(() => {
+    clone.style.transition = 'transform .08s ease';
+    let shakes = 0;
+    const shakeInt = setInterval(() => {
       shakes++;
-      const deg=(shakes%2===0?1:-1)*(3+shakes*0.5);
-      clone.style.transform=`scale(2.2) rotate(${deg}deg)`;
-      if(shakes>=8) clearInterval(shakeInt);
-    },80);
-  },500);
+      const deg = (shakes % 2 === 0 ? 1 : -1) * (3 + shakes * 0.5);
+      clone.style.transform = `scale(2.2) rotate(${deg}deg)`;
+      if (shakes >= 8) clearInterval(shakeInt);
+    }, 80);
+  }, 500);
 
-  // 4) Faz 3: patlama + dağılma (1000ms sonra)
-  setTimeout(()=>{
-    // Parçalara böl — 9 mini kare saçılsın
-    clone.style.display='none';
-    const colors=['#fbbf24','#f97316','#a855f7','#00b4ff','#34d399','#ec4899','#fff'];
-    for(let i=0;i<14;i++){
-      const shard=document.createElement('div');
-      const sz=14+Math.random()*22;
-      const angle=Math.random()*Math.PI*2;
-      const dist=80+Math.random()*200;
-      shard.style.cssText=`
-        position:fixed;
-        left:${targetLeft+elRect.width}px;
-        top:${targetTop+elRect.height/2}px;
+  // Faz 3: Patla ve dağıl
+  setTimeout(() => {
+    clone.style.display = 'none';
+    const colors = ['#fbbf24','#f97316','#a855f7','#00b4ff','#34d399','#ec4899','#fff'];
+    for (let i = 0; i < 14; i++) {
+      const shard = document.createElement('div');
+      const sz = 14 + Math.random() * 22;
+      const angle = Math.random() * Math.PI * 2;
+      const dist = 80 + Math.random() * 200;
+      shard.style.cssText = `
+        position:fixed; left:${targetLeft+elRect.width}px; top:${targetTop+elRect.height/2}px;
         width:${sz}px; height:${sz}px;
         background:${colors[Math.floor(Math.random()*colors.length)]};
         border-radius:${Math.random()>0.5?'50%':'6px'};
-        z-index:502; pointer-events:none;
-        box-shadow:0 0 12px currentColor;
-        transition:left .6s cubic-bezier(.22,1,.36,1),
-                   top .7s cubic-bezier(.22,1,.36,1),
-                   opacity .5s ease .2s,
-                   transform .6s ease;
+        z-index:502; pointer-events:none; box-shadow:0 0 12px currentColor;
+        transition:left .6s cubic-bezier(.22,1,.36,1),top .7s cubic-bezier(.22,1,.36,1),opacity .5s ease .2s,transform .6s ease;
       `;
       document.body.appendChild(shard);
-      requestAnimationFrame(()=>{
-        shard.style.left=(targetLeft+elRect.width + Math.cos(angle)*dist)+'px';
-        shard.style.top=(targetTop+elRect.height/2 + Math.sin(angle)*dist)+'px';
-        shard.style.opacity='0';
-        shard.style.transform=`rotate(${Math.random()*720}deg) scale(0.2)`;
+      requestAnimationFrame(() => {
+        shard.style.left = (targetLeft + elRect.width + Math.cos(angle)*dist) + 'px';
+        shard.style.top = (targetTop + elRect.height/2 + Math.sin(angle)*dist) + 'px';
+        shard.style.opacity = '0';
+        shard.style.transform = `rotate(${Math.random()*720}deg) scale(0.2)`;
       });
-      setTimeout(()=>shard.remove(), 900);
+      setTimeout(() => shard.remove(), 900);
     }
 
-    // Büyük flash
     screenFlash(); screenFlash();
     spawnStars();
     sfxWin();
 
-    // DOM'dan kaldır ama G'de değeri koru (scramble'da yeniden kullanılır)
+    // DOM'dan kaldır ama G'de koru (scramble bunu kullanır)
     el.remove(); delete BE[`${r}-${c}`];
-    // G[r][c] sıfırlanmıyor — goNextLevel→spawnTiles boş hücre olmadığı için atlar
-
-    // Klon temizle
-    setTimeout(()=>clone.remove(),100);
-
-    // 5) showLC aç
-    setTimeout(()=>showLC(val), 500);
-  },1050);
+    setTimeout(() => clone.remove(), 100);
+    setTimeout(() => showLC(val), 500);
+  }, 1050);
 }
 
-// ================================================================
-// LEVEL CLEAR — oyun durur, btn-harika ile devam
-// ================================================================
-function showLC(val){
-  coins+=50;
+/**
+ * Level Clear ekranını gösterir.
+ * +50 coin ödülü verilir. Yeni rekor varsa toast gösterilir.
+ * Épik fanfare sesi: Do-Mi-Sol-Do armonisi yükselir.
+ */
+function showLC(val) {
+  coins += 50;
   updateHUD();
-  const isNew=saveBest(score);
-  if(isNew){
-    const t=document.getElementById('rank-toast');
-    t.textContent='🏆 Yeni Rekor!';
+
+  const isNew = saveBest(score);
+  if (isNew) {
+    const t = document.getElementById('rank-toast');
+    t.textContent = '🏆 Yeni Rekor!';
     t.classList.add('show');
-    setTimeout(()=>t.classList.remove('show'),2500);
+    setTimeout(() => t.classList.remove('show'), 2500);
   }
-  // Hedef sesi — épik yükselen fanfare
-  const notes=[262,330,392,523,659,784,1047];
-  notes.forEach((f,i)=>setTimeout(()=>{
-    tone(f,'triangle',.25,.8);
-    if(i===notes.length-1){
-      // Son nota üzerine gürleme
-      setTimeout(()=>tone(f*2,'sine',.35,1.0),80);
-      setTimeout(()=>tone(f,'triangle',.4,.7),160);
+
+  // 7 notadan yükselen fanfare
+  const notes = [262, 330, 392, 523, 659, 784, 1047];
+  notes.forEach((f, i) => setTimeout(() => {
+    tone(f, 'triangle', .25, .8);
+    if (i === notes.length - 1) {
+      setTimeout(() => tone(f*2, 'sine', .35, 1.0), 80);
+      setTimeout(() => tone(f,   'triangle', .4, .7), 160);
     }
-  },i*80));
-  if(navigator.vibrate) navigator.vibrate([50,30,50,30,100]);
-  document.getElementById('lc-target').textContent=fmtTarget(val);
+  }, i * 80));
+
+  if (navigator.vibrate) navigator.vibrate([50, 30, 50, 30, 100]);
+  document.getElementById('lc-target').textContent = fmtTarget(val);
   document.getElementById('ov-lc').classList.add('show');
 }
 
-function goNextLevel(){
+/**
+ * Bir sonraki bölüme geçer.
+ *
+ * ADIMLAR:
+ * 1. wonTarget: kazanılan hedef (indirgeme değeri olarak kullanılır)
+ * 2. targetIdx++: yeni hedef
+ * 3. doDowngrade: yeni hedefi aşan taşları indir
+ * 4. scrambleBoard: görsel karıştırma animasyonu
+ * 5. spawnTiles: boş hücreleri doldur
+ * 6. checkGO: game over var mı?
+ */
+function goNextLevel() {
   document.getElementById('ov-lc').classList.remove('show');
-  // Önce eski hedefi kaydet, sonra artır
-  const wonTarget = TARGETS[targetIdx]; // kazanılan hedef (indirgeme değeri)
-  if(targetIdx<TARGETS.length-1) targetIdx++;
-  cancelHold(); cancelSwap();
-  smashOn=false; bombOn=false;
-  document.body.classList.remove('smash-mode','bomb-mode');
-  busy=true;
 
-  // Grid'deki kazanılan hedefi AŞAN taşları (yeni hedef >= olanlar)
-  // kazanılan hedef değerine indir.
-  // Örnek: 2K kazandın → 4K hedeflendi → 4096 taşı → 2048'e indir
+  const wonTarget = TARGETS[targetIdx]; // İndirgeme referansı
+  if (targetIdx < TARGETS.length - 1) targetIdx++;
+
+  cancelHold(); cancelSwap();
+  smashOn = false; bombOn = false;
+  document.body.classList.remove('smash-mode', 'bomb-mode');
+  busy = true;
+
   const newTarget = TARGETS[targetIdx];
   const overshootCells = [];
-  for(let r=0;r<ROWS;r++) for(let c=0;c<COLS;c++){
-    if(G[r][c] >= newTarget) overshootCells.push({r,c});
-  }
+  for (let r = 0; r < ROWS; r++)
+    for (let c = 0; c < COLS; c++)
+      if (G[r][c] >= newTarget) overshootCells.push({r, c});
 
-  function doDowngrade(cells, onDone){
-    if(!cells.length){ onDone(); return; }
-    let done=0;
-    cells.forEach(({r,c}, i)=>{
-      setTimeout(()=>{
-        const newV = wonTarget; // kazanılan hedefe indir
+  /**
+   * doDowngrade: Fazla büyük taşları kazanılan hedefe indirir.
+   * Animasyonlu: scale(1.4) → a-merge → yeni değer.
+   * Taşlar sırayla 120ms aralıklı iner (cascade efekti).
+   */
+  function doDowngrade(cells, onDone) {
+    if (!cells.length) { onDone(); return; }
+    let done = 0;
+    cells.forEach(({r, c}, i) => {
+      setTimeout(() => {
+        const newV = wonTarget;
         G[r][c] = newV;
         const el = BE[`${r}-${c}`];
-        if(el){
+        if (el) {
           el.style.transition = 'transform .25s ease, opacity .15s ease';
           el.style.transform = 'scale(1.4)';
           el.style.opacity = '0.4';
-          setTimeout(()=>{
+          setTimeout(() => {
             el.className = `block ${vcls(newV)} a-merge`;
             el.querySelector('.bnum').textContent = fmtTarget(newV);
             el.querySelector('.bnum').style.fontSize = fsize(newV);
             el.dataset.v = newV;
-            el.style.transform = '';
-            el.style.opacity = '';
-            el.style.transition = '';
-            setTimeout(()=>el.classList.remove('a-merge'), 300);
+            el.style.transform = ''; el.style.opacity = ''; el.style.transition = '';
+            setTimeout(() => el.classList.remove('a-merge'), 300);
           }, 200);
         }
         spawnFloat(r, c, `↓${fmtTarget(newV)}`);
         tone(300 - i*20, 'sine', .15, .4);
         done++;
-        if(done===cells.length) setTimeout(onDone, 350);
-      }, i*120);
+        if (done === cells.length) setTimeout(onDone, 350);
+      }, i * 120);
     });
   }
 
-  doDowngrade(overshootCells, ()=>{
-    scrambleBoard(()=>{
-      const sd=spawnTiles();
-      setTimeout(()=>{
+  doDowngrade(overshootCells, () => {
+    scrambleBoard(() => {
+      const sd = spawnTiles();
+      setTimeout(() => {
         applyGravity(true);
-        setTimeout(()=>{
-          busy=false;
-          updateHUD();
-          checkGO();
-        },200);
-      },sd+80);
+        setTimeout(() => { busy = false; updateHUD(); warnShownThisRound = false; checkGO(); }, 200);
+      }, sd + 80);
     });
   });
 }
 
-// ================================================================
-// BOARD SCRAMBLE CINEMATIC
-// Tüm kareler havaya kalkıp ekrana yaklaşır, karışır, yerleşir
-// ================================================================
-function scrambleBoard(onDone){
-  // 1) Yeni değerleri hazırla
-  const vals=[];
-  for(let r=0;r<ROWS;r++) for(let c=0;c<COLS;c++) vals.push(G[r][c]);
+/**
+ * Scramble animasyonu: taşlar havaya uçar → yeniden yerleşir.
+ * İki faz animasyonu: scatter (dağıl) → land (ine).
+ * entries snapshot alınır çünkü animasyon sırasında BE değişir.
+ */
+function scrambleBoard(onDone) {
+  const vals = [];
+  for (let r = 0; r < ROWS; r++) for (let c = 0; c < COLS; c++) vals.push(G[r][c]);
   rng(vals);
-  let idx=0;
-  for(let r=0;r<ROWS;r++) for(let c=0;c<COLS;c++) G[r][c]=vals[idx++];
+  let idx = 0;
+  for (let r = 0; r < ROWS; r++) for (let c = 0; c < COLS; c++) G[r][c] = vals[idx++];
 
-  // 2) Mevcut blokları al
-  const entries=Object.entries(BE);
-  const gwRect=document.getElementById('grid-wrap').getBoundingClientRect();
-  const cx=gwRect.left+gwRect.width/2;
-  const cy=gwRect.top+gwRect.height/2;
+  const entries = Object.entries(BE);
 
-  // 3) Aşama 1: havaya kalk + ekrana yaklaş (scale up + scatter)
-  entries.forEach(([key,el],i)=>{
-    const delay=i*18;
-    const ax=(Math.random()-0.5)*320;
-    const ay=(Math.random()-0.5)*280;
-    el.style.transition=`transform ${0.45}s cubic-bezier(.22,1,.36,1) ${delay}ms, opacity .3s ease ${delay}ms`;
-    el.style.transform=`translate(${ax}px,${ay}px) scale(1.6) rotate(${(Math.random()-0.5)*40}deg)`;
-    el.style.opacity='0';
-    el.style.zIndex='30';
+  // Faz 1: Havaya kalk
+  entries.forEach(([key, el], i) => {
+    const delay = i * 18;
+    const ax = (Math.random() - 0.5) * 320;
+    const ay = (Math.random() - 0.5) * 280;
+    el.style.transition = `transform .45s cubic-bezier(.22,1,.36,1) ${delay}ms, opacity .3s ease ${delay}ms`;
+    el.style.transform = `translate(${ax}px,${ay}px) scale(1.6) rotate(${(Math.random()-0.5)*40}deg)`;
+    el.style.opacity = '0';
+    el.style.zIndex = '30';
   });
 
-  // 4) Aşama 2: yeni değerlerle yerlerine in
-  const phase2Delay=entries.length*18+350;
-  setTimeout(()=>{
-    // DOM'u yeni değerlerle yeniden kur ama mevcut blokları sil
-    entries.forEach(([key,el])=>{ el.remove(); delete BE[key]; });
-    // Yeni blokları yerlerine uçur
-    for(let r=0;r<ROWS;r++) for(let c=0;c<COLS;c++){
-      if(!G[r][c]) continue;
-      const delay=(r*COLS+c)*22;
-      const el=mkBlock(r,c,G[r][c]); // animsiz oluştur
-      const p=bpos(r,c);
-      // Başlangıç: ekranın ortasından dağılmış
-      const ox=(Math.random()-0.5)*300;
-      const oy=(Math.random()-0.5)*250;
-      el.style.transform=`translate(${ox}px,${oy}px) scale(0.4) rotate(${(Math.random()-0.5)*60}deg)`;
-      el.style.opacity='0';
-      el.style.transition='none';
-      el.getBoundingClientRect(); // force reflow
-      el.style.transition=`transform .4s cubic-bezier(.34,1.2,.64,1) ${delay}ms, opacity .3s ease ${delay}ms`;
-      el.style.transform='translate(0,0) scale(1) rotate(0deg)';
-      el.style.opacity='1';
+  // Faz 2: Yeniden yerleş
+  const phase2Delay = entries.length * 18 + 350;
+  setTimeout(() => {
+    entries.forEach(([key, el]) => { el.remove(); delete BE[key]; });
+
+    for (let r = 0; r < ROWS; r++) for (let c = 0; c < COLS; c++) {
+      if (!G[r][c]) continue;
+      const delay = (r * COLS + c) * 22;
+      const el = mkBlock(r, c, G[r][c]);
+      const ox = (Math.random() - 0.5) * 300;
+      const oy = (Math.random() - 0.5) * 250;
+      el.style.transform = `translate(${ox}px,${oy}px) scale(0.4) rotate(${(Math.random()-0.5)*60}deg)`;
+      el.style.opacity = '0';
+      el.style.transition = 'none';
+      el.getBoundingClientRect(); // Force reflow
+      el.style.transition = `transform .4s cubic-bezier(.34,1.2,.64,1) ${delay}ms, opacity .3s ease ${delay}ms`;
+      el.style.transform = 'translate(0,0) scale(1) rotate(0deg)';
+      el.style.opacity = '1';
     }
-    const totalLand=ROWS*COLS*22+450;
-    setTimeout(()=>{
-      // Transition'ları temizle
-      Object.values(BE).forEach(el=>{
-        el.style.transition='';
-        el.style.transform='';
-        el.style.opacity='';
-        el.style.zIndex='';
+
+    const totalLand = ROWS * COLS * 22 + 450;
+    setTimeout(() => {
+      Object.values(BE).forEach(el => {
+        el.style.transition = ''; el.style.transform = '';
+        el.style.opacity = ''; el.style.zIndex = '';
       });
-      if(onDone) onDone();
+      if (onDone) onDone();
     }, totalLand);
   }, phase2Delay);
 
-  // Ses efekti
-  [300,400,500,600,700].forEach((f,i)=>setTimeout(()=>tone(f,'triangle',.15,.2),i*80));
+  [300,400,500,600,700].forEach((f, i) => setTimeout(() => tone(f,'triangle',.15,.2), i*80));
 }
 
-function spawnStars(){
-  const cx=innerWidth/2,cy=innerHeight/2;
-  for(let i=0;i<18;i++){
-    const el=document.createElement('div');el.className='star-p';el.textContent='⭐';
-    const a=Math.random()*Math.PI*2,d=80+Math.random()*200;
-    el.style.cssText=`left:${cx}px;top:${cy}px;--sx:${Math.cos(a)*d}px;--sy:${Math.sin(a)*d}px;--sr:${Math.random()*720-360}deg;animation-delay:${Math.random()*.3}s`;
-    document.body.appendChild(el);setTimeout(()=>el.remove(),1500);
+/** Ekranda yıldız yağmuru (level clear kutlaması) */
+function spawnStars() {
+  const cx = innerWidth/2, cy = innerHeight/2;
+  for (let i = 0; i < 18; i++) {
+    const el = document.createElement('div');
+    el.className = 'star-p';
+    el.textContent = '⭐';
+    const a = Math.random()*Math.PI*2, d = 80+Math.random()*200;
+    el.style.cssText = `left:${cx}px;top:${cy}px;--sx:${Math.cos(a)*d}px;--sy:${Math.sin(a)*d}px;--sr:${Math.random()*720-360}deg;animation-delay:${Math.random()*.3}s`;
+    document.body.appendChild(el);
+    setTimeout(() => el.remove(), 1500);
   }
 }
 
-// ================================================================
-// GAME OVER
-// ================================================================
-function checkGO(){
-  if(!active)return;
-  // Boş hücre varsa — sorun yok
-  for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++)if(!G[r][c])return;
-  // Merge yapılabilecek komşu var mı?
-  for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++){
-    const v=G[r][c];if(!v)continue;
-    for(const[nr,nc]of nbrs(r,c))if(G[nr][nc]===v)return;
-  }
-  // Grid tamamen dolu ve merge yok — tıkandı
-  // Ama önce: uyarı göster mi, doğrudan game over mu?
-  if(!warnShownThisRound){
-    showDangerWarn();
+
+// ════════════════════════════════════════════════════════════════════
+// BÖLÜM 15 — GAME OVER VE TIKANMA UYARISI
+// İki aşamalı koruma: önce power-up öner, sonra game over.
+// ════════════════════════════════════════════════════════════════════
+
+/**
+ * Grid tamamen dolu ve hiç merge yapılamıyorsa çağrılır.
+ *
+ * İki koşul aynı anda doğru olmalı:
+ * 1. Tüm hücreler dolu (boş hücre yok)
+ * 2. Hiçbir komşu çift yok (merge yapılacak yer yok)
+ *
+ * İlk tespitte uyarı gösterilir (power-up şansı).
+ * İkinci tespitte direkt game over.
+ */
+function checkGO() {
+  if (!active) return;
+
+  for (let r = 0; r < ROWS; r++)
+    for (let c = 0; c < COLS; c++)
+      if (!G[r][c]) return; // Boş hücre var → sorun yok
+
+  for (let r = 0; r < ROWS; r++)
+    for (let c = 0; c < COLS; c++) {
+      const v = G[r][c];
+      if (!v) continue;
+      for (const [nr, nc] of nbrs(r, c))
+        if (G[nr][nc] === v) return; // Merge yapılabilir → sorun yok
+    }
+
+  // Tıkandı!
+  if (!warnShownThisRound) {
+    showDangerWarn(); // İlk kez: power-up öner
   } else {
-    // Uyarı gösterilmişti, oyuncu devam dedi ama hâlâ tıkandı → game over
-    triggerGameOver();
+    triggerGameOver(); // İkinci kez: game over
   }
 }
 
-function showDangerWarn(){
-  warnShownThisRound=true;
+/**
+ * Tıkanma uyarısı: mevcut coin'e göre power-up önerir.
+ * Her kullanılabilir power-up tıklanabilir buton olarak listelenir.
+ * Coin yoksa "son hamle" mesajı gösterilir.
+ */
+function showDangerWarn() {
+  warnShownThisRound = true;
 
-  // Kullanılabilir power-up'ları tespit et
-  const available=[];
-  if(coins>=PU_COST.shuffle) available.push({id:'shuffle',icon:'🔀',name:'Karıştır',desc:'Tüm taşları yeniden dağıtır',cost:PU_COST.shuffle});
-  if(coins>=PU_COST.bomb)    available.push({id:'bomb',   icon:'💣',name:'Bomba',   desc:'3×3 alanı temizler',        cost:PU_COST.bomb});
-  if(coins>=PU_COST.smash)   available.push({id:'smash',  icon:'🔨',name:'Yok Et',  desc:'Bir taşı patlatır',          cost:PU_COST.smash});
-  if(coins>=PU_COST.hint)    available.push({id:'hint',   icon:'🔄',name:'Değiştir',desc:'2 taşın yerini değiştirir',   cost:PU_COST.hint});
+  const available = [];
+  if (coins >= PU_COST.shuffle) available.push({id:'shuffle', icon:'🔀', name:'Karıştır',  desc:'Tüm taşları yeniden dağıtır',    cost:PU_COST.shuffle});
+  if (coins >= PU_COST.bomb)    available.push({id:'bomb',    icon:'💣', name:'Bomba',     desc:'3×3 alanı temizler',              cost:PU_COST.bomb});
+  if (coins >= PU_COST.smash)   available.push({id:'smash',   icon:'🔨', name:'Yok Et',    desc:'Bir taşı patlatır',               cost:PU_COST.smash});
+  if (coins >= PU_COST.hint)    available.push({id:'hint',    icon:'🔄', name:'Değiştir',  desc:'2 taşın yerini değiştirir',       cost:PU_COST.hint});
 
-  const title=document.getElementById('warn-title');
-  const msg=document.getElementById('warn-msg');
-  const icon=document.getElementById('warn-icon');
-  const list=document.getElementById('warn-pu-list');
-  list.innerHTML='';
+  const title = document.getElementById('warn-title');
+  const msg   = document.getElementById('warn-msg');
+  const icon  = document.getElementById('warn-icon');
+  const list  = document.getElementById('warn-pu-list');
+  list.innerHTML = '';
 
-  if(available.length>0){
-    icon.textContent='⚠️';
-    title.textContent='SIKIŞTIN!';
-    title.style.color='#f59e0b';
-    msg.textContent='Merge yapacak komşu kalmadı. Bir power-up kullanabilirsin:';
-    available.forEach(pu=>{
-      const btn=document.createElement('button');
-      btn.className='warn-pu-btn';
-      btn.innerHTML=`<span class="wp-icon">${pu.icon}</span>
-        <span class="wp-info"><span class="wp-name">${pu.name}</span><span class="wp-desc">${pu.desc}</span></span>
-        <span class="wp-cost">🪙${pu.cost}</span>`;
-      btn.addEventListener('click',()=>{
+  if (available.length > 0) {
+    icon.textContent = '⚠️';
+    title.textContent = 'SIKIŞTIN!';
+    title.style.color = '#f59e0b';
+    msg.textContent = 'Merge yapacak komşu kalmadı. Bir power-up kullanabilirsin:';
+
+    available.forEach(pu => {
+      const btn = document.createElement('button');
+      btn.className = 'warn-pu-btn';
+      btn.innerHTML = `
+        <span class="wp-icon">${pu.icon}</span>
+        <span class="wp-info">
+          <span class="wp-name">${pu.name}</span>
+          <span class="wp-desc">${pu.desc}</span>
+        </span>
+        <span class="wp-cost">🪙${pu.cost}</span>
+      `;
+      btn.addEventListener('click', () => {
         document.getElementById('ov-warn').classList.remove('show');
-        warnShownThisRound=false;
-        // İlgili power-up'ı aktifleştir
-        if(pu.id==='shuffle') document.getElementById('pu-shuffle').click();
-        else if(pu.id==='bomb'){document.getElementById('pu-bomb').click();}
-        else if(pu.id==='smash') document.getElementById('pu-smash').click();
-        else if(pu.id==='hint') document.getElementById('pu-hint').click();
+        warnShownThisRound = false;
+        // İlgili power-up butonunu simüle et
+        document.getElementById('pu-' + pu.id).click();
       });
       list.appendChild(btn);
     });
   } else {
-    // Coin yok — son uyarı
-    icon.textContent='💸';
-    title.textContent='SON HAMLENİ YAP!';
-    title.style.color='#ef4444';
-    msg.innerHTML='Merge yapacak yer kalmadı ve<br><b>coin\'in yok.</b><br>Bu son hamlen!';
+    icon.textContent = '💸';
+    title.textContent = 'SON HAMLENİ YAP!';
+    title.style.color = '#ef4444';
+    msg.innerHTML = 'Merge yapacak yer kalmadı ve<br><b>coin\'in yok.</b><br>Bu son hamlen!';
   }
 
-  // Ses: tehlike tonu
-  tone(200,'sawtooth',.1,.5);
-  setTimeout(()=>tone(150,'sawtooth',.15,.4),150);
-  if(navigator.vibrate) navigator.vibrate([100,50,100]);
-
+  tone(200, 'sawtooth', .1, .5);
+  setTimeout(() => tone(150, 'sawtooth', .15, .4), 150);
+  if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
   document.getElementById('ov-warn').classList.add('show');
 }
 
-function triggerGameOver(){
-  warnShownThisRound=false;
+/** Game Over ekranını gösterir */
+function triggerGameOver() {
+  warnShownThisRound = false;
   sfxGO();
-  document.getElementById('go-score').textContent=score.toLocaleString('tr');
-  setTimeout(()=>document.getElementById('ov-go').classList.add('show'),600);
+  document.getElementById('go-score').textContent = score.toLocaleString('tr');
+  setTimeout(() => document.getElementById('ov-go').classList.add('show'), 600);
 }
-function nbrs(r,c){
-  const res=[];
-  for(let dr=-1;dr<=1;dr++)for(let dc=-1;dc<=1;dc++){
-    if(!dr&&!dc)continue;const nr=r+dr,nc=c+dc;
-    if(nr>=0&&nr<ROWS&&nc>=0&&nc<COLS)res.push([nr,nc]);
+
+
+// ════════════════════════════════════════════════════════════════════
+// BÖLÜM 16 — HUD (Heads-Up Display)
+// Ekrandaki puan, coin, hedef göstergelerini günceller.
+// ════════════════════════════════════════════════════════════════════
+
+/**
+ * Tüm HUD elementlerini güncel değerlerle yeniler.
+ * void sv.offsetWidth: DOM'u "sıfırlamak" için — CSS animation yeniden tetiklenir.
+ * (Animation'ı tekrar oynatmak için önce class kaldırılır, sonra yeniden eklenir.)
+ */
+function updateHUD() {
+  const sv = document.getElementById('score-val');
+  sv.textContent = score.toLocaleString('tr');
+  sv.classList.remove('pop');
+  void sv.offsetWidth; // Force reflow — 'pop' animasyonunu yeniden başlatır
+  sv.classList.add('pop');
+
+  document.getElementById('coin-val').textContent = coins;
+  document.getElementById('target-val').textContent = fmtTarget(TARGETS[targetIdx]);
+
+  // Yetersiz coin'li power-up butonlarını devre dışı bırak
+  for (const [k, v] of Object.entries(PU_COST)) {
+    const btn = document.getElementById('pu-' + k);
+    if (btn) btn.classList.toggle('disabled', coins < v);
   }
-  return res;
 }
 
-// ================================================================
-// HUD
-// ================================================================
-function updateHUD(){
-  const sv=document.getElementById('score-val');
-  sv.textContent=score.toLocaleString('tr');
-  sv.classList.remove('pop');void sv.offsetWidth;sv.classList.add('pop');
-  document.getElementById('coin-val').textContent=coins;
-  document.getElementById('target-val').textContent=fmtTarget(TARGETS[targetIdx]);
-  for(const[k,v]of Object.entries(PU_COST)){
-    const btn=document.getElementById('pu-'+k);
-    if(btn) btn.classList.toggle('disabled',coins<v);
+
+// ════════════════════════════════════════════════════════════════════
+// BÖLÜM 17 — GÖRSEL EFEKTLER (VFX)
+// Parçacıklar, yüzen metinler, combo etiketleri, ekran flaşı.
+// Hepsi geçici DOM elementleri — animasyon bitince kaldırılır.
+// ════════════════════════════════════════════════════════════════════
+
+/**
+ * Merge noktasından parçacık fırlatır.
+ * Parçacık sayısı: taş değeri ve birleşen sayısına göre ölçeklenir.
+ * Patlama halkası (explode-ring): büyük merge'lerde ek görsel etki.
+ */
+function spawnPtcl(r, c, v, count = 1) {
+  const el = BE[`${r}-${c}`];
+  const sz = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--cs')) || 62;
+  const gp = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--cg')) || 6;
+  const gwRect = document.getElementById('grid-wrap').getBoundingClientRect();
+
+  // Merkez koordinatı: element varsa ondan al, yoksa hesapla
+  const cx = el ? el.getBoundingClientRect().left + el.getBoundingClientRect().width/2
+               : gwRect.left + 7 + c*(sz+gp) + sz/2;
+  const cy = el ? el.getBoundingClientRect().top + el.getBoundingClientRect().height/2
+               : gwRect.top + 7 + r*(sz+gp) + sz/2;
+
+  const cols = ['#00b4ff','#a855f7','#fbbf24','#34d399','#f97316','#ec4899','#22c55e','#fff'];
+  const base = Math.min(6 + Math.floor(Math.log2(v)), 14);
+  const n = Math.min(base * (count > 1 ? count : 1), 48); // Max 48 parçacık
+  const maxDist = 45 + count * 18;
+
+  for (let i = 0; i < n; i++) {
+    const p = document.createElement('div');
+    const a = Math.random() * 360;
+    const d = 18 + Math.random() * maxDist;
+    const sz2 = 2 + Math.random() * (3 + count);
+    p.className = 'ptcl';
+    const dur = 0.4 + Math.random() * 0.5 + count * 0.05;
+    p.style.cssText = `left:${cx-sz2/2}px;top:${cy-sz2/2}px;width:${sz2}px;height:${sz2}px;background:${cols[Math.floor(Math.random()*cols.length)]};--tx:${Math.cos(a*Math.PI/180)*d}px;--ty:${Math.sin(a*Math.PI/180)*d}px;animation-duration:${dur}s`;
+    document.body.appendChild(p);
+    setTimeout(() => p.remove(), 1100);
+  }
+
+  // Patlama halkaları (büyük merge'lerde)
+  const rings = Math.min(count, 4);
+  for (let ri = 0; ri < rings; ri++) {
+    const ring = document.createElement('div');
+    ring.className = 'explode-ring';
+    const ringSize = (60 + ri*35 + count*15) + 'px';
+    ring.style.cssText = `left:${cx}px;top:${cy}px;width:${ringSize};height:${ringSize};border-color:${cols[ri%cols.length]};animation-delay:${ri*.06}s;animation-duration:${.4+ri*.05}s`;
+    document.body.appendChild(ring);
+    setTimeout(() => ring.remove(), 700);
   }
 }
 
-// ================================================================
-// POWERUPS
-// ================================================================
-// ── SWAP STATE ──
-let swapOn=false;
-let swapFirst=null; // {r,c} — ilk seçilen taş
+/** Anlık ekran beyazlaması — büyük combo'da tatmin hissi yaratır */
+function screenFlash() {
+  const f = document.getElementById('flash-overlay');
+  f.classList.add('flash');
+  setTimeout(() => f.classList.remove('flash'), 120);
+}
 
-document.getElementById('pu-hint').addEventListener('click',()=>{
-  if(swapOn){ cancelSwap(); return; }
-  if(coins<PU_COST.hint||!active)return;
-  swapOn=true; swapFirst=null;
+/**
+ * Yüzen puan/mesaj metni.
+ * r < 0 ise ekran ortasında gösterilir (freeze bildirimi gibi).
+ */
+function spawnFloat(r, c, txt) {
+  let x, y;
+  if (r < 0) {
+    x = innerWidth / 2; y = innerHeight / 2 - 60;
+  } else {
+    const el = BE[`${r}-${c}`];
+    if (!el) return;
+    const rect = el.getBoundingClientRect();
+    x = rect.left + rect.width / 2;
+    y = rect.top;
+  }
+  const f = document.createElement('div');
+  f.className = 'float-s';
+  f.textContent = txt;
+  // Görünmez ekle, genişliği ölç, sonra sınır içine al
+  f.style.cssText = 'visibility:hidden;position:fixed;';
+  document.body.appendChild(f);
+  const fw = f.offsetWidth;
+  const margin = 6;
+  x = Math.max(margin + fw/2, Math.min(x, innerWidth - fw/2 - margin));
+  y = Math.max(margin, y);
+  f.style.cssText = '';
+  f.className = 'float-s';
+  f.style.left = (x - fw/2) + 'px';
+  f.style.top  = y + 'px';
+  setTimeout(() => f.remove(), 950);
+}
+
+/**
+ * Combo etiketi (🔥 COMBO ×8+ gibi).
+ * Büyük merge anında merkez taşın üstünde belirip kaybolur.
+ */
+function spawnComboLabel(r, c, mult, count) {
+  const el = BE[`${r}-${c}`];
+  if (!el) return;
+
+  const rect = el.getBoundingClientRect();
+  const lbl = document.createElement('div');
+  lbl.className = 'combo-label';
+
+  const tierLabel = mult >= 2.0 ? '🔥 COMBO ×8+' : mult >= 1.5 ? '⚡ COMBO ×5+' : '✨ COMBO ×3+';
+  const col       = mult >= 2.0 ? '#fb923c'       : mult >= 1.5 ? '#c084fc'       : '#fbbf24';
+
+  lbl.innerHTML = `
+    <div style="font-size:${mult>=2.0?28:mult>=1.5?25:22}px;color:${col};text-shadow:0 0 16px ${col};">${tierLabel}</div>
+    <div style="font-size:12px;color:rgba(255,255,255,.75);font-family:'Nunito',sans-serif;font-weight:800;letter-spacing:.06em;margin-top:3px;">${count+1} taş birden</div>
+  `;
+
+  // Önce görünmez ekle, gerçek boyutu ölç, sonra sınır içinde konumlandır
+  lbl.style.cssText = 'visibility:hidden;position:fixed;z-index:600;';
+  document.body.appendChild(lbl);
+
+  const lw = lbl.offsetWidth;
+  const lh = lbl.offsetHeight;
+  const margin = 8; // Ekran kenarından minimum mesafe
+
+  // Yatay: taşın ortasına hizala, ekran dışına çıkmasın
+  let x = rect.left + rect.width / 2 - lw / 2;
+  x = Math.max(margin, Math.min(x, innerWidth - lw - margin));
+
+  // Dikey: taşın üstüne koy, üstten taşarsa altına al
+  let y = rect.top - lh - 8;
+  if (y < margin) y = rect.bottom + 8; // Üstte yer yoksa altına
+
+  lbl.style.cssText = ''; // Temizle — CSS class devreye girer
+  lbl.className = 'combo-label';
+  lbl.style.left = x + 'px';
+  lbl.style.top  = y + 'px';
+  // transform kaldırıldı — artık x manuel hesaplanıyor
+
+  setTimeout(() => lbl.remove(), 1850);
+  if (navigator.vibrate) navigator.vibrate(mult >= 2.0 ? [40,20,40] : mult >= 1.5 ? [30] : 15);
+}
+
+
+// ════════════════════════════════════════════════════════════════════
+// BÖLÜM 18 — GERİ ALMA (UNDO) TARİHİ
+// Son 12 hamle saklanır — her hamle öncesi snapshot alınır.
+// ════════════════════════════════════════════════════════════════════
+
+/**
+ * Mevcut oyun durumunun snapshot'ını hist dizisine ekler.
+ * G.map(r=>[...r]): 2B diziyi derin kopyalar (deep copy).
+ * Neden derin kopya? Nesne referansı değil, değer kopyası saklanır —
+ * aksi halde geri aldığında aynı nesneyi gösterirdi.
+ */
+function saveHist() {
+  hist.push({ G: G.map(r => [...r]), score, coins });
+  if (hist.length > 12) hist.shift(); // Bellek yönetimi: en eskiyi at
+}
+
+
+// ════════════════════════════════════════════════════════════════════
+// BÖLÜM 19 — OTOMATIK KAYIT / DEVAM
+// localStorage ile oyun periyodik olarak kaydedilir.
+// Sayfa yenilense bile kaldığı yerden devam edilebilir.
+// ════════════════════════════════════════════════════════════════════
+
+function saveGame() {
+  if (!active) return;
+  try {
+    localStorage.setItem(SAVE_KEY, JSON.stringify({
+      G, score, coins, targetIdx, gameStartTime, ts: Date.now()
+    }));
+  } catch(e) {}
+}
+
+/**
+ * Kayıtlı oyunu yükler.
+ * 24 saatten eski kayıtlar otomatik silinir — stale data önlenir.
+ * @returns {boolean} Kayıt yüklendi mi?
+ */
+function loadGame() {
+  try {
+    const raw = localStorage.getItem(SAVE_KEY);
+    if (!raw) return false;
+    const d = JSON.parse(raw);
+    if (Date.now() - d.ts > 86400000) { localStorage.removeItem(SAVE_KEY); return false; }
+    G = d.G; score = d.score; coins = d.coins;
+    targetIdx = d.targetIdx; gameStartTime = d.gameStartTime || Date.now();
+    return true;
+  } catch(e) { return false; }
+}
+
+function clearSave() { localStorage.removeItem(SAVE_KEY); }
+
+
+// ════════════════════════════════════════════════════════════════════
+// BÖLÜM 20 — OYUN BAŞLATMA VE DEVAM ETTİRME
+// startGame: sıfırdan başlar. resumeGame: kayıtlı durumu yükler.
+// ════════════════════════════════════════════════════════════════════
+
+/**
+ * Tüm state değişkenlerini ve DOM'u sıfırlar, yeni oyun başlatır.
+ * Neden tek fonksiyonda? Tutarsız state'i önlemek için —
+ * her değişken buradan güvenle sıfırlanır.
+ */
+function startGame() {
+  score = 0; coins = 30; targetIdx = 0;
+  gameStartTime = Date.now();
+  clearSave();
+  cancelHold(); cancelSwap();
+  smashOn = false; smashCharges = 0; hist = []; busy = false;
+  lastMergeCount = 0; warnShownThisRound = false;
+  bombOn = false; freezeActive = false;
+  document.body.classList.remove('smash-mode', 'bomb-mode');
+
+  // Power-up butonlarını sıfırla
+  const smashBtn = document.getElementById('pu-smash');
+  smashBtn.classList.remove('active');
+  smashBtn.querySelector('.pu-icon').textContent = '🔨';
+  smashBtn.querySelector('.pu-cost').textContent = '🪙50';
+  document.getElementById('pu-bomb').classList.remove('active');
+  document.getElementById('pu-freeze').classList.remove('active');
+  document.getElementById('pu-freeze').querySelector('.pu-icon').textContent = '❄️';
+
+  // Grid DOM'unu temizle ve yeniden oluştur
+  Object.keys(BE).forEach(k => { BE[k].remove(); delete BE[k]; });
+  const g = document.getElementById('grid');
+  g.innerHTML = '';
+  for (let r = 0; r < ROWS; r++)
+    for (let c = 0; c < COLS; c++) {
+      const cell = document.createElement('div');
+      cell.className = 'cell';
+      g.appendChild(cell);
+    }
+
+  initGrid(); rebuildDOM(); updateHUD();
+  updateBestShort(); updateFreezeInd();
+  active = true;
+}
+
+/**
+ * Kayıtlı oyunu devam ettirir.
+ * loadGame() çağrısı state değişkenlerini doldurmuş olmalı.
+ */
+function resumeGame() {
+  cancelHold(); cancelSwap();
+  smashOn = false; smashCharges = 0; hist = []; busy = false;
+  lastMergeCount = 0; warnShownThisRound = false;
+  bombOn = false; freezeActive = false;
+  document.body.classList.remove('smash-mode', 'bomb-mode');
+
+  const smashBtn = document.getElementById('pu-smash');
+  smashBtn.classList.remove('active');
+  smashBtn.querySelector('.pu-icon').textContent = '🔨';
+  smashBtn.querySelector('.pu-cost').textContent = '🪙50';
+  document.getElementById('pu-bomb').classList.remove('active');
+  document.getElementById('pu-freeze').classList.remove('active');
+  document.getElementById('pu-freeze').querySelector('.pu-icon').textContent = '❄️';
+
+  Object.keys(BE).forEach(k => { BE[k].remove(); delete BE[k]; });
+  const g = document.getElementById('grid');
+  g.innerHTML = '';
+  for (let r = 0; r < ROWS; r++)
+    for (let c = 0; c < COLS; c++) {
+      const cell = document.createElement('div');
+      cell.className = 'cell';
+      g.appendChild(cell);
+    }
+
+  rebuildDOM(); updateHUD(); updateBestShort(); updateFreezeInd();
+  active = true;
+}
+
+
+// ════════════════════════════════════════════════════════════════════
+// BÖLÜM 21 — POWER-UP EVENT LISTENER'LARI
+// Butonlara tıklanınca ilgili mod aktif hale gelir.
+// ════════════════════════════════════════════════════════════════════
+
+// Değiştir (Swap): iki aşamalı — önce mod aktif, sonra taşlar seçilir
+document.getElementById('pu-hint').addEventListener('click', () => {
+  if (swapOn) { cancelSwap(); return; }
+  if (coins < PU_COST.hint || !active) return;
+  swapOn = true; swapFirst = null;
   document.getElementById('pu-hint').classList.add('active');
-  tone(550,'sine',.12,.4);
+  tone(550, 'sine', .12, .4);
 });
-document.getElementById('pu-undo').addEventListener('click',()=>{
-  if(coins<PU_COST.undo||!hist.length)return;
+
+// Geri Al: snapshot'tan restore et, cost düşür
+document.getElementById('pu-undo').addEventListener('click', () => {
+  if (coins < PU_COST.undo || !hist.length) return;
   cancelHold();
-  const h=hist.pop();G=h.G;score=h.score;coins=h.coins-PU_COST.undo;
-  if(coins<0)coins=0;rebuildDOM();updateHUD();
-  tone(330,'triangle',.15,.28);
+  const h = hist.pop();
+  G = h.G; score = h.score;
+  coins = h.coins - PU_COST.undo; // Undo'nun kendisi de coin ister
+  if (coins < 0) coins = 0;
+  rebuildDOM(); updateHUD();
+  tone(330, 'triangle', .15, .28);
 });
-document.getElementById('pu-smash').addEventListener('click',()=>{
-  if(smashOn){
-    smashOn=false; smashCharges=0;
+
+// Yok Et: cursor crosshair olur, tıklanan taş silinir
+document.getElementById('pu-smash').addEventListener('click', () => {
+  if (smashOn) {
+    smashOn = false; smashCharges = 0;
     document.body.classList.remove('smash-mode');
-    const btn=document.getElementById('pu-smash');
+    const btn = document.getElementById('pu-smash');
     btn.classList.remove('active');
-    btn.querySelector('.pu-icon').textContent='🔨';
-    btn.querySelector('.pu-cost').textContent='🪙50';
+    btn.querySelector('.pu-icon').textContent = '🔨';
+    btn.querySelector('.pu-cost').textContent = '🪙50';
     return;
   }
-  if(coins<PU_COST.smash)return;
-  smashOn=true; smashCharges=1;
+  if (coins < PU_COST.smash) return;
+  smashOn = true; smashCharges = 1;
   document.body.classList.add('smash-mode');
-  const btn=document.getElementById('pu-smash');
-  btn.classList.add('active');
-  tone(440,'sawtooth',.1,.25);
+  document.getElementById('pu-smash').classList.add('active');
+  tone(440, 'sawtooth', .1, .25);
 });
-document.getElementById('pu-shuffle').addEventListener('click',()=>{
-  if(coins<PU_COST.shuffle)return;
+
+// Karıştır: tüm taşları Fisher-Yates ile yeniden dağıt
+document.getElementById('pu-shuffle').addEventListener('click', () => {
+  if (coins < PU_COST.shuffle) return;
   cancelHold();
-  saveHist();coins-=PU_COST.shuffle;updateHUD();
-  const vals=[];for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++)if(G[r][c])vals.push(G[r][c]);
-  rng(vals);let i=0;for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++)if(G[r][c])G[r][c]=vals[i++];
+  saveHist(); coins -= PU_COST.shuffle; updateHUD();
+  const vals = [];
+  for (let r = 0; r < ROWS; r++) for (let c = 0; c < COLS; c++) if (G[r][c]) vals.push(G[r][c]);
+  rng(vals);
+  let i = 0;
+  for (let r = 0; r < ROWS; r++) for (let c = 0; c < COLS; c++) if (G[r][c]) G[r][c] = vals[i++];
   rebuildDOM();
-  [300,400,500,600].forEach((f,i)=>setTimeout(()=>tone(f,'triangle',.1,.2),i*55));
+  [300,400,500,600].forEach((f, i) => setTimeout(() => tone(f,'triangle',.1,.2), i*55));
 });
-document.getElementById('pu-bomb').addEventListener('click',()=>{
-  if(bombOn){
-    bombOn=false;document.body.classList.remove('bomb-mode');
-    const btn=document.getElementById('pu-bomb');btn.classList.remove('active');
+
+// Bomba: cursor crosshair, tıklanan 3×3 temizlenir
+document.getElementById('pu-bomb').addEventListener('click', () => {
+  if (bombOn) {
+    bombOn = false; document.body.classList.remove('bomb-mode');
+    document.getElementById('pu-bomb').classList.remove('active');
     return;
   }
-  if(coins<PU_COST.bomb)return;
-  // Smash/hold iptal
-  if(smashOn){smashOn=false;smashCharges=0;document.body.classList.remove('smash-mode');document.getElementById('pu-smash').classList.remove('active');}
+  if (coins < PU_COST.bomb) return;
+  // Diğer aktif modları iptal et
+  if (smashOn) { smashOn = false; smashCharges = 0; document.body.classList.remove('smash-mode'); document.getElementById('pu-smash').classList.remove('active'); }
   cancelHold();
-  bombOn=true;
+  bombOn = true;
   document.body.classList.add('bomb-mode');
-  const btn=document.getElementById('pu-bomb');btn.classList.add('active');
-  tone(200,'sawtooth',.12,.4);setTimeout(()=>tone(350,'sawtooth',.1,.3),80);
+  document.getElementById('pu-bomb').classList.add('active');
+  tone(200, 'sawtooth', .12, .4);
+  setTimeout(() => tone(350, 'sawtooth', .1, .3), 80);
 });
-document.getElementById('pu-freeze').addEventListener('click',()=>{
-  if(coins<PU_COST.freeze)return;
-  if(freezeActive){
-    freezeActive=false;updateFreezeInd();
-    const btn=document.getElementById('pu-freeze');btn.classList.remove('active');btn.querySelector('.pu-icon').textContent='❄️';
+
+// Dondur: bir sonraki spawn turunu atlar
+document.getElementById('pu-freeze').addEventListener('click', () => {
+  if (coins < PU_COST.freeze) return;
+  if (freezeActive) {
+    freezeActive = false; updateFreezeInd();
+    const btn = document.getElementById('pu-freeze');
+    btn.classList.remove('active'); btn.querySelector('.pu-icon').textContent = '❄️';
     return;
   }
   cancelHold();
-  saveHist();coins-=PU_COST.freeze;
-  freezeActive=true;
-  updateHUD();updateFreezeInd();
-  const btn=document.getElementById('pu-freeze');btn.classList.add('active');btn.querySelector('.pu-icon').textContent='🔒';
-  tone(880,'sine',.15,.35);setTimeout(()=>tone(1100,'sine',.12,.25),90);
+  saveHist(); coins -= PU_COST.freeze;
+  freezeActive = true;
+  updateHUD(); updateFreezeInd();
+  const btn = document.getElementById('pu-freeze');
+  btn.classList.add('active'); btn.querySelector('.pu-icon').textContent = '🔒';
+  tone(880, 'sine', .15, .35);
+  setTimeout(() => tone(1100, 'sine', .12, .25), 90);
 });
-document.getElementById('btn-pause').addEventListener('click',()=>{
+
+
+// ════════════════════════════════════════════════════════════════════
+// BÖLÜM 22 — GRID INPUT EVENT'LERİ
+// Dokunma ve tıklama olayları — hold, release, cancel, move.
+// ════════════════════════════════════════════════════════════════════
+
+const gridEl2 = document.getElementById('grid');
+
+// pointerup: parmak kaldırıldı → merge veya iptal
+gridEl2.addEventListener('pointerup',    e => { e.preventDefault(); onGridUp(); });
+// pointercancel: sistem tarafından iptal (örn. telefon bildirimi)
+gridEl2.addEventListener('pointercancel', () => cancelHold());
+// contextmenu: sağ tıklamayı engelle (özellikle masaüstünde)
+gridEl2.addEventListener('contextmenu', e => e.preventDefault());
+
+// pointermove: parmak başka kareye geçince hold iptal
+// Neden? Kullanıcı kaymak isteyebilir — yanlış merge önlenir
+gridEl2.addEventListener('pointermove', e => {
+  if (!holdCell) return;
+  const el = document.elementFromPoint(e.clientX, e.clientY);
+  if (!el) return;
+  const block = el.closest('.block');
+  if (!block) return;
+  const mr = parseInt(block.dataset.r);
+  const mc = parseInt(block.dataset.c);
+  if (mr !== holdCell.r || mc !== holdCell.c) cancelHold();
+});
+
+// Kontrol butonları
+document.getElementById('btn-resume').addEventListener('click', () =>
+  document.getElementById('ov-pause').classList.remove('show'));
+
+document.getElementById('btn-warn-ok').addEventListener('click', () => {
+  document.getElementById('ov-warn').classList.remove('show');
+  // warnShownThisRound=true kalır → bir sonraki tıkanda game over
+});
+
+document.getElementById('btn-restart-p').addEventListener('click', () => {
+  document.getElementById('ov-pause').classList.remove('show'); startGame();
+});
+
+document.getElementById('btn-restart-go').addEventListener('click', () => {
+  document.getElementById('ov-go').classList.remove('show'); startGame();
+});
+
+document.getElementById('btn-pause').addEventListener('click', () => {
   cancelHold();
-  document.getElementById('p-sc').textContent=score.toLocaleString('tr');
+  document.getElementById('p-sc').textContent = score.toLocaleString('tr');
   document.getElementById('ov-pause').classList.add('show');
 });
-// grid-level pointerup/cancel — catches release anywhere on the grid
-const gridEl2=document.getElementById('grid');
-gridEl2.addEventListener('pointerup',   e=>{e.preventDefault();onGridUp();});
-gridEl2.addEventListener('pointercancel',()=>cancelHold());
-gridEl2.addEventListener('contextmenu', e=>e.preventDefault());
 
-// pointermove — sadece hold aktifse ve parmak BAŞKA kareye geçtiyse iptal
-gridEl2.addEventListener('pointermove', e=>{
-  if(!holdCell) return; // debounce süresinde holdCell null, dokunma
-  const el=document.elementFromPoint(e.clientX, e.clientY);
-  if(!el) return;
-  const block=el.closest('.block');
-  if(!block) return;
-  const mr=parseInt(block.dataset.r), mc=parseInt(block.dataset.c);
-  if(mr!==holdCell.r || mc!==holdCell.c){
-    cancelHold();
-  }
+document.getElementById('btn-undo-game').addEventListener('click', () => {
+  cancelHold();
+  active = false;
+  saveGame();
+  document.getElementById('ov-start').classList.add('show');
 });
-document.getElementById('btn-resume').addEventListener('click',()=>document.getElementById('ov-pause').classList.remove('show'));
-document.getElementById('btn-warn-ok').addEventListener('click',()=>{
-  document.getElementById('ov-warn').classList.remove('show');
-  // Oyuncu devam dedi — bir hamle yapabilir, sonra checkGO tekrar tetiklenecek
-  // warnShownThisRound=true kalıyor → bir sonraki tıkanda game over gelir
+
+// Overlay butonları
+document.getElementById('btn-start').addEventListener('click', () => {
+  document.getElementById('ov-start').classList.remove('show'); startGame();
 });
-document.getElementById('btn-restart-p').addEventListener('click',()=>{document.getElementById('ov-pause').classList.remove('show');startGame();});
-document.getElementById('btn-restart-go').addEventListener('click',()=>{document.getElementById('ov-go').classList.remove('show');startGame();});
-// ================================================================
-// ADMIN PANELİ — 5x hızlı tıklama ile açılır (gizli)
-// ================================================================
-(()=>{
-  let adminTaps=0, adminTimer=null;
-  let adminVal=2048; // seçili değer
-  let adminMode=false; // tıklama modu aktif mi
+document.getElementById('btn-howto').addEventListener('click', () =>
+  document.getElementById('ov-howto').classList.add('show'));
+document.getElementById('btn-howto-ig').addEventListener('click', () =>
+  document.getElementById('ov-howto').classList.add('show'));
+document.getElementById('btn-howto-close').addEventListener('click', () =>
+  document.getElementById('ov-howto').classList.remove('show'));
+document.getElementById('btn-harika').addEventListener('click', goNextLevel);
 
-  const ADMIN_VALS=[2,4,8,16,32,64,128,256,512,1024,2048,4096,8192,16384,32768,65536,131072];
 
-  function openAdmin(){
-    if(!active) return; // oyun aktif değilse açma
-    const ov=document.getElementById('ov-admin');
-    ov.style.display='flex';
+// ════════════════════════════════════════════════════════════════════
+// BÖLÜM 23 — SIFIRLAMA PANELİ
+// ════════════════════════════════════════════════════════════════════
+
+document.getElementById('btn-reset-all').addEventListener('click', () => {
+  document.getElementById('rst-bests').checked = false;
+  document.getElementById('rst-save').checked = false;
+  document.getElementById('ov-reset').classList.add('show');
+});
+
+document.getElementById('btn-reset-cancel').addEventListener('click', () =>
+  document.getElementById('ov-reset').classList.remove('show'));
+
+document.getElementById('btn-reset-confirm').addEventListener('click', () => {
+  const delBests = document.getElementById('rst-bests').checked;
+  const delSave  = document.getElementById('rst-save').checked;
+  if (!delBests && !delSave) { document.getElementById('ov-reset').classList.remove('show'); return; }
+
+  const msgs = [];
+  if (delBests) { localStorage.removeItem('axydrop_bests'); updateBestShort(); msgs.push('skorlar'); }
+  if (delSave)  { localStorage.removeItem(SAVE_KEY); const rb = document.getElementById('btn-resume-save'); if (rb) rb.remove(); msgs.push('kayıt'); }
+
+  document.getElementById('ov-reset').classList.remove('show');
+  [523,659,784].forEach((f, i) => setTimeout(() => tone(f,'sine',.1,.3), i*80));
+  const t = document.getElementById('rank-toast');
+  t.textContent = `🗑 Silindi: ${msgs.join(' + ')}`;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2200);
+});
+
+
+// ════════════════════════════════════════════════════════════════════
+// BÖLÜM 24 — ADMIN PANELİ (GİZLİ TEST ARACI)
+// Üst başlığa 5 kez hızlı tıklanınca açılır.
+// Production'a geçmeden önce kaldırılacak.
+// IIFE (Immediately Invoked Function Expression) kullanıldı:
+// adminTaps gibi değişkenler dışarıya sızmaz — kapsülleme sağlar.
+// ════════════════════════════════════════════════════════════════════
+
+(() => {
+  let adminTaps = 0, adminTimer = null;
+  let adminVal = 2048;
+  let adminMode = false;
+
+  const ADMIN_VALS = [2,4,8,16,32,64,128,256,512,1024,2048,4096,8192,16384,32768,65536,131072];
+
+  function openAdmin() {
+    if (!active) return;
+    document.getElementById('ov-admin').style.display = 'flex';
     buildAdminVals();
-    document.getElementById('admin-sel-label').textContent=fmtTarget(adminVal);
+    document.getElementById('admin-sel-label').textContent = fmtTarget(adminVal);
   }
-  function closeAdmin(){
-    document.getElementById('ov-admin').style.display='none';
-    adminMode=false;
-    // Grid'deki selected class temizle
-    Object.values(BE).forEach(e=>e.classList.remove('admin-sel'));
+
+  function closeAdmin() {
+    document.getElementById('ov-admin').style.display = 'none';
+    adminMode = false;
+    Object.values(BE).forEach(e => e.classList.remove('admin-sel'));
   }
-  function buildAdminVals(){
-    const wrap=document.getElementById('admin-vals');
-    wrap.innerHTML='';
-    ADMIN_VALS.forEach(v=>{
-      const btn=document.createElement('button');
-      btn.textContent=fmtTarget(v);
-      btn.style.cssText=`background:${v===adminVal?'rgba(251,191,36,.25)':'rgba(255,255,255,.06)'};
+
+  function buildAdminVals() {
+    const wrap = document.getElementById('admin-vals');
+    wrap.innerHTML = '';
+    ADMIN_VALS.forEach(v => {
+      const btn = document.createElement('button');
+      btn.textContent = fmtTarget(v);
+      btn.style.cssText = `
+        background:${v===adminVal?'rgba(251,191,36,.25)':'rgba(255,255,255,.06)'};
         border:1.5px solid ${v===adminVal?'#fbbf24':'rgba(255,255,255,.12)'};
-        border-radius:7px;padding:5px 8px;
-        font-family:'Orbitron',sans-serif;font-size:10px;font-weight:700;
-        color:${v===adminVal?'#fbbf24':'rgba(200,220,255,.7)'};cursor:pointer;min-width:36px;`;
-      btn.addEventListener('click',()=>{
-        adminVal=v;
-        document.getElementById('admin-sel-label').textContent=fmtTarget(v);
-        buildAdminVals(); // yeniden render — seçili highlight
-        adminMode=true; // tıklama modunu aktif et
+        border-radius:7px; padding:5px 8px;
+        font-family:'Orbitron',sans-serif; font-size:10px; font-weight:700;
+        color:${v===adminVal?'#fbbf24':'rgba(200,220,255,.7)'}; cursor:pointer; min-width:36px;
+      `;
+      btn.addEventListener('click', () => {
+        adminVal = v;
+        document.getElementById('admin-sel-label').textContent = fmtTarget(v);
+        buildAdminVals();
+        adminMode = true;
       });
       wrap.appendChild(btn);
     });
   }
 
-  // Başlık 5x tıklama tetikleyici
-  document.getElementById('app-title').addEventListener('click',()=>{
+  // 800ms içinde 5 kez tıklanırsa açılır
+  document.getElementById('app-title').addEventListener('click', () => {
     adminTaps++;
     clearTimeout(adminTimer);
-    adminTimer=setTimeout(()=>{ adminTaps=0; },800);
-    if(adminTaps>=5){ adminTaps=0; openAdmin(); }
+    adminTimer = setTimeout(() => { adminTaps = 0; }, 800);
+    if (adminTaps >= 5) { adminTaps = 0; openAdmin(); }
   });
 
-  // Kapat
-  document.getElementById('admin-close').addEventListener('click',closeAdmin);
+  document.getElementById('admin-close').addEventListener('click', closeAdmin);
 
-  // Tüm grid doldur
-  document.getElementById('admin-fill').addEventListener('click',()=>{
-    if(!active) return;
-    for(let r=0;r<ROWS;r++) for(let c=0;c<COLS;c++) G[r][c]=adminVal;
+  document.getElementById('admin-fill').addEventListener('click', () => {
+    if (!active) return;
+    for (let r = 0; r < ROWS; r++) for (let c = 0; c < COLS; c++) G[r][c] = adminVal;
     rebuildDOM(); updateHUD();
   });
 
-  // Grid temizle
-  document.getElementById('admin-clear').addEventListener('click',()=>{
-    if(!active) return;
-    for(let r=0;r<ROWS;r++) for(let c=0;c<COLS;c++) G[r][c]=0;
-    Object.keys(BE).forEach(k=>{BE[k].remove();delete BE[k];});
+  document.getElementById('admin-clear').addEventListener('click', () => {
+    if (!active) return;
+    for (let r = 0; r < ROWS; r++) for (let c = 0; c < COLS; c++) G[r][c] = 0;
+    Object.keys(BE).forEach(k => { BE[k].remove(); delete BE[k]; });
     updateHUD();
   });
 
-  // Grid tıklaması — admin modunda kareyi seçili değere çevir
-  document.getElementById('grid').addEventListener('pointerdown', e=>{
-    if(document.getElementById('ov-admin').style.display==='none') return;
-    if(!adminMode) return;
-    const block=e.target.closest('.block');
-    if(!block) return;
+  // Admin modunda grid tıklaması: seçili değeri hücreye yaz
+  document.getElementById('grid').addEventListener('pointerdown', e => {
+    if (document.getElementById('ov-admin').style.display === 'none') return;
+    if (!adminMode) return;
+    const block = e.target.closest('.block');
+    if (!block) return;
     e.stopPropagation();
-    const r=parseInt(block.dataset.r), c=parseInt(block.dataset.c);
-    G[r][c]=adminVal;
-    // DOM güncelle
-    block.className=`block ${vcls(adminVal)}`;
-    block.querySelector('.bnum').textContent=fmtTarget(adminVal);
-    block.querySelector('.bnum').style.fontSize=fsize(adminVal);
-    block.dataset.v=adminVal;
-    // Kısa flash animasyonu
+    const r = parseInt(block.dataset.r), c = parseInt(block.dataset.c);
+    G[r][c] = adminVal;
+    block.className = `block ${vcls(adminVal)}`;
+    block.querySelector('.bnum').textContent = fmtTarget(adminVal);
+    block.querySelector('.bnum').style.fontSize = fsize(adminVal);
+    block.dataset.v = adminVal;
     block.classList.add('a-merge');
-    setTimeout(()=>block.classList.remove('a-merge'),300);
-    tone(440,'sine',.06,.3);
+    setTimeout(() => block.classList.remove('a-merge'), 300);
+    tone(440, 'sine', .06, .3);
   }, true);
 })();
 
-document.getElementById('btn-start').addEventListener('click',()=>{document.getElementById('ov-start').classList.remove('show');startGame();});
-document.getElementById('btn-howto').addEventListener('click',()=>document.getElementById('ov-howto').classList.add('show'));
-document.getElementById('btn-howto-ig').addEventListener('click',()=>document.getElementById('ov-howto').classList.add('show'));
-document.getElementById('btn-howto-close').addEventListener('click',()=>document.getElementById('ov-howto').classList.remove('show'));
 
-// Sıfırlama
-document.getElementById('btn-reset-all').addEventListener('click',()=>{
-  // Checkbox'ları sıfırla her açılışta
-  document.getElementById('rst-bests').checked=false;
-  document.getElementById('rst-save').checked=false;
-  document.getElementById('ov-reset').classList.add('show');
-});
-document.getElementById('btn-reset-cancel').addEventListener('click',()=>{
-  document.getElementById('ov-reset').classList.remove('show');
-});
-document.getElementById('btn-reset-confirm').addEventListener('click',()=>{
-  const delBests=document.getElementById('rst-bests').checked;
-  const delSave=document.getElementById('rst-save').checked;
-  if(!delBests&&!delSave){
-    // Hiçbir şey seçilmemişse sadece kapat
-    document.getElementById('ov-reset').classList.remove('show');
-    return;
-  }
-  const msgs=[];
-  if(delBests){
-    localStorage.removeItem('axydrop_bests');
-    updateBestShort();
-    msgs.push('skorlar');
-  }
-  if(delSave){
-    localStorage.removeItem('axydrop_autosave');
-    const resumeBtn=document.getElementById('btn-resume-save');
-    if(resumeBtn) resumeBtn.remove();
-    msgs.push('kayıt');
-  }
-  document.getElementById('ov-reset').classList.remove('show');
-  [523,659,784].forEach((f,i)=>setTimeout(()=>tone(f,'sine',.1,.3),i*80));
-  const t=document.getElementById('rank-toast');
-  t.textContent=`🗑 Silindi: ${msgs.join(' + ')}`;
-  t.classList.add('show');
-  setTimeout(()=>t.classList.remove('show'),2200);
-});
-document.getElementById('btn-harika').addEventListener('click',goNextLevel);
+// ════════════════════════════════════════════════════════════════════
+// BÖLÜM 25 — BAŞLANGIÇ VE DÖNGÜSEL GÖREVLER
+// Sayfa yüklenince ilk layout hesaplanır.
+// Otomatik kayıt periyodik çalışır.
+// ════════════════════════════════════════════════════════════════════
 
-// ================================================================
-// HISTORY
-// ================================================================
-function saveHist(){hist.push({G:G.map(r=>[...r]),score,coins});if(hist.length>12)hist.shift();}
+// İlk layout hesabı DOM render olduktan sonra yapılmalı
+requestAnimationFrame(() => { fitLayout(); });
+window.addEventListener('resize', fitLayout);
 
-// ================================================================
-// VFX
-// ================================================================
-function spawnPtcl(r,c,v,count=1){
-  const el=BE[`${r}-${c}`];
-  // use grid position as fallback if element not yet updated
-  const sz=parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--cs'))||62;
-  const gp=parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--cg'))||6;
-  const gwRect=document.getElementById('grid-wrap').getBoundingClientRect();
-  const cx=el?el.getBoundingClientRect().left+el.getBoundingClientRect().width/2 : gwRect.left+7+c*(sz+gp)+sz/2;
-  const cy=el?el.getBoundingClientRect().top+el.getBoundingClientRect().height/2  : gwRect.top+7+r*(sz+gp)+sz/2;
-  const cols=['#00b4ff','#a855f7','#fbbf24','#34d399','#f97316','#ec4899','#22c55e','#fff'];
-  // scale particle count with how many tiles merged
-  const base=Math.min(6+Math.floor(Math.log2(v)),14);
-  const n=Math.min(base*(count>1?count:1), 48);
-  const maxDist=45+count*18;
-  for(let i=0;i<n;i++){
-    const p=document.createElement('div'),a=Math.random()*360,d=18+Math.random()*maxDist;
-    const sz2=2+Math.random()*(3+count);
-    p.className='ptcl';
-    const dur=.4+Math.random()*.5+count*.05;
-    p.style.cssText=`left:${cx-sz2/2}px;top:${cy-sz2/2}px;width:${sz2}px;height:${sz2}px;background:${cols[Math.floor(Math.random()*cols.length)]};--tx:${Math.cos(a*Math.PI/180)*d}px;--ty:${Math.sin(a*Math.PI/180)*d}px;animation-duration:${dur}s`;
-    document.body.appendChild(p);setTimeout(()=>p.remove(),1100);
-  }
-  // ring(s) for multi-merges
-  const rings=Math.min(count,4);
-  for(let ri=0;ri<rings;ri++){
-    const rng=document.createElement('div');
-    rng.className='explode-ring';
-    const ringSize=(60+ri*35+count*15)+'px';
-    rng.style.cssText=`left:${cx}px;top:${cy}px;width:${ringSize};height:${ringSize};border-color:${cols[ri%cols.length]};animation-delay:${ri*.06}s;animation-duration:${.4+ri*.05}s`;
-    document.body.appendChild(rng);setTimeout(()=>rng.remove(),700);
-  }
-}
+// Her 3 saniyede otomatik kayıt (busy değilken)
+setInterval(() => { if (active && !busy) saveGame(); }, 3000);
 
-function screenFlash(){
-  const f=document.getElementById('flash-overlay');
-  f.classList.add('flash');
-  setTimeout(()=>f.classList.remove('flash'),120);
-}
-function spawnFloat(r,c,txt){
-  let x,y;
-  if(r<0){x=innerWidth/2;y=innerHeight/2-60;}
-  else{const el=BE[`${r}-${c}`];if(!el)return;const rect=el.getBoundingClientRect();x=rect.left+rect.width/2-16;y=rect.top;}
-  const f=document.createElement('div');f.className='float-s';f.textContent=txt;
-  f.style.left=x+'px';f.style.top=y+'px';
-  document.body.appendChild(f);setTimeout(()=>f.remove(),950);
-}
+// Sekme kapanırken/gizlenirken kayıt
+window.addEventListener('pagehide', () => saveGame());
+window.addEventListener('visibilitychange', () => { if (document.hidden) saveGame(); });
 
-function spawnComboLabel(r,c,mult,count){
-  const el=BE[`${r}-${c}`];if(!el)return;
-  const rect=el.getBoundingClientRect();
-  const lbl=document.createElement('div');
-  lbl.className='combo-label';
-  // Etiket içeriği: çarpan + taş sayısı
-  const tierLabel = mult>=2.0 ? '🔥 COMBO ×8+' : mult>=1.5 ? '⚡ COMBO ×5+' : '✨ COMBO ×3+';
-  const col = mult>=2.0 ? '#fb923c' : mult>=1.5 ? '#c084fc' : '#fbbf24';
-  lbl.innerHTML=`<div style="font-size:${mult>=2.0?28:mult>=1.5?25:22}px;color:${col};text-shadow:0 0 16px ${col};">${tierLabel}</div><div style="font-size:12px;color:rgba(255,255,255,.75);font-family:'Nunito',sans-serif;font-weight:800;letter-spacing:.06em;margin-top:3px;">${count+1} taş birden</div>`;
-  lbl.style.left=(rect.left+rect.width/2)+'px';
-  lbl.style.top=(rect.top)+'px';
-  lbl.style.transform='translateX(-50%)';
-  document.body.appendChild(lbl);
-  setTimeout(()=>lbl.remove(),1850);
-  if(navigator.vibrate) navigator.vibrate(mult>=2.0?[40,20,40]:mult>=1.5?[30]:15);
-}
-
-// ================================================================
-// AUTO-SAVE / RESUME
-// ================================================================
-const SAVE_KEY='axydrop_autosave';
-
-function saveGame(){
-  if(!active)return;
-  try{
-    localStorage.setItem(SAVE_KEY,JSON.stringify({
-      G,score,coins,targetIdx,
-      gameStartTime,
-      ts:Date.now()
-    }));
-  }catch(e){}
-}
-
-function loadGame(){
-  try{
-    const raw=localStorage.getItem(SAVE_KEY);
-    if(!raw)return false;
-    const d=JSON.parse(raw);
-    // 24 saatten eski kayıt varsa sil
-    if(Date.now()-d.ts > 86400000){localStorage.removeItem(SAVE_KEY);return false;}
-    G=d.G; score=d.score; coins=d.coins; targetIdx=d.targetIdx;
-    gameStartTime=d.gameStartTime||Date.now();
-    return true;
-  }catch(e){return false;}
-}
-
-function clearSave(){
-  localStorage.removeItem(SAVE_KEY);
-}
-
-function resumeGame(){
-  cancelHold(); cancelSwap();
-  smashOn=false; smashCharges=0; hist=[]; busy=false; lastMergeCount=0; warnShownThisRound=false;
-  bombOn=false; freezeActive=false;
-  document.body.classList.remove('smash-mode','bomb-mode');
-  const smashBtn=document.getElementById('pu-smash');
-  smashBtn.classList.remove('active');
-  smashBtn.querySelector('.pu-icon').textContent='🔨';
-  smashBtn.querySelector('.pu-cost').textContent='🪙50';
-  document.getElementById('pu-bomb').classList.remove('active');
-  document.getElementById('pu-freeze').classList.remove('active');
-  document.getElementById('pu-freeze').querySelector('.pu-icon').textContent='❄️';
-  Object.keys(BE).forEach(k=>{BE[k].remove();delete BE[k];});
-  const g=document.getElementById('grid');g.innerHTML='';
-  for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++){const cell=document.createElement('div');cell.className='cell';g.appendChild(cell);}
-  rebuildDOM();updateHUD();updateBestShort();updateFreezeInd();
-  active=true;
-}
-
-// ================================================================
-// START GAME
-// ================================================================
-function startGame(){
-  score=0;coins=30;targetIdx=0;
-  gameStartTime=Date.now();
-  clearSave();
-  cancelHold(); cancelSwap();
-  smashOn=false; smashCharges=0; hist=[];busy=false; lastMergeCount=0; warnShownThisRound=false;
-  bombOn=false; freezeActive=false;
-  document.body.classList.remove('smash-mode','bomb-mode');
-  const smashBtn=document.getElementById('pu-smash');
-  smashBtn.classList.remove('active');
-  smashBtn.querySelector('.pu-icon').textContent='🔨';
-  smashBtn.querySelector('.pu-cost').textContent='🪙50';
-  document.getElementById('pu-bomb').classList.remove('active');
-  document.getElementById('pu-freeze').classList.remove('active');
-  document.getElementById('pu-freeze').querySelector('.pu-icon').textContent='❄️';
-  Object.keys(BE).forEach(k=>{BE[k].remove();delete BE[k];});
-  const g=document.getElementById('grid');g.innerHTML='';
-  for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++){const cell=document.createElement('div');cell.className='cell';g.appendChild(cell);}
-  initGrid();rebuildDOM();updateHUD();
-  updateBestShort();updateFreezeInd();
-  active=true;
-}
-
-// İlk fitLayout DOM render olduktan sonra
-requestAnimationFrame(()=>{ fitLayout(); });
-window.addEventListener('resize',fitLayout);
-
-// Her merge/hamle sonrası otomatik kaydet
-setInterval(()=>{ if(active&&!busy) saveGame(); },3000);
-window.addEventListener('pagehide',()=>saveGame());
-window.addEventListener('visibilitychange',()=>{ if(document.hidden) saveGame(); });
-
-// Sayfa açılınca kayıtlı oyun var mı kontrol et
-requestAnimationFrame(()=>{
-  if(loadGame()){
-    // Kayıt var — start ekranına "Devam Et" butonu ekle
-    const startModal=document.querySelector('#ov-start .modal');
-    if(startModal&&!document.getElementById('btn-resume-save')){
-      const resumeBtn=document.createElement('button');
-      resumeBtn.id='btn-resume-save';
-      resumeBtn.className='btn-purple';
-      resumeBtn.style.marginBottom='0';
-      resumeBtn.style.marginTop='8px';
-      resumeBtn.textContent='▶ Kaldığım Yerden Devam Et';
-      resumeBtn.addEventListener('click',()=>{
+// Sayfa açılınca kayıtlı oyun kontrolü
+requestAnimationFrame(() => {
+  if (loadGame()) {
+    const startModal = document.querySelector('#ov-start .modal');
+    if (startModal && !document.getElementById('btn-resume-save')) {
+      const resumeBtn = document.createElement('button');
+      resumeBtn.id = 'btn-resume-save';
+      resumeBtn.className = 'btn-purple';
+      resumeBtn.style.cssText = 'margin-bottom:0;margin-top:8px;';
+      resumeBtn.textContent = '▶ Kaldığım Yerden Devam Et';
+      resumeBtn.addEventListener('click', () => {
         document.getElementById('ov-start').classList.remove('show');
         resumeGame();
       });
-      // OYNA butonunun üstüne ekle
-      const startBtn=document.getElementById('btn-start');
+      const startBtn = document.getElementById('btn-start');
       startModal.insertBefore(resumeBtn, startBtn);
     }
   }
