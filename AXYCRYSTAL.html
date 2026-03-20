@@ -66,8 +66,17 @@ canvas#stars{position:fixed;inset:0;z-index:0;pointer-events:none;}
 .bv8192{background:linear-gradient(145deg,#00ffcc,#0080ff);border:2px solid #80ffee;box-shadow:0 0 40px rgba(0,255,200,.9);color:#fff;animation:pb 1s infinite;}
 .bv16384{background:linear-gradient(135deg,#a855f7,#06b6d4,#fbbf24);border:2px solid #fff;box-shadow:0 0 48px rgba(168,85,247,.9);color:#fff;animation:rr 2s linear infinite;}
 .bv32768{background:linear-gradient(135deg,#fff,#fbbf24,#ef4444);border:3px solid #fff;box-shadow:0 0 60px rgba(255,255,255,.9);color:#000;animation:rr 1.5s linear infinite;}
+/* 64K–1G: her biri ayrı renk, giderek daha epik */
+.bv65536  {background:linear-gradient(145deg,#0f172a,#6366f1);border:2px solid #818cf8;box-shadow:0 0 44px rgba(99,102,241,.9);color:#fff;animation:pb 1.1s infinite;}
+.bv131072 {background:linear-gradient(145deg,#134e4a,#2dd4bf);border:2px solid #5eead4;box-shadow:0 0 44px rgba(45,212,191,.9);color:#fff;animation:pb 1s infinite;}
+.bv262144 {background:linear-gradient(145deg,#450a0a,#f87171);border:2px solid #fca5a5;box-shadow:0 0 48px rgba(248,113,113,.9);color:#fff;animation:rr 1.8s linear infinite;}
+.bv524288 {background:linear-gradient(135deg,#1e1b4b,#7c3aed,#db2777);border:2px solid #f0abfc;box-shadow:0 0 52px rgba(124,58,237,.9);color:#fff;animation:rr 1.6s linear infinite;}
+.bv1048576{background:linear-gradient(135deg,#052e16,#16a34a,#fbbf24);border:2px solid #fde047;box-shadow:0 0 56px rgba(22,163,74,.9);color:#fff;animation:rr 1.4s linear infinite;}
+.bv2097152{background:linear-gradient(135deg,#fbbf24,#f97316,#7c3aed,#06b6d4);border:3px solid #fff;box-shadow:0 0 64px rgba(251,191,36,1);color:#fff;animation:rr 1.2s linear infinite;}
+.bv4194304{background:linear-gradient(135deg,#fff,#00ffcc,#ff0080);border:3px solid #fff;box-shadow:0 0 72px rgba(255,255,255,1);color:#000;animation:rr 1s linear infinite;}
 @keyframes pb{0%,100%{filter:brightness(1)}50%{filter:brightness(1.4) saturate(1.3)}}
 @keyframes rr{0%{filter:hue-rotate(0deg)}100%{filter:hue-rotate(360deg)}}
+@keyframes preview-pop{0%{transform:translate(-50%,-90%) scale(.7);opacity:0}100%{transform:translate(-50%,-100%) scale(1);opacity:1}}
 
 /* selected & hint */
 .block.selected{box-shadow:0 0 0 3px #fff,0 0 18px rgba(255,255,255,.5) !important;transform:scale(0.9) !important;z-index:10;}
@@ -242,6 +251,16 @@ body.smash-mode .block:hover{filter:brightness(1.5) saturate(1.5);outline:2px da
   transition:background .08s;
 }
 #flash-overlay.flash{background:rgba(255,255,255,.18);}
+/* tıkanma uyarı - power-up butonu */
+.warn-pu-btn{display:flex;align-items:center;gap:10px;padding:8px 12px;
+  background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.3);
+  border-radius:10px;cursor:pointer;transition:all .15s;width:100%;text-align:left;}
+.warn-pu-btn:hover{background:rgba(245,158,11,.2);border-color:rgba(245,158,11,.6);}
+.warn-pu-btn .wp-icon{font-size:20px;flex-shrink:0;}
+.warn-pu-btn .wp-info{display:flex;flex-direction:column;gap:1px;}
+.warn-pu-btn .wp-name{font-family:'Nunito',sans-serif;font-size:13px;font-weight:800;color:#e2f0ff;}
+.warn-pu-btn .wp-desc{font-family:'Nunito',sans-serif;font-size:10px;color:rgba(180,210,255,.5);}
+.warn-pu-btn .wp-cost{font-family:'Orbitron',sans-serif;font-size:10px;font-weight:700;color:#34d399;margin-left:auto;flex-shrink:0;}
 </style>
 </head>
 <body>
@@ -250,7 +269,7 @@ body.smash-mode .block:hover{filter:brightness(1.5) saturate(1.5);outline:2px da
 <div id="app">
   <!-- Oyun adı -->
   <div style="width:100%;text-align:center;flex-shrink:0;padding-top:2px;">
-    <span style="font-family:'Orbitron',sans-serif;font-size:13px;font-weight:900;background:linear-gradient(90deg,#00b4ff,#a855f7,#fbbf24);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;letter-spacing:.18em;">AXY CRYSTAL</span>
+    <span id="app-title" style="font-family:'Orbitron',sans-serif;font-size:13px;font-weight:900;background:linear-gradient(90deg,#00b4ff,#a855f7,#fbbf24);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;letter-spacing:.18em;cursor:default;user-select:none;">AXY CRYSTAL</span>
     <span style="font-family:'Nunito',sans-serif;font-size:9px;color:rgba(180,210,255,.25);margin-left:6px;letter-spacing:.06em;">v2.0</span>
   </div>
 
@@ -298,6 +317,34 @@ body.smash-mode .block:hover{filter:brightness(1.5) saturate(1.5);outline:2px da
 <div id="rank-toast">🏆 Yeni rekor!</div>
 <div id="flash-overlay"></div>
 
+<!-- ADMIN PANELİ — gizli, 5x title tıklama ile açılır -->
+<div id="ov-admin" style="display:none;position:fixed;inset:0;background:rgba(0,4,20,.92);backdrop-filter:blur(10px);z-index:200;align-items:center;justify-content:center;">
+  <div style="background:rgba(10,18,50,.98);border:2px solid rgba(255,80,80,.5);border-radius:18px;padding:22px;width:88%;max-width:320px;box-shadow:0 0 40px rgba(255,50,50,.3);">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+      <div style="font-family:'Orbitron',sans-serif;font-size:13px;font-weight:900;color:#ef4444;letter-spacing:.1em;">⚙ ADMIN</div>
+      <button id="admin-close" style="background:rgba(239,68,68,.15);border:1px solid rgba(239,68,68,.3);border-radius:8px;padding:4px 10px;color:#ef4444;font-size:12px;font-weight:800;cursor:pointer;font-family:'Nunito',sans-serif;">✕ KAPAT</button>
+    </div>
+
+    <!-- Değer seçici -->
+    <div style="margin-bottom:12px;">
+      <div style="font-family:'Nunito',sans-serif;font-size:10px;font-weight:800;color:rgba(255,120,120,.6);letter-spacing:.08em;margin-bottom:8px;">DEĞER SEÇ — sonra grid'de kareye tıkla</div>
+      <div id="admin-vals" style="display:flex;flex-wrap:wrap;gap:5px;"></div>
+    </div>
+
+    <!-- Seçili değer göstergesi -->
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;padding:8px 12px;background:rgba(255,80,80,.08);border:1px solid rgba(255,80,80,.2);border-radius:10px;">
+      <span style="font-family:'Nunito',sans-serif;font-size:11px;color:rgba(255,180,180,.6);font-weight:800;">SEÇİLİ:</span>
+      <span id="admin-sel-label" style="font-family:'Orbitron',sans-serif;font-size:16px;font-weight:900;color:#fbbf24;">—</span>
+    </div>
+
+    <!-- Araçlar -->
+    <div style="display:flex;flex-direction:column;gap:6px;">
+      <button id="admin-fill" style="background:rgba(0,180,255,.12);border:1px solid rgba(0,180,255,.3);border-radius:10px;padding:8px;font-family:'Nunito',sans-serif;font-size:12px;font-weight:800;color:#00b4ff;cursor:pointer;">🔲 Tüm Grid'i Seçili Değerle Doldur</button>
+      <button id="admin-clear" style="background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.25);border-radius:10px;padding:8px;font-family:'Nunito',sans-serif;font-size:12px;font-weight:800;color:#ef4444;cursor:pointer;">🗑 Grid'i Temizle</button>
+    </div>
+  </div>
+</div>
+
 <!-- BEST SCORE PANEL -->
 <div id="best-panel" style="display:none;position:fixed;top:72px;right:10px;z-index:90;
   background:rgba(10,18,50,.97);border:1.5px solid rgba(124,58,237,.5);border-radius:14px;
@@ -331,6 +378,18 @@ body.smash-mode .block:hover{filter:brightness(1.5) saturate(1.5);outline:2px da
   </div>
 </div>
 
+<!-- TIKANMA UYARISI -->
+<div class="ov" id="ov-warn">
+  <div class="modal" style="border:2px solid rgba(245,158,11,.5);box-shadow:0 0 50px rgba(245,158,11,.25);max-width:290px;">
+    <div style="font-size:44px;margin-bottom:8px;" id="warn-icon">⚠️</div>
+    <div style="font-family:'Orbitron',sans-serif;font-size:15px;font-weight:900;color:#f59e0b;margin-bottom:8px;letter-spacing:.08em;" id="warn-title">DİKKAT!</div>
+    <div style="font-size:13px;color:rgba(180,210,255,.7);margin-bottom:16px;line-height:1.7;" id="warn-msg">Grid dolmak üzere.</div>
+    <!-- Power-up önerileri -->
+    <div id="warn-pu-list" style="display:flex;flex-direction:column;gap:6px;margin-bottom:16px;"></div>
+    <button class="btn-green" id="btn-warn-ok" style="margin-bottom:0;">Anladım, Devam</button>
+  </div>
+</div>
+
 <!-- GAME OVER -->
 <div class="ov" id="ov-go">
   <div class="modal" style="border:2px solid rgba(239,68,68,.4);box-shadow:0 0 50px rgba(239,68,68,.2);">
@@ -351,6 +410,34 @@ body.smash-mode .block:hover{filter:brightness(1.5) saturate(1.5);outline:2px da
     <div style="font-family:'Nunito',sans-serif;font-size:10px;color:rgba(180,210,255,.3);letter-spacing:.1em;margin-bottom:16px;">v2.0 • 2026</div>
     <button class="btn-green" id="btn-start">YENİ OYUN 🚀</button>
     <button id="btn-howto" style="background:transparent;border:1.5px solid rgba(180,210,255,.2);border-radius:14px;padding:10px;width:100%;font-family:'Nunito',sans-serif;font-size:14px;font-weight:800;color:rgba(180,210,255,.55);cursor:pointer;margin-top:8px;transition:all .15s;" onmouseover="this.style.borderColor='rgba(180,210,255,.5)';this.style.color='rgba(180,210,255,.85)'" onmouseout="this.style.borderColor='rgba(180,210,255,.2)';this.style.color='rgba(180,210,255,.55)'">📖 Nasıl Oynanır?</button>
+    <button id="btn-reset-all" style="background:transparent;border:1.5px solid rgba(239,68,68,.2);border-radius:14px;padding:8px;width:100%;font-family:'Nunito',sans-serif;font-size:12px;font-weight:800;color:rgba(239,68,68,.4);cursor:pointer;margin-top:6px;transition:all .15s;" onmouseover="this.style.borderColor='rgba(239,68,68,.5)';this.style.color='rgba(239,68,68,.8)'" onmouseout="this.style.borderColor='rgba(239,68,68,.2)';this.style.color='rgba(239,68,68,.4)'">🗑 Tüm Verileri Sıfırla</button>
+  </div>
+</div>
+
+<!-- SIFIRLAMA ONAY -->
+<div class="ov" id="ov-reset">
+  <div class="modal" style="border:2px solid rgba(239,68,68,.4);box-shadow:0 0 50px rgba(239,68,68,.2);max-width:300px;">
+    <div style="font-size:40px;margin-bottom:8px;">🗑</div>
+    <div style="font-family:'Orbitron',sans-serif;font-size:15px;font-weight:900;color:#ef4444;margin-bottom:16px;letter-spacing:.08em;">VERİ SİL</div>
+    <!-- Seçenekler -->
+    <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:20px;text-align:left;">
+      <label style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:8px 12px;background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.2);border-radius:10px;">
+        <input type="checkbox" id="rst-bests" style="width:16px;height:16px;accent-color:#ef4444;cursor:pointer;">
+        <div>
+          <div style="font-family:'Nunito',sans-serif;font-size:13px;font-weight:800;color:#e2f0ff;">🏆 En Yüksek Skorlar</div>
+          <div style="font-family:'Nunito',sans-serif;font-size:10px;color:rgba(180,210,255,.45);">Top-5 skor listesi</div>
+        </div>
+      </label>
+      <label style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:8px 12px;background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.2);border-radius:10px;">
+        <input type="checkbox" id="rst-save" style="width:16px;height:16px;accent-color:#ef4444;cursor:pointer;">
+        <div>
+          <div style="font-family:'Nunito',sans-serif;font-size:13px;font-weight:800;color:#e2f0ff;">💾 Kayıtlı Oyun</div>
+          <div style="font-family:'Nunito',sans-serif;font-size:10px;color:rgba(180,210,255,.45);">Kaldığın yerden devam verisi</div>
+        </div>
+      </label>
+    </div>
+    <button class="btn-green" id="btn-reset-confirm" style="background:linear-gradient(135deg,#ef4444,#b91c1c);box-shadow:0 4px 18px rgba(239,68,68,.4);">Seçilenleri Sil</button>
+    <button class="btn-ghost" id="btn-reset-cancel" style="margin-top:8px;">Vazgeç</button>
   </div>
 </div>
 
@@ -517,13 +604,18 @@ function fitLayout(){
 // ================================================================
 // VALUE HELPERS
 // ================================================================
-const VCLS={2:'bv2',4:'bv4',8:'bv8',16:'bv16',32:'bv32',64:'bv64',128:'bv128',256:'bv256',512:'bv512',1024:'bv1024',2048:'bv2048',4096:'bv4096',8192:'bv8192',16384:'bv16384',32768:'bv32768'};
+const VCLS={
+  2:'bv2',4:'bv4',8:'bv8',16:'bv16',32:'bv32',64:'bv64',
+  128:'bv128',256:'bv256',512:'bv512',1024:'bv1024',
+  2048:'bv2048',4096:'bv4096',8192:'bv8192',16384:'bv16384',32768:'bv32768',
+  65536:'bv65536',131072:'bv131072',262144:'bv262144',524288:'bv524288',
+  1048576:'bv1048576',2097152:'bv2097152',4194304:'bv4194304'
+};
+const HIGH_CLS=['bv524288','bv1048576','bv2097152','bv4194304'];
 function vcls(v){
-  if(v<=32768&&VCLS[v]) return VCLS[v];
-  // Yüksek değerler: cycling through top-tier visual classes
-  const highTiers=['bv8192','bv16384','bv32768'];
+  if(VCLS[v]) return VCLS[v];
   const exp=Math.floor(Math.log2(v));
-  return highTiers[exp%highTiers.length];
+  return HIGH_CLS[exp%HIGH_CLS.length];
 }
 function fsize(v){
   // fmtTarget sonrası karakter sayısına göre ayarla
@@ -539,24 +631,131 @@ function fsize(v){
 // ================================================================
 function initGrid(){
   G=Array.from({length:ROWS},()=>Array(COLS).fill(0));
-  // tüm grid dolu başlar
-  for(let r=0;r<ROWS;r++) for(let c=0;c<COLS;c++) G[r][c]=rspawn();
+  // Başlangıç grid'i: hedeften bağımsız, geniş ve karışık değerler
+  // 2K hedefinde 2-4-8-16-32-64 karışık gelsin, monoton olmasın
+  for(let r=0;r<ROWS;r++) for(let c=0;c<COLS;c++) G[r][c]=rspawnInit();
 }
-function rspawn(){
-  // İlk 90 saniye: max 16, sonra score'a göre yükselir
-  const elapsed=(Date.now()-gameStartTime)/1000;
-  const earlyPhase=elapsed<90;
-  const maxVal= earlyPhase
-    ? 16
-    : Math.max(16, Math.min(256, Math.pow(2, Math.floor(Math.log2(score/100+2)))));
+function rspawnInit(){
+  // Bölüm çiftlerine göre sabit spawn bandı
+  const bands=[
+    [1,4],  // B1-2  (2K-4K):    2–16
+    [1,4],
+    [1,5],  // B3-4  (8K-16K):   2–32
+    [1,5],
+    [1,6],  // B5-6  (32K-64K):  2–64
+    [1,6],
+    [1,7],  // B7-8  (128K-256K):2–128
+    [1,7],
+    [1,8],  // B9-10 (512K-1M):  2–256
+    [1,8],
+    [1,9],  // B11+  (2M+):      2–512
+  ];
+  const band=bands[Math.min(targetIdx,bands.length-1)];
+  const lo=band[0], hi=band[1];
   const pool=[];
-  for(let v=2;v<=maxVal;v*=2){
-    const w=Math.max(1, Math.floor(8-Math.log2(v)));
+  for(let e=lo;e<=hi;e++){
+    const v=Math.pow(2,e);
+    const w=Math.max(1,hi-e+3);
     for(let i=0;i<w;i++) pool.push(v);
   }
   return pool[Math.floor(Math.random()*pool.length)];
 }
+function rspawn(){
+  const target = TARGETS[targetIdx];
+
+  // ── GRID DOLULUK KONTROLÜ ─────────────────────────────────────
+  let filledCells=0;
+  for(let r=0;r<ROWS;r++) for(let c=0;c<COLS;c++) if(G[r][c]) filledCells++;
+  const fillRate = filledCells / (ROWS*COLS);
+  if(fillRate >= 0.75) return [2,2,4,4,8][Math.floor(Math.random()*5)];
+
+  // ── KURTARICI SPAWN: merge yapılabilecek komşu yok mu? ────────
+  // %30 ihtimalle grid'deki mevcut değerlerden birini ver (birleştirebilsin)
+  if(Math.random()<0.30){
+    const existing=[];
+    for(let r=0;r<ROWS;r++) for(let c=0;c<COLS;c++) if(G[r][c]) existing.push(G[r][c]);
+    if(existing.length>0){
+      // En çok tekrar eden değeri bul — en birleştirilebilir olanı
+      const freq={};
+      existing.forEach(v=>freq[v]=(freq[v]||0)+1);
+      const sorted=Object.entries(freq).sort((a,b)=>b[1]-a[1]);
+      // İlk 3 en çok tekrar edenden rastgele seç
+      const candidates=sorted.slice(0,3).map(([v])=>+v);
+      return candidates[Math.floor(Math.random()*candidates.length)];
+    }
+  }
+
+  // ── 3 KATMANLI AĞIRLIK SİSTEMİ ───────────────────────────────
+  // Katman 1 — BASE (%70): 2-4-8-16, her zaman dominant
+  // Katman 2 — MID  (%25): hedefe bağlı orta değerler
+  // Katman 3 — HIGH (%5):  nadir yüksek değer (ödül hissi)
+  //
+  // Grok'un band yapısı: targetIdx'e göre orta katman büyür
+  const bands=[
+    {max:2,  midDiv:16, highDiv:8},   // B1-3  (2K-8K)
+    {max:5,  midDiv:12, highDiv:6},   // B4-6  (16K-64K)
+    {max:9,  midDiv:8,  highDiv:4},   // B7-10 (128K-1M)
+    {max:999,midDiv:6,  highDiv:3},   // B11+
+  ];
+  const band = bands.find(b=>targetIdx<=b.max) || bands[bands.length-1];
+  const midVal  = Math.max(8,  Math.floor(target/band.midDiv));
+  const highVal = Math.max(16, Math.floor(target/band.highDiv));
+  // ikiye kuvvetine yuvarla
+  const snap=(v)=>Math.pow(2,Math.round(Math.log2(v)));
+  const mid  = snap(midVal);
+  const high = snap(highVal);
+
+  // Havuz — sabit ağırlıklar + mid arası değerler için köprü
+  const midLow = snap(Math.max(32, mid/4));  // mid ile base arasındaki köprü
+  const pool=[
+    ...Array(38).fill(2),
+    ...Array(28).fill(4),
+    ...Array(16).fill(8),
+    ...Array(9).fill(16),    // BASE ~65%
+    ...Array(14).fill(midLow), // MID-alt köprü ~10%
+    ...Array(12).fill(mid),    // MID ~9%
+    ...Array(7).fill(high),    // HIGH ~5%
+  ];
+
+  return pool[Math.floor(Math.random()*pool.length)];
+}
 function rng(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+
+// ================================================================
+// BONUS TILE — hedefin 1/4'ü değerinde şaşaalı spawn
+// ================================================================
+function spawnBonusTile(r,c,v){
+  // Normal blok oluştur
+  const el=mkBlock(r,c,v);
+  if(!el) return;
+  // Parlak giriş: büyük scale + ışıltı
+  el.style.transform='scale(0) rotate(-15deg)';
+  el.style.opacity='0';
+  el.style.transition='none';
+  el.style.zIndex='15';
+  el.style.boxShadow=`0 0 0 4px #ff4500, 0 0 40px rgba(255,69,0,.9), 0 0 80px rgba(255,140,0,.6)`;
+  el.getBoundingClientRect(); // reflow
+  el.style.transition='transform .45s cubic-bezier(.34,1.56,.64,1), opacity .2s ease, box-shadow .4s ease';
+  el.style.transform='scale(1.15) rotate(0deg)';
+  el.style.opacity='1';
+  setTimeout(()=>{
+    el.style.transform='scale(1)';
+    el.style.boxShadow='';
+    el.style.zIndex='';
+    setTimeout(()=>{ el.style.transition=''; },300);
+  },350);
+  // Parçacık + float
+  spawnPtcl(r,c,v,5);
+  spawnFloat(r,c,`🔥${fmtTarget(v)}`);
+  // Fiery ses: dramatik iniş + ateş tonları
+  tone(120,'sawtooth',.08,.7);
+  setTimeout(()=>tone(180,'sawtooth',.1,.6),60);
+  setTimeout(()=>tone(440,'triangle',.15,.8),140);
+  setTimeout(()=>tone(660,'triangle',.12,.7),240);
+  setTimeout(()=>tone(880,'sine',.18,.9),340);
+  setTimeout(()=>tone(1100,'sine',.2,.8),440);
+  if(navigator.vibrate) navigator.vibrate([20,10,30,10,40]);
+}
 
 // freeze göstergesini güncelle
 function updateFreezeInd(){
@@ -601,7 +800,13 @@ function mvBlock(fr,fc,tr,tc){
   setTimeout(()=>el.classList.remove('a-grav'),220);
 }
 function rebuildDOM(){
-  Object.keys(BE).forEach(k=>{if(!BE[k].classList.contains('a-vanish')){BE[k].remove();}delete BE[k];});
+  // Tüm BE elementlerini kaldır (a-vanish dahil — hepsini temizle)
+  Object.keys(BE).forEach(k=>{
+    if(BE[k]&&BE[k].parentNode) BE[k].remove();
+    delete BE[k];
+  });
+  // DOM'da kaçan ghost elementleri de temizle
+  document.querySelectorAll('#grid .block').forEach(el=>el.remove());
   for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++)if(G[r][c])mkBlock(r,c,G[r][c]);
 }
 
@@ -609,11 +814,13 @@ function rebuildDOM(){
 // GRAVITY
 // ================================================================
 function applyGravity(anim=true){
-  // Önce tüm bloklardaki transform kalıntısını temizle (magnet-fly artığı)
+  // magnet-fly elementleri animasyon süreci içinde — onlara dokunma
+  // Sadece a-grav kalıntılarını temizle
   Object.values(BE).forEach(el=>{
-    el.classList.remove('magnet-fly');
-    el.style.transform='';
-    el.style.opacity='';
+    if(!el.classList.contains('magnet-fly')){
+      el.style.transform='';
+      el.style.opacity='';
+    }
   });
   let moved=false;
   for(let c=0;c<COLS;c++){
@@ -631,6 +838,9 @@ function applyGravity(anim=true){
 // ================================================================
 // SPAWN — tüm boş hücreleri doldur (üstten gravity ile)
 // ================================================================
+// Bonus taş sayacı: son büyük merge'den sonra tetiklenir
+let lastMergeCount=0; // doHoldMerge'den güncellenir
+let warnShownThisRound=false; // tıkanma uyarısı gösterildi mi
 function spawnTiles(){
   // Freeze aktifse bu turu spawn atla
   if(freezeActive){
@@ -642,19 +852,43 @@ function spawnTiles(){
     return 0; // ms cinsinden bekleme süresi
   }
   let totalSpawned=0;
+
+  // %20 ihtimalle bonus taş: hedefin 1/4'ü değerinde, şaşaalı
+  // En az 3 boş hücre varsa tetikle (grid çok doluyken çıkmasın)
+  const totalEmpty=[];
+  for(let r=0;r<ROWS;r++) for(let c=0;c<COLS;c++) if(!G[r][c]) totalEmpty.push({r,c});
+  const bonusVal=TARGETS[targetIdx]/4;
+  // Bonus taş: sadece 10+ taş patladıktan sonra, %30 ihtimalle
+  const doBonus = lastMergeCount>=10 && totalEmpty.length>=3 && Math.random()<0.30 && bonusVal>=2;
+  lastMergeCount=0; // sıfırla
+  let bonusCell=null;
+  if(doBonus){
+    // Rastgele boş bir hücre seç
+    bonusCell=totalEmpty[Math.floor(Math.random()*totalEmpty.length)];
+    G[bonusCell.r][bonusCell.c]=bonusVal;
+  }
+
   for(let c=0;c<COLS;c++){
     const empty=[];
     for(let r=0;r<ROWS;r++) if(!G[r][c]) empty.push(r);
     if(!empty.length) continue;
     empty.forEach((r,i)=>{
-      G[r][c]=rspawn();
-      // DOM bloğunu hemen oluştur — gecikme sadece animasyon için
+      const val=rspawn();
+      G[r][c]=val;
       const delay=totalSpawned*40;
-      setTimeout(()=>{ mkBlock(r,c,G[r][c],'a-drop'); sfxDrop(); }, delay);
+      setTimeout(()=>{ mkBlock(r,c,val,'a-drop'); sfxDrop(); }, delay);
       totalSpawned++;
     });
   }
-  // Tüm blokların DOM'a eklendiğinden emin olunacak bekleme süresi
+
+  // Bonus taşı ayrıca ekle — özel animasyon
+  if(doBonus&&bonusCell){
+    const {r:br,c:bc}=bonusCell;
+    const delay=totalSpawned*40+80;
+    setTimeout(()=>spawnBonusTile(br,bc,bonusVal), delay);
+    totalSpawned+=2; // biraz ekstra bekleme
+  }
+
   return totalSpawned>0 ? totalSpawned*40+60 : 0;
 }
 
@@ -662,6 +896,61 @@ function spawnTiles(){
 // ADJACENCY
 // ================================================================
 function isAdj(r1,c1,r2,c2){return Math.abs(r1-r2)<=1&&Math.abs(c1-c2)<=1&&!(r1===r2&&c1===c2);}
+
+// ================================================================
+// MERGE ÖNİZLEME
+// ================================================================
+let mergePreviewEl=null;
+function showMergePreview(r,c,totalTiles,newV){
+  hideMergePreview();
+  const el=BE[`${r}-${c}`];
+  if(!el) return;
+  const rect=el.getBoundingClientRect();
+
+  const badge=document.createElement('div');
+  badge.id='merge-preview';
+  // Combo rengini belirle
+  const isBig=totalTiles>=8;
+  const isMid=totalTiles>=5;
+  const col=isBig?'#fb923c':isMid?'#c084fc':'#00b4ff';
+  badge.style.cssText=`
+    position:fixed;
+    left:${rect.left+rect.width/2}px;
+    top:${rect.top-8}px;
+    transform:translate(-50%,-100%);
+    background:rgba(5,10,35,.95);
+    border:1.5px solid ${col};
+    border-radius:10px;
+    padding:6px 12px 6px;
+    z-index:500;
+    pointer-events:none;
+    text-align:center;
+    box-shadow:0 0 14px ${col}66;
+    animation:preview-pop .15s cubic-bezier(.34,1.56,.64,1);
+    white-space:nowrap;
+  `;
+  const count=totalTiles-1;
+  const logV=Math.log2(newV);
+  const comboBonus=count>=8?2.0:count>=5?1.5:count>=3?1.2:1.0;
+  const pts=Math.round(logV*totalTiles*comboBonus);
+  const comboLabel=comboBonus>=2.0?'🔥 COMBO ×8+':comboBonus>=1.5?'⚡ COMBO ×5+':comboBonus>=1.2?'✨ COMBO ×3+':'';
+
+  badge.innerHTML=`
+    <div style="font-family:'Orbitron',sans-serif;font-size:16px;font-weight:900;color:${col};line-height:1;letter-spacing:.04em;">${fmtTarget(newV)}</div>
+    ${comboLabel?`<div style="font-family:'Nunito',sans-serif;font-size:9px;font-weight:900;color:${col};opacity:.9;margin-top:2px;letter-spacing:.05em;">${comboLabel}</div>`:''}
+    <div style="border-top:1px solid rgba(255,255,255,.12);margin:4px 0 3px;"></div>
+    <div style="display:flex;gap:8px;align-items:center;justify-content:center;font-family:'Nunito',sans-serif;font-size:9px;font-weight:800;color:rgba(180,210,255,.7);">
+      <span>🔷 ${totalTiles} taş</span>
+      <span style="color:#fbbf24;">⭐ +${pts} puan</span>
+      <span style="color:#34d399;">🪙 +1</span>
+    </div>
+  `;
+  document.body.appendChild(badge);
+  mergePreviewEl=badge;
+}
+function hideMergePreview(){
+  if(mergePreviewEl){mergePreviewEl.remove();mergePreviewEl=null;}
+}
 
 // ================================================================
 // HOLD MECHANIC
@@ -691,6 +980,7 @@ function onGridUp(){
 
 function cancelHold(){
   clearTimeout(holdTimer); holdTimer=null;
+  hideMergePreview();
   if(holdCell){
     const ce=BE[`${holdCell.r}-${holdCell.c}`];
     if(ce)ce.classList.remove('holding');
@@ -732,12 +1022,20 @@ function beginHold(r,c){
     const me=BE[`${mr}-${mc}`]; if(me)me.classList.add('hold-match');
   });
 
+  // Merge önizlemesi — merkez taşın üstünde sonuç göster
+  if(holdMatches.length>0){
+    const totalTiles=holdMatches.length+1;
+    const newV=G[r][c]*Math.pow(2,Math.ceil(totalTiles/2));
+    showMergePreview(r,c,totalTiles,newV);
+  }
+
   if(holdMatches.length>0&&navigator.vibrate)navigator.vibrate(25);
   tone(300+holdMatches.length*40,'sine',.12,.18);
 }
 
 function doHoldMerge(){
   if(!holdCell||holdMatches.length===0)return;
+  hideMergePreview();
   const {r:cr,c:cc}=holdCell;
   const count=holdMatches.length;       // komşu sayısı (merkez hariç)
   const totalTiles=count+1;             // toplam birleşen taş (merkez dahil)
@@ -758,12 +1056,15 @@ function doHoldMerge(){
     if(cRect){
       const eRect=el.getBoundingClientRect();
       const dx=cRect.left-eRect.left, dy=cRect.top-eRect.top;
-      // force reflow so transition fires
-      el.getBoundingClientRect();
+      el.getBoundingClientRect(); // force reflow
       el.style.transform=`translate(${dx}px,${dy}px) scale(0.25)`;
       el.style.opacity='0';
     }
-    setTimeout(()=>{ el.remove(); delete BE[`${r}-${c}`]; G[r][c]=0; },240);
+    // BE'den hemen sil — gravity bu hücreyi boş görsün
+    delete BE[`${r}-${c}`];
+    G[r][c]=0;
+    // DOM'dan animasyon bittikten sonra kaldır
+    setTimeout(()=>{ if(el.parentNode) el.remove(); }, 260);
   });
 
   // snapshot and clear hold state BEFORE timeout
@@ -773,7 +1074,9 @@ function doHoldMerge(){
   setTimeout(()=>{
     const el2=BE[`${savedHC.r}-${savedHC.c}`];
     if(el2){
-      el2.classList.remove('holding','magnet-fly');
+      el2.classList.remove('holding');
+      // magnet-fly ve transform kalıntısını temizle
+      el2.classList.remove('magnet-fly');
       el2.style.transform='';
       el2.style.opacity='';
       el2.className=`block ${vcls(newV)} a-merge`;
@@ -783,6 +1086,7 @@ function doHoldMerge(){
       setTimeout(()=>el2.classList.remove('a-merge'),350);
     }
     G[savedHC.r][savedHC.c]=newV;
+    lastMergeCount=count+1; // toplam birleşen taş sayısını kaydet
     // PUANLAMA: log2(newV) × (count+1) × combo bonus
     // Örnek: 16 taşı (4 adet) → log2(64)×5 = 6×5=30 puan
     // 26 adet 16 taşı → log2(newV≈262144) × 27 = 18×27 = 486 puan (9M değil)
@@ -839,30 +1143,47 @@ function doBomb(r,c){
   const bbtn=document.getElementById('pu-bomb');
   bbtn.classList.remove('active');
   bbtn.querySelector('.pu-icon').textContent='💣';
+
   // 3×3 alandaki tüm blokları patlat
   const targets=[];
   for(let dr=-1;dr<=1;dr++)for(let dc=-1;dc<=1;dc++){
     const nr=r+dr,nc=c+dc;
     if(nr>=0&&nr<ROWS&&nc>=0&&nc<COLS&&G[nr][nc]) targets.push({r:nr,c:nc});
   }
+
+  // G matrisini HEMEN sıfırla (DOM animasyonu gecikmeli ama mantık anında)
+  targets.forEach(({r:tr,c:tc})=>{
+    G[tr][tc]=0;
+  });
+
+  // DOM animasyonları gecikmeli, BE'den hemen sil
+  busy=true;
   targets.forEach(({r:tr,c:tc},i)=>{
+    // BE'den hemen sil — gravity doğru çalışsın
+    const el=BE[`${tr}-${tc}`];
+    delete BE[`${tr}-${tc}`];
     setTimeout(()=>{
-      const el=BE[`${tr}-${tc}`];
-      if(el){el.classList.add('a-vanish');setTimeout(()=>{el.remove();delete BE[`${tr}-${tc}`];},260);}
-      spawnPtcl(tr,tc,G[tr][tc]);
-      G[tr][tc]=0;
+      if(el){el.classList.add('a-vanish');setTimeout(()=>{ if(el.parentNode) el.remove(); },260);}
+      spawnPtcl(tr,tc,4);
     },i*35);
   });
+
   sfxSmash();screenFlash();screenFlash();
-  spawnComboLabel(r,c,3,targets.length-1);
+  if(targets.length>0) spawnComboLabel(r,c,3,targets.length-1);
   updateHUD();
+
+  // Tüm vanish animasyonları bittikten sonra gravity+spawn
+  const vanishWait = targets.length*35 + 320; // son vanish + 260ms animasyon
   setTimeout(()=>{
     applyGravity(true);
     setTimeout(()=>{
       const sd=spawnTiles();
-      setTimeout(()=>{applyGravity(true);setTimeout(()=>checkGO(),150);},sd+60);
+      setTimeout(()=>{
+        applyGravity(true);
+        setTimeout(()=>{busy=false;checkGO();},150);
+      },sd+60);
     },180);
-  },targets.length*35+100);
+  }, vanishWait);
 }
 
 
@@ -948,8 +1269,10 @@ function doSmash(r,c){
   smashBtn.querySelector('.pu-cost').textContent='🪙50';
   sfxSmash();spawnPtcl(r,c,G[r][c]);
   const el=BE[`${r}-${c}`];
-  if(el){el.classList.add('a-vanish');setTimeout(()=>{el.remove();delete BE[`${r}-${c}`];},260);}
-  G[r][c]=0; updateHUD();
+  delete BE[`${r}-${c}`]; // BE'den hemen sil
+  G[r][c]=0;
+  if(el){el.classList.add('a-vanish');setTimeout(()=>{ if(el.parentNode) el.remove(); },260);}
+  updateHUD();
   setTimeout(()=>{
     applyGravity(true);
     setTimeout(()=>{
@@ -1126,6 +1449,17 @@ function showLC(val){
     t.classList.add('show');
     setTimeout(()=>t.classList.remove('show'),2500);
   }
+  // Hedef sesi — épik yükselen fanfare
+  const notes=[262,330,392,523,659,784,1047];
+  notes.forEach((f,i)=>setTimeout(()=>{
+    tone(f,'triangle',.25,.8);
+    if(i===notes.length-1){
+      // Son nota üzerine gürleme
+      setTimeout(()=>tone(f*2,'sine',.35,1.0),80);
+      setTimeout(()=>tone(f,'triangle',.4,.7),160);
+    }
+  },i*80));
+  if(navigator.vibrate) navigator.vibrate([50,30,50,30,100]);
   document.getElementById('lc-target').textContent=fmtTarget(val);
   document.getElementById('ov-lc').classList.add('show');
 }
@@ -1278,11 +1612,79 @@ function spawnStars(){
 // ================================================================
 function checkGO(){
   if(!active)return;
+  // Boş hücre varsa — sorun yok
   for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++)if(!G[r][c])return;
+  // Merge yapılabilecek komşu var mı?
   for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++){
     const v=G[r][c];if(!v)continue;
     for(const[nr,nc]of nbrs(r,c))if(G[nr][nc]===v)return;
   }
+  // Grid tamamen dolu ve merge yok — tıkandı
+  // Ama önce: uyarı göster mi, doğrudan game over mu?
+  if(!warnShownThisRound){
+    showDangerWarn();
+  } else {
+    // Uyarı gösterilmişti, oyuncu devam dedi ama hâlâ tıkandı → game over
+    triggerGameOver();
+  }
+}
+
+function showDangerWarn(){
+  warnShownThisRound=true;
+
+  // Kullanılabilir power-up'ları tespit et
+  const available=[];
+  if(coins>=PU_COST.shuffle) available.push({id:'shuffle',icon:'🔀',name:'Karıştır',desc:'Tüm taşları yeniden dağıtır',cost:PU_COST.shuffle});
+  if(coins>=PU_COST.bomb)    available.push({id:'bomb',   icon:'💣',name:'Bomba',   desc:'3×3 alanı temizler',        cost:PU_COST.bomb});
+  if(coins>=PU_COST.smash)   available.push({id:'smash',  icon:'🔨',name:'Yok Et',  desc:'Bir taşı patlatır',          cost:PU_COST.smash});
+  if(coins>=PU_COST.hint)    available.push({id:'hint',   icon:'🔄',name:'Değiştir',desc:'2 taşın yerini değiştirir',   cost:PU_COST.hint});
+
+  const title=document.getElementById('warn-title');
+  const msg=document.getElementById('warn-msg');
+  const icon=document.getElementById('warn-icon');
+  const list=document.getElementById('warn-pu-list');
+  list.innerHTML='';
+
+  if(available.length>0){
+    icon.textContent='⚠️';
+    title.textContent='SIKIŞTIN!';
+    title.style.color='#f59e0b';
+    msg.textContent='Merge yapacak komşu kalmadı. Bir power-up kullanabilirsin:';
+    available.forEach(pu=>{
+      const btn=document.createElement('button');
+      btn.className='warn-pu-btn';
+      btn.innerHTML=`<span class="wp-icon">${pu.icon}</span>
+        <span class="wp-info"><span class="wp-name">${pu.name}</span><span class="wp-desc">${pu.desc}</span></span>
+        <span class="wp-cost">🪙${pu.cost}</span>`;
+      btn.addEventListener('click',()=>{
+        document.getElementById('ov-warn').classList.remove('show');
+        warnShownThisRound=false;
+        // İlgili power-up'ı aktifleştir
+        if(pu.id==='shuffle') document.getElementById('pu-shuffle').click();
+        else if(pu.id==='bomb'){document.getElementById('pu-bomb').click();}
+        else if(pu.id==='smash') document.getElementById('pu-smash').click();
+        else if(pu.id==='hint') document.getElementById('pu-hint').click();
+      });
+      list.appendChild(btn);
+    });
+  } else {
+    // Coin yok — son uyarı
+    icon.textContent='💸';
+    title.textContent='SON HAMLENİ YAP!';
+    title.style.color='#ef4444';
+    msg.innerHTML='Merge yapacak yer kalmadı ve<br><b>coin\'in yok.</b><br>Bu son hamlen!';
+  }
+
+  // Ses: tehlike tonu
+  tone(200,'sawtooth',.1,.5);
+  setTimeout(()=>tone(150,'sawtooth',.15,.4),150);
+  if(navigator.vibrate) navigator.vibrate([100,50,100]);
+
+  document.getElementById('ov-warn').classList.add('show');
+}
+
+function triggerGameOver(){
+  warnShownThisRound=false;
   sfxGO();
   document.getElementById('go-score').textContent=score.toLocaleString('tr');
   setTimeout(()=>document.getElementById('ov-go').classList.add('show'),600);
@@ -1411,12 +1813,146 @@ gridEl2.addEventListener('pointermove', e=>{
   }
 });
 document.getElementById('btn-resume').addEventListener('click',()=>document.getElementById('ov-pause').classList.remove('show'));
+document.getElementById('btn-warn-ok').addEventListener('click',()=>{
+  document.getElementById('ov-warn').classList.remove('show');
+  // Oyuncu devam dedi — bir hamle yapabilir, sonra checkGO tekrar tetiklenecek
+  // warnShownThisRound=true kalıyor → bir sonraki tıkanda game over gelir
+});
 document.getElementById('btn-restart-p').addEventListener('click',()=>{document.getElementById('ov-pause').classList.remove('show');startGame();});
 document.getElementById('btn-restart-go').addEventListener('click',()=>{document.getElementById('ov-go').classList.remove('show');startGame();});
+// ================================================================
+// ADMIN PANELİ — 5x hızlı tıklama ile açılır (gizli)
+// ================================================================
+(()=>{
+  let adminTaps=0, adminTimer=null;
+  let adminVal=2048; // seçili değer
+  let adminMode=false; // tıklama modu aktif mi
+
+  const ADMIN_VALS=[2,4,8,16,32,64,128,256,512,1024,2048,4096,8192,16384,32768,65536,131072];
+
+  function openAdmin(){
+    if(!active) return; // oyun aktif değilse açma
+    const ov=document.getElementById('ov-admin');
+    ov.style.display='flex';
+    buildAdminVals();
+    document.getElementById('admin-sel-label').textContent=fmtTarget(adminVal);
+  }
+  function closeAdmin(){
+    document.getElementById('ov-admin').style.display='none';
+    adminMode=false;
+    // Grid'deki selected class temizle
+    Object.values(BE).forEach(e=>e.classList.remove('admin-sel'));
+  }
+  function buildAdminVals(){
+    const wrap=document.getElementById('admin-vals');
+    wrap.innerHTML='';
+    ADMIN_VALS.forEach(v=>{
+      const btn=document.createElement('button');
+      btn.textContent=fmtTarget(v);
+      btn.style.cssText=`background:${v===adminVal?'rgba(251,191,36,.25)':'rgba(255,255,255,.06)'};
+        border:1.5px solid ${v===adminVal?'#fbbf24':'rgba(255,255,255,.12)'};
+        border-radius:7px;padding:5px 8px;
+        font-family:'Orbitron',sans-serif;font-size:10px;font-weight:700;
+        color:${v===adminVal?'#fbbf24':'rgba(200,220,255,.7)'};cursor:pointer;min-width:36px;`;
+      btn.addEventListener('click',()=>{
+        adminVal=v;
+        document.getElementById('admin-sel-label').textContent=fmtTarget(v);
+        buildAdminVals(); // yeniden render — seçili highlight
+        adminMode=true; // tıklama modunu aktif et
+      });
+      wrap.appendChild(btn);
+    });
+  }
+
+  // Başlık 5x tıklama tetikleyici
+  document.getElementById('app-title').addEventListener('click',()=>{
+    adminTaps++;
+    clearTimeout(adminTimer);
+    adminTimer=setTimeout(()=>{ adminTaps=0; },800);
+    if(adminTaps>=5){ adminTaps=0; openAdmin(); }
+  });
+
+  // Kapat
+  document.getElementById('admin-close').addEventListener('click',closeAdmin);
+
+  // Tüm grid doldur
+  document.getElementById('admin-fill').addEventListener('click',()=>{
+    if(!active) return;
+    for(let r=0;r<ROWS;r++) for(let c=0;c<COLS;c++) G[r][c]=adminVal;
+    rebuildDOM(); updateHUD();
+  });
+
+  // Grid temizle
+  document.getElementById('admin-clear').addEventListener('click',()=>{
+    if(!active) return;
+    for(let r=0;r<ROWS;r++) for(let c=0;c<COLS;c++) G[r][c]=0;
+    Object.keys(BE).forEach(k=>{BE[k].remove();delete BE[k];});
+    updateHUD();
+  });
+
+  // Grid tıklaması — admin modunda kareyi seçili değere çevir
+  document.getElementById('grid').addEventListener('pointerdown', e=>{
+    if(document.getElementById('ov-admin').style.display==='none') return;
+    if(!adminMode) return;
+    const block=e.target.closest('.block');
+    if(!block) return;
+    e.stopPropagation();
+    const r=parseInt(block.dataset.r), c=parseInt(block.dataset.c);
+    G[r][c]=adminVal;
+    // DOM güncelle
+    block.className=`block ${vcls(adminVal)}`;
+    block.querySelector('.bnum').textContent=fmtTarget(adminVal);
+    block.querySelector('.bnum').style.fontSize=fsize(adminVal);
+    block.dataset.v=adminVal;
+    // Kısa flash animasyonu
+    block.classList.add('a-merge');
+    setTimeout(()=>block.classList.remove('a-merge'),300);
+    tone(440,'sine',.06,.3);
+  }, true);
+})();
+
 document.getElementById('btn-start').addEventListener('click',()=>{document.getElementById('ov-start').classList.remove('show');startGame();});
 document.getElementById('btn-howto').addEventListener('click',()=>document.getElementById('ov-howto').classList.add('show'));
 document.getElementById('btn-howto-ig').addEventListener('click',()=>document.getElementById('ov-howto').classList.add('show'));
 document.getElementById('btn-howto-close').addEventListener('click',()=>document.getElementById('ov-howto').classList.remove('show'));
+
+// Sıfırlama
+document.getElementById('btn-reset-all').addEventListener('click',()=>{
+  // Checkbox'ları sıfırla her açılışta
+  document.getElementById('rst-bests').checked=false;
+  document.getElementById('rst-save').checked=false;
+  document.getElementById('ov-reset').classList.add('show');
+});
+document.getElementById('btn-reset-cancel').addEventListener('click',()=>{
+  document.getElementById('ov-reset').classList.remove('show');
+});
+document.getElementById('btn-reset-confirm').addEventListener('click',()=>{
+  const delBests=document.getElementById('rst-bests').checked;
+  const delSave=document.getElementById('rst-save').checked;
+  if(!delBests&&!delSave){
+    // Hiçbir şey seçilmemişse sadece kapat
+    document.getElementById('ov-reset').classList.remove('show');
+    return;
+  }
+  const msgs=[];
+  if(delBests){
+    localStorage.removeItem('axydrop_bests');
+    updateBestShort();
+    msgs.push('skorlar');
+  }
+  if(delSave){
+    localStorage.removeItem('axydrop_autosave');
+    const resumeBtn=document.getElementById('btn-resume-save');
+    if(resumeBtn) resumeBtn.remove();
+    msgs.push('kayıt');
+  }
+  document.getElementById('ov-reset').classList.remove('show');
+  [523,659,784].forEach((f,i)=>setTimeout(()=>tone(f,'sine',.1,.3),i*80));
+  const t=document.getElementById('rank-toast');
+  t.textContent=`🗑 Silindi: ${msgs.join(' + ')}`;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2200);
+});
 document.getElementById('btn-harika').addEventListener('click',goNextLevel);
 
 // ================================================================
@@ -1525,7 +2061,7 @@ function clearSave(){
 
 function resumeGame(){
   cancelHold(); cancelSwap();
-  smashOn=false; smashCharges=0; hist=[]; busy=false;
+  smashOn=false; smashCharges=0; hist=[]; busy=false; lastMergeCount=0; warnShownThisRound=false;
   bombOn=false; freezeActive=false;
   document.body.classList.remove('smash-mode','bomb-mode');
   const smashBtn=document.getElementById('pu-smash');
@@ -1550,7 +2086,7 @@ function startGame(){
   gameStartTime=Date.now();
   clearSave();
   cancelHold(); cancelSwap();
-  smashOn=false; smashCharges=0; hist=[];busy=false;
+  smashOn=false; smashCharges=0; hist=[];busy=false; lastMergeCount=0; warnShownThisRound=false;
   bombOn=false; freezeActive=false;
   document.body.classList.remove('smash-mode','bomb-mode');
   const smashBtn=document.getElementById('pu-smash');
