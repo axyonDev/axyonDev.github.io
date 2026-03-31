@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Esenyurt İmsakiye</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700&display=swap');
+
+:root {
+  --gold: #c9a84c;
+  --gold-l: #e8c97a;
+  --gold-d: #8a6820;
+  --deep: #0b0f1c;
+  --deep2: #131928;
+  --teal: #1a4a5a;
+  --teal-l: #2d7a8a;
+  --cream: #f5ead8;
+  --muted: #7a8ba0;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+
+html, body {
+  background: var(--deep);
+  color: var(--cream);
+  font-family: 'Cairo', 'Segoe UI', Tahoma, sans-serif;
+  font-size: 14px;
+  min-height: 100%;
+}
+
+.wrap {
+  max-width: 520px;
+  margin: 0 auto;
+  padding: 0 12px 32px;
+  background: var(--deep);
+  min-height: 100vh;
+}
+
+/* ---------- HEADER ---------- */
+.hdr {
+  text-align: center;
+  padding: 28px 12px 20px;
+}
+
+.moon-svg { display:block; margin:0 auto 12px; animation: bob 3.5s ease-in-out infinite; }
+@keyframes bob { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-5px)} }
+
+.hdr-eyebrow {
+  font-size: 10px;
+  letter-spacing: .3em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 4px;
+}
+
+.hdr-title {
+  font-size: 30px;
+  font-weight: 700;
+  background: linear-gradient(135deg, var(--gold-l), var(--gold), var(--gold-d));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  line-height: 1.15;
+}
+
+.hdr-div {
+  width:60px; height:1px;
+  background: linear-gradient(90deg, transparent, var(--gold), transparent);
+  margin:12px auto 8px;
+}
+
+.hdr-sub { font-size:12px; color:var(--muted); }
+
+/* ---------- CLOCK ---------- */
+.clock-box { text-align:center; padding:10px 0 4px; }
+.clock {
+  font-size: 40px;
+  font-weight: 700;
+  color: var(--cream);
+  letter-spacing: .04em;
+  font-variant-numeric: tabular-nums;
+}
+.clock-date { font-size:11px; color:var(--muted); margin-top:2px; }
+
+/* ---------- EVENT CARDS ---------- */
+.events { display:flex; flex-direction:column; gap:8px; padding:14px 0 8px; }
+
+.ev-card {
+  border-radius:14px;
+  padding:14px 16px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
+.ev-kadir {
+  background: linear-gradient(135deg,rgba(201,168,76,.13),rgba(201,168,76,.04));
+  border:1px solid rgba(201,168,76,.3);
+}
+.ev-bayram {
+  background: linear-gradient(135deg,rgba(45,122,138,.2),rgba(26,74,90,.1));
+  border:1px solid rgba(45,122,138,.35);
+}
+
+.ev-name { font-size:13px; font-weight:700; margin-bottom:2px; }
+.ev-date { font-size:10px; color:var(--muted); }
+.ev-days {
+  font-size:28px; font-weight:700; line-height:1;
+  text-align:right;
+}
+.ev-label { font-size:9px; color:var(--muted); margin-top:2px; text-align:right; }
+.ev-kadir .ev-name { color:var(--gold-l); }
+.ev-kadir .ev-days { color:var(--gold); }
+.ev-bayram .ev-name { color:#7dd3e8; }
+.ev-bayram .ev-days { color:var(--teal-l); }
+
+/* ---------- PROGRESS ---------- */
+.prog-sec { padding:4px 0 14px; }
+.prog-hdr { display:flex; justify-content:space-between; margin-bottom:8px; }
+.prog-lbl { font-size:11px; color:var(--gold); text-transform:uppercase; letter-spacing:.08em; font-weight:700; }
+.prog-frac { font-size:11px; color:var(--muted); }
+.prog-bg { background:rgba(255,255,255,.06); border-radius:100px; height:7px; overflow:visible; position:relative; }
+.prog-fill {
+  height:100%; border-radius:100px;
+  background:linear-gradient(90deg, var(--teal-l), var(--gold));
+  position:relative; transition:width .8s ease;
+}
+.prog-fill::after {
+  content:'';
+  position:absolute; right:-4px; top:50%; transform:translateY(-50%);
+  width:10px; height:10px;
+  background:var(--gold-l); border-radius:50%;
+  box-shadow:0 0 8px var(--gold);
+}
+.prog-stats { display:flex; justify-content:space-between; margin-top:7px; }
+.prog-stat { font-size:10px; color:var(--muted); }
+.prog-stat b { color:var(--cream); }
+
+/* ---------- TODAY CARD ---------- */
+.today-card {
+  background: linear-gradient(135deg,rgba(26,74,90,.65),rgba(13,45,58,.8));
+  border:1px solid rgba(201,168,76,.3);
+  border-radius:18px;
+  padding:18px;
+  margin-bottom:14px;
+}
+
+.tc-hdr { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:14px; }
+.tc-hijri { font-size:11px; color:var(--gold); margin-bottom:2px; }
+.tc-miladi { font-size:15px; font-weight:700; margin-bottom:1px; }
+.tc-weekday { font-size:11px; color:var(--muted); }
+
+.badge {
+  background:var(--gold); color:var(--deep);
+  font-size:9px; font-weight:700;
+  padding:4px 9px; border-radius:100px;
+  letter-spacing:.05em; white-space:nowrap;
+  display:flex; align-items:center; gap:4px;
+}
+.dot {
+  width:6px; height:6px; border-radius:50%;
+  background:var(--deep);
+  animation:blink 2s ease-in-out infinite;
+}
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:.3} }
+
+.times-grid {
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:8px;
+}
+
+.t-item {
+  background:rgba(0,0,0,.22);
+  border-radius:10px;
+  padding:10px 6px;
+  text-align:center;
+  border:1px solid transparent;
+  transition:all .3s;
+}
+.t-item.active {
+  background:rgba(201,168,76,.14);
+  border-color:rgba(201,168,76,.4);
+  box-shadow:0 0 14px rgba(201,168,76,.1);
+}
+.t-icon { font-size:14px; margin-bottom:2px; }
+.t-name {
+  font-size:9px; color:var(--muted); text-transform:uppercase;
+  letter-spacing:.06em; margin-bottom:3px; font-weight:700;
+}
+.t-val {
+  font-size:18px; font-weight:700;
+  color:var(--cream); line-height:1;
+}
+.t-item.active .t-name,
+.t-item.active .t-val { color:var(--gold-l); }
+
+.next-info {
+  margin-top:10px;
+  background:rgba(0,0,0,.2);
+  border-radius:8px;
+  padding:9px 12px;
+  font-size:11px;
+  color:var(--muted);
+  text-align:center;
+}
+.next-info b { color:var(--gold-l); }
+
+/* ---------- MINI STRIP ---------- */
+.strip { display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; margin-bottom:16px; }
+.s-card {
+  background:rgba(255,255,255,.03);
+  border:1px solid rgba(201,168,76,.14);
+  border-radius:12px;
+  padding:12px 8px;
+  text-align:center;
+  position:relative;
+}
+.s-card::before {
+  content:''; position:absolute; top:0;left:0;right:0; height:2px;
+  background:linear-gradient(90deg,transparent,var(--gold),transparent);
+  border-radius:2px 2px 0 0; opacity:.5;
+}
+.s-num { font-size:26px; font-weight:700; color:var(--gold-l); line-height:1; margin-bottom:3px; }
+.s-lbl { font-size:9px; color:var(--muted); line-height:1.3; }
+.s-lbl b { display:block; font-size:10px; color:var(--cream); margin-bottom:1px; }
+
+/* ---------- TABLE ---------- */
+.sec-title {
+  display:flex; align-items:center; gap:8px;
+  padding:4px 0 10px;
+}
+.sec-title-txt {
+  font-size:10px; letter-spacing:.18em;
+  text-transform:uppercase; color:var(--gold); font-weight:700;
+  white-space:nowrap;
+}
+.sec-title-line { flex:1; height:1px; background:linear-gradient(90deg,rgba(201,168,76,.3),transparent); }
+
+.tbl-head {
+  display:grid;
+  grid-template-columns:30px 1fr 1fr 1fr 1fr 1fr 1fr 1fr;
+  gap:0; margin-bottom:6px;
+}
+.tbl-head div {
+  font-size:7.5px; color:var(--muted); text-transform:uppercase;
+  letter-spacing:.07em; font-weight:700; text-align:center; padding:4px 2px;
+}
+
+.tbl-row {
+  display:grid;
+  grid-template-columns:30px 1fr 1fr 1fr 1fr 1fr 1fr 1fr;
+  gap:0;
+  border-radius:10px;
+  margin-bottom:3px;
+  transition:all .3s;
+}
+
+.tbl-row.is-today {
+  background:linear-gradient(135deg,rgba(26,74,90,.75),rgba(201,168,76,.07));
+  border:1px solid rgba(201,168,76,.35);
+  box-shadow:0 2px 16px rgba(201,168,76,.07);
+}
+.tbl-row.is-today .tc { color:var(--cream); font-weight:600; }
+.tbl-row.is-today .dnum { background:var(--gold); color:var(--deep); }
+
+.tbl-row.is-past { opacity:.38; }
+.tbl-row.is-past .tc { color:var(--muted); }
+
+.tbl-row.is-kadir {
+  background:linear-gradient(135deg,rgba(201,168,76,.08),rgba(26,74,90,.25));
+  border:1px solid rgba(201,168,76,.22);
+}
+
+.tc {
+  padding:9px 2px; text-align:center;
+  font-size:10px; color:rgba(245,234,216,.65);
+  display:flex; align-items:center; justify-content:center;
+}
+
+.dnum {
+  width:22px; height:22px; border-radius:50%;
+  font-size:9px; font-weight:700;
+  color:var(--muted);
+  display:flex; align-items:center; justify-content:center;
+  transition:all .3s;
+}
+
+.kadir-tag {
+  font-size:7px; color:var(--gold); letter-spacing:.04em;
+  font-weight:700; text-align:center; padding-bottom:2px;
+  grid-column:1/-1;
+}
+
+/* ---------- FOOTER ---------- */
+.footer {
+  text-align:center;
+  padding:18px 0 8px;
+  font-size:9px;
+  color:rgba(138,154,176,.4);
+  letter-spacing:.08em;
+  line-height:1.8;
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- HEADER -->
+  <div class="hdr">
+    <svg class="moon-svg" width="52" height="52" viewBox="0 0 60 60" fill="none">
+      <defs>
+        <linearGradient id="mg" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stop-color="#e8c97a"/>
+          <stop offset="100%" stop-color="#8a6820"/>
+        </linearGradient>
+      </defs>
+      <path d="M42 10C36 13 30 20 30 30C30 40 36 47 42 50C30 56 15 46 15 30C15 14 30 4 42 10Z" fill="url(#mg)"/>
+      <polygon points="48,18 49.5,22 54,22 50.5,24.5 52,28.5 48,26 44,28.5 45.5,24.5 42,22 46.5,22" fill="#e8c97a" opacity=".9"/>
+    </svg>
+    <div class="hdr-eyebrow">Ramazan 1447 · Esenyurt</div>
+    <div class="hdr-title">İmsakiye</div>
+    <div class="hdr-div"></div>
+    <div class="hdr-sub">Hayırlı Ramazanlar 🌙</div>
+  </div>
+
+  <!-- CLOCK -->
+  <div class="clock-box">
+    <div class="clock" id="clk">--:--:--</div>
+    <div class="clock-date" id="clk-date"></div>
+  </div>
+
+  <!-- EVENTS -->
+  <div class="events">
+    <div class="ev-card ev-kadir">
+      <div>
+        <div class="ev-name">✦ Kadir Gecesi</div>
+        <div class="ev-date">27 Ramazan · 16–17 Mart 2026</div>
+      </div>
+      <div>
+        <div class="ev-days" id="kadir-d">—</div>
+        <div class="ev-label">gün kaldı</div>
+      </div>
+    </div>
+    <div class="ev-card ev-bayram">
+      <div>
+        <div class="ev-name">🎉 Ramazan Bayramı</div>
+        <div class="ev-date">20 Mart 2026 · Namaz: 07:40</div>
+      </div>
+      <div>
+        <div class="ev-days" id="bayram-d">—</div>
+        <div class="ev-label">gün kaldı</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PROGRESS -->
+  <div class="prog-sec">
+    <div class="prog-hdr">
+      <div class="prog-lbl">🌙 Ramazan Süreci</div>
+      <div class="prog-frac" id="prog-frac">— / 29</div>
+    </div>
+    <div class="prog-bg">
+      <div class="prog-fill" id="prog-fill" style="width:0%"></div>
+    </div>
+    <div class="prog-stats">
+      <div class="prog-stat">Geçen: <b id="p-passed">—</b> gün</div>
+      <div class="prog-stat">Kalan: <b id="p-rem">—</b> gün</div>
+    </div>
+  </div>
+
+  <!-- TODAY CARD -->
+  <div class="today-card">
+    <div class="tc-hdr">
+      <div>
+        <div class="tc-hijri" id="tc-hijri">— Ramazan 1447</div>
+        <div class="tc-miladi" id="tc-miladi">—</div>
+        <div class="tc-weekday" id="tc-weekday">—</div>
+      </div>
+      <div class="badge"><div class="dot"></div>BUGÜN</div>
+    </div>
+    <div class="times-grid" id="times-grid"></div>
+    <div class="next-info" id="next-info">yükleniyor…</div>
+  </div>
+
+  <!-- STRIP -->
+  <div class="strip">
+    <div class="s-card">
+      <div class="s-num" id="s-kadir">—</div>
+      <div class="s-lbl"><b>Kadir Gecesi</b>gün kaldı</div>
+    </div>
+    <div class="s-card">
+      <div class="s-num" id="s-bayram">—</div>
+      <div class="s-lbl"><b>Bayram</b>gün kaldı</div>
+    </div>
+    <div class="s-card">
+      <div class="s-num" id="s-iftar">—</div>
+      <div class="s-lbl"><b>İftara</b>kalan</div>
+    </div>
+  </div>
+
+  <!-- TABLE -->
+  <div class="sec-title">
+    <div class="sec-title-txt">Tüm Günler</div>
+    <div class="sec-title-line"></div>
+  </div>
+
+  <div class="tbl-head">
+    <div></div><div>TARİH</div><div>İMSAK</div><div>GÜNEŞ</div>
+    <div>ÖĞLE</div><div>İKİNDİ</div><div>AKŞAM</div><div>YATSI</div>
+  </div>
+
+  <div id="tbl-body"></div>
+
+  <div class="footer">
+    Esenyurt · Ramazan 1447 · Sadaka-i Fıtır: 240 TL<br>
+    Bayram Namazı: 07:40
+  </div>
+
+</div><!-- /wrap -->
+
+<script>
+var DATA=[
+  {r:1, d:'19 Şubat 2026',  g:'Perşembe',  t:{imsak:'06:23',gunes:'07:48',ogle:'13:24',ikindi:'16:21',aksam:'18:50',yatsi:'20:10'}},
+  {r:2, d:'20 Şubat 2026',  g:'Cuma',      t:{imsak:'06:22',gunes:'07:46',ogle:'13:24',ikindi:'16:22',aksam:'18:52',yatsi:'20:11'}},
+  {r:3, d:'21 Şubat 2026',  g:'Cumartesi', t:{imsak:'06:20',gunes:'07:45',ogle:'13:24',ikindi:'16:23',aksam:'18:53',yatsi:'20:12'}},
+  {r:4, d:'22 Şubat 2026',  g:'Pazar',     t:{imsak:'06:19',gunes:'07:44',ogle:'13:24',ikindi:'16:23',aksam:'18:54',yatsi:'20:13'}},
+  {r:5, d:'23 Şubat 2026',  g:'Pazartesi', t:{imsak:'06:17',gunes:'07:42',ogle:'13:24',ikindi:'16:24',aksam:'18:55',yatsi:'20:15'}},
+  {r:6, d:'24 Şubat 2026',  g:'Salı',      t:{imsak:'06:16',gunes:'07:41',ogle:'13:24',ikindi:'16:25',aksam:'18:56',yatsi:'20:16'}},
+  {r:7, d:'25 Şubat 2026',  g:'Çarşamba',  t:{imsak:'06:15',gunes:'07:39',ogle:'13:23',ikindi:'16:26',aksam:'18:58',yatsi:'20:17'}},
+  {r:8, d:'26 Şubat 2026',  g:'Perşembe',  t:{imsak:'06:13',gunes:'07:38',ogle:'13:23',ikindi:'16:27',aksam:'18:59',yatsi:'20:18'}},
+  {r:9, d:'27 Şubat 2026',  g:'Cuma',      t:{imsak:'06:12',gunes:'07:36',ogle:'13:23',ikindi:'16:28',aksam:'19:00',yatsi:'20:19'}},
+  {r:10,d:'28 Şubat 2026',  g:'Cumartesi', t:{imsak:'06:10',gunes:'07:35',ogle:'13:23',ikindi:'16:28',aksam:'19:01',yatsi:'20:20'}},
+  {r:11,d:'1 Mart 2026',    g:'Pazar',     t:{imsak:'06:09',gunes:'07:33',ogle:'13:23',ikindi:'16:29',aksam:'19:02',yatsi:'20:21'}},
+  {r:12,d:'2 Mart 2026',    g:'Pazartesi', t:{imsak:'06:07',gunes:'07:32',ogle:'13:22',ikindi:'16:30',aksam:'19:03',yatsi:'20:22'}},
+  {r:13,d:'3 Mart 2026',    g:'Salı',      t:{imsak:'06:06',gunes:'07:30',ogle:'13:22',ikindi:'16:31',aksam:'19:05',yatsi:'20:24'}},
+  {r:14,d:'4 Mart 2026',    g:'Çarşamba',  t:{imsak:'06:04',gunes:'07:28',ogle:'13:22',ikindi:'16:31',aksam:'19:06',yatsi:'20:25'}},
+  {r:15,d:'5 Mart 2026',    g:'Perşembe',  t:{imsak:'06:03',gunes:'07:27',ogle:'13:22',ikindi:'16:32',aksam:'19:07',yatsi:'20:26'}},
+  {r:16,d:'6 Mart 2026',    g:'Cuma',      t:{imsak:'06:01',gunes:'07:25',ogle:'13:22',ikindi:'16:33',aksam:'19:08',yatsi:'20:27'}},
+  {r:17,d:'7 Mart 2026',    g:'Cumartesi', t:{imsak:'05:59',gunes:'07:24',ogle:'13:21',ikindi:'16:34',aksam:'19:09',yatsi:'20:28'}},
+  {r:18,d:'8 Mart 2026',    g:'Pazar',     t:{imsak:'05:58',gunes:'07:22',ogle:'13:21',ikindi:'16:34',aksam:'19:10',yatsi:'20:29'}},
+  {r:19,d:'9 Mart 2026',    g:'Pazartesi', t:{imsak:'05:56',gunes:'07:20',ogle:'13:21',ikindi:'16:35',aksam:'19:11',yatsi:'20:30'}},
+  {r:20,d:'10 Mart 2026',   g:'Salı',      t:{imsak:'05:54',gunes:'07:19',ogle:'13:21',ikindi:'16:36',aksam:'19:13',yatsi:'20:32'}},
+  {r:21,d:'11 Mart 2026',   g:'Çarşamba',  t:{imsak:'05:53',gunes:'07:17',ogle:'13:20',ikindi:'16:36',aksam:'19:14',yatsi:'20:33'}},
+  {r:22,d:'12 Mart 2026',   g:'Perşembe',  t:{imsak:'05:51',gunes:'07:16',ogle:'13:20',ikindi:'16:37',aksam:'19:15',yatsi:'20:34'}},
+  {r:23,d:'13 Mart 2026',   g:'Cuma',      t:{imsak:'05:49',gunes:'07:14',ogle:'13:20',ikindi:'16:38',aksam:'19:16',yatsi:'20:35'}},
+  {r:24,d:'14 Mart 2026',   g:'Cumartesi', t:{imsak:'05:48',gunes:'07:12',ogle:'13:20',ikindi:'16:38',aksam:'19:17',yatsi:'20:36'}},
+  {r:25,d:'15 Mart 2026',   g:'Pazar',     t:{imsak:'05:46',gunes:'07:11',ogle:'13:19',ikindi:'16:39',aksam:'19:18',yatsi:'20:37'}},
+  {r:26,d:'16 Mart 2026',   g:'Pazartesi', t:{imsak:'05:44',gunes:'07:09',ogle:'13:19',ikindi:'16:39',aksam:'19:19',yatsi:'20:38'}},
+  {r:27,d:'17 Mart 2026',   g:'Salı',      t:{imsak:'05:42',gunes:'07:07',ogle:'13:19',ikindi:'16:40',aksam:'19:20',yatsi:'20:40'}, kadir:true},
+  {r:28,d:'18 Mart 2026',   g:'Çarşamba',  t:{imsak:'05:41',gunes:'07:06',ogle:'13:18',ikindi:'16:41',aksam:'19:21',yatsi:'20:41'}},
+  {r:29,d:'19 Mart 2026',   g:'Perşembe',  t:{imsak:'05:39',gunes:'07:04',ogle:'13:18',ikindi:'16:41',aksam:'19:22',yatsi:'20:42'}},
+];
+
+var ICONS={imsak:'🌑',gunes:'🌅',ogle:'☀️',ikindi:'🌤️',aksam:'🌇',yatsi:'🌙'};
+var NAMES={imsak:'İmsak',gunes:'Güneş',ogle:'Öğle',ikindi:'İkindi',aksam:'Akşam',yatsi:'Yatsı'};
+var KEYS=['imsak','gunes','ogle','ikindi','aksam','yatsi'];
+var KADIR_DATE=new Date(2026,2,17);
+var BAYRAM_DATE=new Date(2026,2,20);
+var AYLAR=['Ocak','Şubat','Mart','Nisan','Mayıs','Haziran','Temmuz','Ağustos','Eylül','Ekim','Kasım','Aralık'];
+var GUNLER=['Pazar','Pazartesi','Salı','Çarşamba','Perşembe','Cuma','Cumartesi'];
+
+function parseDateStr(s){
+  var p=s.split(' ');
+  var m={Ocak:0,Şubat:1,Mart:2,Nisan:3,Mayıs:4,Haziran:5,Temmuz:6,Ağustos:7,Eylül:8,Ekim:9,Kasım:10,Aralık:11};
+  return new Date(+p[2],m[p[1]],+p[0]);
+}
+
+function sameDay(a,b){ return a.getFullYear()===b.getFullYear()&&a.getMonth()===b.getMonth()&&a.getDate()===b.getDate(); }
+function toMins(s){ var p=s.split(':'); return +p[0]*60+(+p[1]); }
+function daysBetween(a,b){ return Math.round((b-a)/864e5); }
+
+function todayData(){
+  var now=new Date();
+  return DATA.find(function(d){ return sameDay(parseDateStr(d.d),now); })||null;
+}
+
+function activePrayer(nowMins,t){
+  var times=KEYS.map(function(k){return toMins(t[k]);});
+  if(nowMins<times[0]) return 'yatsi';
+  for(var i=0;i<times.length-1;i++){
+    if(nowMins>=times[i]&&nowMins<times[i+1]) return KEYS[i];
+  }
+  return 'yatsi';
+}
+
+function buildTimesGrid(td){
+  if(!td){ document.getElementById('times-grid').innerHTML='<div style="color:var(--muted);font-size:11px;padding:8px;text-align:center">Ramazan dışında</div>'; return; }
+  var now=new Date();
+  var nm=now.getHours()*60+now.getMinutes();
+  var active=activePrayer(nm,td.t);
+  var html='';
+  KEYS.forEach(function(k){
+    var isA=k===active;
+    html+='<div class="t-item'+(isA?' active':'')+'">'+
+      '<div class="t-icon">'+ICONS[k]+'</div>'+
+      '<div class="t-name">'+NAMES[k]+'</div>'+
+      '<div class="t-val">'+td.t[k]+'</div>'+
+      '</div>';
+  });
+  document.getElementById('times-grid').innerHTML=html;
+}
+
+function updateNextInfo(td){
+  if(!td){ document.getElementById('next-info').innerHTML='Ramazan dışında'; return; }
+  var now=new Date();
+  var nm=now.getHours()*60+now.getMinutes();
+  var el=document.getElementById('next-info');
+  for(var i=0;i<KEYS.length;i++){
+    var k=KEYS[i];
+    var pm=toMins(td.t[k]);
+    if(pm>nm){
+      var diff=pm-nm;
+      var h=Math.floor(diff/60),m=diff%60;
+      var ts=h>0?h+' saat '+m+' dakika':m+' dakika';
+      el.innerHTML='<b>'+NAMES[k]+'</b> vaktine '+ts+' kaldı · '+td.t[k];
+      return;
+    }
+  }
+  el.innerHTML='Yatsı vakti geçti. <b>İmsak</b>ta yeni gün.';
+}
+
+function updateIftar(td){
+  var el=document.getElementById('s-iftar');
+  if(!td){ el.textContent='—'; return; }
+  var now=new Date();
+  var nm=now.getHours()*60+now.getMinutes();
+  var am=toMins(td.t.aksam);
+  var diff=am-nm;
+  if(diff<=0){ el.textContent='✓'; return; }
+  var h=Math.floor(diff/60),m=diff%60;
+  el.textContent=h>0?h+'s '+m+'d':m+'dk';
+}
+
+function updateCountdowns(){
+  var now=new Date();
+  var today=new Date(now.getFullYear(),now.getMonth(),now.getDate());
+  var kd=daysBetween(today,KADIR_DATE);
+  var bd=daysBetween(today,BAYRAM_DATE);
+  var kt=kd>0?kd:(kd===0?'🌙':'Geçti');
+  var bt=bd>0?bd:(bd===0?'🎉':'Geçti');
+  ['kadir-d','s-kadir'].forEach(function(id){ document.getElementById(id).textContent=kt; });
+  ['bayram-d','s-bayram'].forEach(function(id){ document.getElementById(id).textContent=bt; });
+}
+
+function updateProgress(){
+  var now=new Date();
+  var today=new Date(now.getFullYear(),now.getMonth(),now.getDate());
+  var start=parseDateStr('19 Şubat 2026');
+  var passed=Math.max(0,Math.min(29,daysBetween(start,today)));
+  var rem=Math.max(0,29-passed);
+  var pct=Math.min(100,(passed/29)*100);
+  document.getElementById('prog-fill').style.width=pct+'%';
+  document.getElementById('prog-frac').textContent=passed+' / 29';
+  document.getElementById('p-passed').textContent=passed;
+  document.getElementById('p-rem').textContent=rem;
+}
+
+function updateClock(){
+  var now=new Date();
+  var h=('0'+now.getHours()).slice(-2);
+  var m=('0'+now.getMinutes()).slice(-2);
+  var s=('0'+now.getSeconds()).slice(-2);
+  document.getElementById('clk').textContent=h+':'+m+':'+s;
+  document.getElementById('clk-date').textContent=
+    GUNLER[now.getDay()]+', '+now.getDate()+' '+AYLAR[now.getMonth()]+' '+now.getFullYear();
+}
+
+function buildTodayCard(td){
+  if(!td){
+    document.getElementById('tc-hijri').textContent='Ramazan dışında';
+    document.getElementById('tc-miladi').textContent='—';
+    document.getElementById('tc-weekday').textContent='';
+  } else {
+    document.getElementById('tc-hijri').textContent=td.r+'. Ramazan 1447';
+    document.getElementById('tc-miladi').textContent=td.d;
+    document.getElementById('tc-weekday').textContent=td.g;
+  }
+  buildTimesGrid(td);
+  updateNextInfo(td);
+}
+
+function buildTable(td){
+  var now=new Date();
+  var nowDate=new Date(now.getFullYear(),now.getMonth(),now.getDate());
+  var body=document.getElementById('tbl-body');
+  var html='';
+  DATA.forEach(function(row){
+    var d=parseDateStr(row.d);
+    var isToday=td&&row.r===td.r;
+    var isPast=d<nowDate&&!isToday;
+    var cls='tbl-row'+(isToday?' is-today':'')+(isPast?' is-past':'')+(row.kadir?' is-kadir':'');
+    var shortD=row.d.split(' ')[0]+' '+row.d.split(' ')[1].substring(0,3);
+    var extra=row.kadir?'<div class="kadir-tag">✦ KADİR GECESİ</div>':'';
+    html+='<div class="'+cls+'">'+(isToday?'<span id="today-row" style="display:none"></span>':'')+
+      '<div class="tc"><div class="dnum">'+row.r+'</div></div>'+
+      '<div class="tc" style="font-size:9px;line-height:1.3">'+shortD+'<br><span style="opacity:.55;font-size:8px">'+row.g.substring(0,3)+'</span></div>'+
+      '<div class="tc">'+row.t.imsak+'</div>'+
+      '<div class="tc">'+row.t.gunes+'</div>'+
+      '<div class="tc">'+row.t.ogle+'</div>'+
+      '<div class="tc">'+row.t.ikindi+'</div>'+
+      '<div class="tc">'+row.t.aksam+'</div>'+
+      '<div class="tc">'+row.t.yatsi+'</div>'+
+      extra+
+      '</div>';
+  });
+  body.innerHTML=html;
+}
+
+function init(){
+  var td=todayData();
+  buildTodayCard(td);
+  buildTable(td);
+  updateCountdowns();
+  updateProgress();
+  updateClock();
+  updateIftar(td);
+
+  setInterval(function(){
+    updateClock();
+    updateIftar(td);
+    updateNextInfo(td);
+    buildTimesGrid(td);
+  },1000);
+}
+
+document.addEventListener('DOMContentLoaded',init);
+</script>
+</body>
+</html>
