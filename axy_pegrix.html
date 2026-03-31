@@ -566,11 +566,18 @@
     /* INIT */
     function mkPegs() {
       G.pegs = [];
-      const rows = 11, sx = 46, sy = 48, y0 = 68;
+      const rows = 11, sx = 46, sy = 46, y0 = 62;
+      const bucketY = H - 58;
+      const wallMargin = 14;
       for (let r = 0; r < rows; r++) {
         const cols = r + 3, tw = (cols - 1) * sx, x0 = W / 2 - tw / 2;
-        for (let c = 0; c < cols; c++)
-          G.pegs.push({ x: x0 + c * sx, y: y0 + r * sy, r: 5.5, gw: Math.random() * 6, hit: 0, hc: '#00eeff' });
+        for (let c = 0; c < cols; c++) {
+          const px = x0 + c * sx;
+          const py = y0 + r * sy;
+          if (px < wallMargin || px > W - wallMargin) continue;
+          if (py > bucketY - 52) continue;
+          G.pegs.push({ x: px, y: py, r: 5.5, gw: Math.random() * 6, hit: 0, hc: '#00eeff' });
+        }
       }
     }
     function mkBuckets() {
@@ -587,7 +594,7 @@
     function dropBall(bx) {
       if (G.balls.length >= maxB() || G.paused) return;
       const x = bx !== undefined ? Math.max(12, Math.min(W - 12, bx)) : W / 2 + (Math.random() - .5) * 50;
-      G.balls.push({ x, y: 20, vx: (Math.random() - .5) * 1.4, vy: 1.8, r: 8, trail: [], hue: Math.random() * 360, dead: false });
+      G.balls.push({ x, y: 20, vx: (Math.random() - .5) * 1.4, vy: 1.8, r: 8, trail: [], hue: Math.random() * 360, dead: false, stuckFrames: 0, lastY: 20 });
     }
 
     /* FX */
@@ -619,65 +626,81 @@
           b.x  += b.vx * dt_step;
           b.y  += b.vy * dt_step;
 
-          /* Duvar */
+          /* ── DUVAR: önce pozisyon sabitle, sonra hız ── */
           if (b.x < b.r + 1) {
-            b.x = b.r + 1;
-            b.vx = Math.abs(b.vx) * 0.75 + 0.5;
+            b.x  = b.r + 1;
+            b.vx = Math.max(Math.abs(b.vx), 1.5) * 0.8;   // her zaman pozitif, min hız garantili
           } else if (b.x > W - b.r - 1) {
-            b.x = W - b.r - 1;
-            b.vx = -(Math.abs(b.vx) * 0.75 + 0.5);
+            b.x  = W - b.r - 1;
+            b.vx = -Math.max(Math.abs(b.vx), 1.5) * 0.8;  // her zaman negatif, min hız garantili
           }
           if (b.y < b.r + 1) {
-            b.y = b.r + 1;
-            b.vy = Math.abs(b.vy) * 0.5 + 0.5;
+            b.y  = b.r + 1;
+            b.vy = Math.max(Math.abs(b.vy), 1.0) * 0.6;
           }
 
-          /* Çivi çarpışmaları — TÜM çivilerle her substep'te */
+          /* ── ÇİVİ ÇARPIŞMALARI ── */
           for (const p of G.pegs) {
             const dx = b.x - p.x, dy = b.y - p.y;
             const d2 = dx * dx + dy * dy;
             const mn = b.r + p.r;
-            if (d2 < mn * mn) {
-              const d = Math.sqrt(d2) || 0.001;
-              const nx = dx / d, ny = dy / d;
+            if (d2 >= mn * mn) continue;
 
-              /* 1. Topu çivi yüzeyine çek (overlap gider) */
-              const overlap = mn - d + 0.5;
-              b.x += nx * overlap;
-              b.y += ny * overlap;
+            const d  = Math.sqrt(d2) || 0.001;
+            const nx = dx / d, ny = dy / d;
 
-              /* 2. Normal yönündeki hız bileşeni */
-              const vn = b.vx * nx + b.vy * ny;
+            /* 1. Overlap tamamen gider — ekstra pay YOK */
+            b.x = p.x + nx * mn;
+            b.y = p.y + ny * mn;
 
-              /* Sadece birbirlerine yaklaşıyorlarsa yansıt */
-              if (vn < 0) {
-                /* Yansıma katsayısı 0.55 + rastgele gürültü */
-                const restitution = 0.55 + Math.random() * 0.15;
-                b.vx -= (1 + restitution) * vn * nx;
-                b.vy -= (1 + restitution) * vn * ny;
+            /* 2. Duvar sınırını HEMEN uygula (overlap düzeltmesi duvarı ihlal etmiş olabilir) */
+            if (b.x < b.r + 1)       { b.x = b.r + 1; }
+            else if (b.x > W-b.r-1)  { b.x = W - b.r - 1; }
+            if (b.y < b.r + 1)       { b.y = b.r + 1; }
 
-                /* Sürtünme: teğet hızı biraz azalt */
-                const tx = -ny, ty = nx;
-                const vt = b.vx * tx + b.vy * ty;
-                b.vx -= 0.08 * vt * tx;
-                b.vy -= 0.08 * vt * ty;
+            /* 3. Normal hız bileşeni */
+            const vn = b.vx * nx + b.vy * ny;
 
-                /* Hız büyüklüğünü sınırla (patlama önleme) */
-                const spd = Math.sqrt(b.vx*b.vx + b.vy*b.vy);
-                if (spd > 18) { b.vx = b.vx/spd*18; b.vy = b.vy/spd*18; }
+            /* Her durumda (yaklaşıyor veya içeride kalmış) yansıt */
+            if (vn < 0) {
+              const restitution = 0.55 + Math.random() * 0.15;
+              b.vx -= (1 + restitution) * vn * nx;
+              b.vy -= (1 + restitution) * vn * ny;
 
-                /* Her zaman aşağı doğru minimum hız */
-                if (b.vy < 0.8) b.vy = 0.8 + Math.random() * 1.0;
-
-                /* Çok az yatay hız varsa rastgele küçük itme */
-                if (Math.abs(b.vx) < 0.5) b.vx += (Math.random() - 0.5) * 2.0;
-
-                p.hit = 1; p.hc = `hsl(${b.hue},100%,70%)`;
-                const cs = [T().pegG, '#ff6eb4', '#ffe066', '#a3f07a', '#60d5fa'];
-                sparks(b.x, b.y, cs[Math.floor(Math.random() * cs.length)], 7);
-                ring(b.x, b.y, p.hc);
-              }
+              /* Sürtünme */
+              const tx = -ny, ty = nx;
+              const vt = b.vx * tx + b.vy * ty;
+              b.vx -= 0.08 * vt * tx;
+              b.vy -= 0.08 * vt * ty;
+            } else if (vn < 1.0) {
+              /* Top içeride ama "yaklaşmıyor" sayılıyor — zorla it */
+              b.vx += nx * (1.0 - vn + 0.5);
+              b.vy += ny * (1.0 - vn + 0.5);
             }
+
+            /* 4. Hız üst sınırı */
+            const spd = Math.sqrt(b.vx*b.vx + b.vy*b.vy);
+            if (spd > 18) { b.vx = b.vx/spd*18; b.vy = b.vy/spd*18; }
+
+            /* 5. Aşağı minimum hız — sıkışınca durmasın */
+            if (b.vy < 1.0) b.vy = 1.0 + Math.random() * 1.2;
+
+            /* 6. Yatay minimum hız — köşe/çivi dibinde askıda kalmasın */
+            if (Math.abs(b.vx) < 0.8) b.vx += (Math.random() < 0.5 ? 1 : -1) * (0.8 + Math.random() * 1.2);
+
+            p.hit = 1; p.hc = `hsl(${b.hue},100%,70%)`;
+            const cs = [T().pegG, '#ff6eb4', '#ffe066', '#a3f07a', '#60d5fa'];
+            sparks(b.x, b.y, cs[Math.floor(Math.random() * cs.length)], 7);
+            ring(b.x, b.y, p.hc);
+          }
+
+          /* ── SON DUVAR KONTROLÜ: çivi ittirmesi sonrası tekrar kontrol ── */
+          if (b.x < b.r + 1) {
+            b.x  = b.r + 1;
+            if (b.vx < 1.5) b.vx = 1.5;
+          } else if (b.x > W - b.r - 1) {
+            b.x  = W - b.r - 1;
+            if (b.vx > -1.5) b.vx = -1.5;
           }
         }
         /* ── SUBSTEP BİTTİ ── */
@@ -697,6 +720,24 @@
           }
         }
         if (b.y > H + 30) b.dead = true;
+
+        /* ── SIKIŞ KORUMA: 90 frame içinde yeterince aşağı inmemişse zorla it ── */
+        if (!b.dead) {
+          if (b.y - b.lastY < 1.0) {
+            b.stuckFrames++;
+            if (b.stuckFrames > 90) {
+              /* Tamamen sıkışmış — güvenli bir x'e taşı ve aşağı at */
+              b.x = Math.max(b.r + 2, Math.min(W - b.r - 2, b.x));
+              b.vx = (Math.random() - 0.5) * 4;
+              b.vy = Math.max(b.vy, 3.5);
+              b.stuckFrames = 0;
+            }
+          } else {
+            b.stuckFrames = 0;
+          }
+          b.lastY = b.y;
+        }
+
         if (b.dead) dead.push(bi);
       });
 
