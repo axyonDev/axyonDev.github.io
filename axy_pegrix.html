@@ -232,6 +232,35 @@
     .cn { color: var(--tx3); background: var(--upbg); border: 1px solid var(--upbr); }
     .cm { color: #3de8a0; background: rgba(61,232,160,.1); border: 1px solid rgba(61,232,160,.25); }
 
+    /* TOOLTIP */
+    #upg-tooltip {
+      position: fixed; z-index: 200; pointer-events: none;
+      max-width: 210px; padding: 9px 12px; border-radius: 10px;
+      font-family: 'Nunito', sans-serif; font-size: 12px; line-height: 1.55;
+      color: var(--tx); border: 1px solid var(--br2);
+      opacity: 0; transform: translateY(4px);
+      transition: opacity .15s, transform .15s;
+    }
+    [data-theme="dark"] #upg-tooltip {
+      background: rgba(18,10,42,.97);
+      box-shadow: 0 6px 28px rgba(0,0,0,.6), 0 0 0 1px rgba(200,160,255,.08);
+    }
+    [data-theme="light"] #upg-tooltip {
+      background: rgba(255,255,255,.98);
+      box-shadow: 0 4px 20px rgba(100,50,200,.12);
+    }
+    #upg-tooltip.show { opacity: 1; transform: translateY(0); }
+    #upg-tooltip .tt-title {
+      font-family: 'Orbitron', sans-serif; font-size: 9px; font-weight: 700;
+      letter-spacing: 1px; margin-bottom: 5px;
+    }
+    #upg-tooltip .tt-desc { color: var(--tx2); }
+    #upg-tooltip .tt-next {
+      margin-top: 5px; padding-top: 5px;
+      border-top: 1px solid var(--br);
+      font-size: 11px; color: var(--tx3);
+    }
+
     /* BUTTONS */
     .btn-p {
       flex-shrink: 0; width: 100%; padding: 13px; border-radius: 12px;
@@ -505,6 +534,12 @@
     </div>
   </div>
 
+  <div id="upg-tooltip">
+    <div class="tt-title" id="tt-title"></div>
+    <div class="tt-desc" id="tt-desc"></div>
+    <div class="tt-next" id="tt-next"></div>
+  </div>
+
   <script>
     const cv = document.getElementById('c'), cx = cv.getContext('2d'), W = cv.width, H = cv.height;
 
@@ -568,7 +603,9 @@
       G.pegs = [];
       const rows = 11, sx = 46, sy = 46, y0 = 62;
       const bucketY = H - 58;
-      const wallMargin = 14;
+      const ballR = 8, pegR = 5.5;
+      // Duvar ile çivi arasında topun rahatça geçebileceği min boşluk
+      const wallMargin = ballR + pegR + 6; // = 19.5 → yuvarla 20
       for (let r = 0; r < rows; r++) {
         const cols = r + 3, tw = (cols - 1) * sx, x0 = W / 2 - tw / 2;
         for (let c = 0; c < cols; c++) {
@@ -576,7 +613,7 @@
           const py = y0 + r * sy;
           if (px < wallMargin || px > W - wallMargin) continue;
           if (py > bucketY - 52) continue;
-          G.pegs.push({ x: px, y: py, r: 5.5, gw: Math.random() * 6, hit: 0, hc: '#00eeff' });
+          G.pegs.push({ x: px, y: py, r: pegR, gw: Math.random() * 6, hit: 0, hc: '#00eeff' });
         }
       }
     }
@@ -721,15 +758,14 @@
         }
         if (b.y > H + 30) b.dead = true;
 
-        /* ── SIKIŞ KORUMA: 90 frame içinde yeterince aşağı inmemişse zorla it ── */
+        /* ── SIKIŞ KORUMA: 45 frame içinde yeterince aşağı inmemişse zorla it ── */
         if (!b.dead) {
           if (b.y - b.lastY < 1.0) {
             b.stuckFrames++;
-            if (b.stuckFrames > 90) {
-              /* Tamamen sıkışmış — güvenli bir x'e taşı ve aşağı at */
+            if (b.stuckFrames > 45) {
               b.x = Math.max(b.r + 2, Math.min(W - b.r - 2, b.x));
-              b.vx = (Math.random() - 0.5) * 4;
-              b.vy = Math.max(b.vy, 3.5);
+              b.vx = (Math.random() < 0.5 ? 1 : -1) * (2 + Math.random() * 2);
+              b.vy = Math.max(b.vy, 5.0);
               b.stuckFrames = 0;
             }
           } else {
@@ -880,8 +916,53 @@
       if (G.upgrades.auto.lvl > 0) { cx.fillStyle = T().aTx; cx.textAlign = 'right'; cx.fillText('OTO-ATIŞ ✓', W - 8, 14); }
     }
 
+    /* UPGRADE AÇIKLAMALARI */
+    const UPG_DESC = {
+      ball:  { desc: 'Aynı anda düşebilecek top sayısını 1 artırır.', next: (u) => `Sonraki: ${u.lvl + 1} top` },
+      grav:  { desc: 'Topların düşüş hızını artırır. Daha hızlı = daha çok puan/saniye.', next: (u) => `Sonraki hız: %${((0.18 + (u.lvl+1)*0.06)*100).toFixed(0)}` },
+      auto:  { desc: 'Otomatik olarak belirli aralıklarla top atar. Seviye arttıkça atış hızlanır.', next: (u) => u.lvl === 0 ? 'Oto-atışı etkinleştirir' : `Sonraki: daha hızlı atış` },
+      bonus: { desc: 'Her kovaya düşüşte 5× bonus kazanma şansı verir.', next: (u) => `Sonraki: %${((u.lvl+1)*2.5).toFixed(1)} şans` },
+      crit:  { desc: 'Kritik vuruş ile 15× puan kazanma şansı verir. Mor parlama ile belli olur.', next: (u) => `Sonraki: %${((u.lvl+1)*1.5).toFixed(1)} şans` },
+    };
+
+    /* TOOLTIP */
+    var _tt, _ttTitle, _ttDesc, _ttNext, _ttVisible = false;
+    function _initTooltip() {
+      _tt      = document.getElementById('upg-tooltip');
+      _ttTitle = document.getElementById('tt-title');
+      _ttDesc  = document.getElementById('tt-desc');
+      _ttNext  = document.getElementById('tt-next');
+    }
+
+    function showTooltip(e, k, u, col) {
+      const info = UPG_DESC[k];
+      if (!info) return;
+      _ttTitle.textContent = u.n;
+      _ttTitle.style.color = col;
+      _ttDesc.textContent  = info.desc;
+      const mx = u.lvl >= u.max;
+      _ttNext.textContent  = mx ? '✓ Maksimum seviyeye ulaşıldı' : info.next(u);
+      _ttNext.style.color  = mx ? '#3de8a0' : '';
+      positionTooltip(e);
+      _tt.classList.add('show');
+      _ttVisible = true;
+    }
+
+    function positionTooltip(e) {
+      const cx2 = e.clientX, cy2 = e.clientY;
+      const tw = 220, th = 90;
+      let left = cx2 + 14, top = cy2 - 10;
+      if (left + tw > window.innerWidth - 8)  left = cx2 - tw - 14;
+      if (top + th  > window.innerHeight - 8) top  = window.innerHeight - th - 8;
+      if (top < 8) top = 8;
+      _tt.style.left = left + 'px';
+      _tt.style.top  = top  + 'px';
+    }
+
+    function hideTooltip() { _tt.classList.remove('show'); _ttVisible = false; }
+
     /* UI */
-    let _ls = -1, _lhs = -1, _lm = -1, _lb = -1, _la = -1;
+    var _ls = -1, _lhs = -1, _lm = -1, _lb = -1, _la = -1;
     function renderUI() {
       const f = fmt(G.score);
       if (G.score !== _ls) { document.getElementById('sv').textContent = f; document.getElementById('hSk').textContent = f; _ls = G.score; }
@@ -905,6 +986,11 @@
         const d = document.createElement('div'); d.className = 'upg';
         d.innerHTML = `<div class="ui" style="background:${u.col}18;color:${u.col};border:1px solid ${u.col}30;">${u.ico}</div><div class="uin"><div class="un" style="color:${u.col}">${u.n}</div><div class="us">${sub}</div></div><div class="uc ${mx ? 'cm' : can ? 'cc' : 'cn'}">${mx ? 'MAX' : fmt(cost)}</div>`;
         if (!mx) d.onclick = () => { const c = ucost(k); if (G.score >= c) { G.score -= c; u.lvl++; sparks(W / 2, H * .4, '#ffcc00', 20); } };
+        d.addEventListener('mouseenter', e => showTooltip(e, k, u, u.col));
+        d.addEventListener('mousemove',  e => { if (_ttVisible) positionTooltip(e); });
+        d.addEventListener('mouseleave', hideTooltip);
+        d.addEventListener('touchstart', e => { showTooltip(e.touches[0], k, u, u.col); }, { passive: true });
+        d.addEventListener('touchend', () => setTimeout(hideTooltip, 1200));
         cont.appendChild(d);
       });
     }
@@ -1029,6 +1115,7 @@
       if (_uiTimer >= 3) { renderUI(); _uiTimer = 0; }
     }
 
+    _initTooltip();
     requestAnimationFrame(loop);
   </script>
 </body>
