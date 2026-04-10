@@ -15,30 +15,6 @@
   --cs: 62px; /* cell size */
   --cg: 6px;  /* cell gap */
 }
-/* ── LIGHT MODE (Crystal Merge) ── */
-[data-theme="light"] {
-  --bg: #eef2ff;
-  --panel: rgba(220,228,255,0.96);
-  --border: rgba(80,100,220,0.3);
-  --glow-gold: #d97706;
-  --text: #1e1b4b;
-}
-[data-theme="light"] body::before {
-  background: radial-gradient(ellipse 70% 50% at 50% 0%,rgba(120,140,255,0.12) 0%,transparent 65%),
-              radial-gradient(ellipse 40% 40% at 85% 80%,rgba(160,80,255,0.07) 0%,transparent 60%);
-}
-[data-theme="light"] #game-wrap {
-  background: rgba(230,236,255,0.7);
-  border-color: rgba(80,100,220,0.25);
-}
-[data-theme="light"] .ov { background: rgba(200,210,255,0.85); backdrop-filter: blur(16px); }
-[data-theme="light"] .modal { background: rgba(235,240,255,0.97); border-color: rgba(80,100,220,0.3); color: #1e1b4b; }
-[data-theme="light"] .ctrl-btn { background: rgba(200,210,255,0.6); border-color: rgba(80,100,220,0.25); color: #2d3a8c; }
-[data-theme="light"] .pu-btn { background: rgba(200,210,255,0.5); border-color: rgba(80,100,220,0.2); color: #2d3a8c; }
-[data-theme="light"] .pu-cost { color: #1e7a3a; }
-[data-theme="light"] #hud-top { background: rgba(210,220,255,0.85); border-color: rgba(80,100,220,0.2); }
-[data-theme="light"] .warn-pu-btn { background: rgba(200,215,255,0.7); border-color: rgba(80,100,220,0.25); color: #2d3a8c; }
-[data-theme="light"] canvas#stars { opacity: 0.15; }
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
 html,body{height:100%;width:100%;background:var(--bg);font-family:'Nunito',sans-serif;color:var(--text);overflow:hidden;display:flex;flex-direction:column;align-items:center;justify-content:center;}
 body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;background:radial-gradient(ellipse 70% 50% at 50% 0%,rgba(0,60,180,0.18) 0%,transparent 65%),radial-gradient(ellipse 40% 40% at 85% 80%,rgba(120,0,220,0.1) 0%,transparent 60%);}
@@ -330,7 +306,6 @@ body.smash-mode .block:hover{filter:brightness(1.5) saturate(1.5);outline:2px da
       <button class="ctrl-btn" id="btn-undo-game" data-tip="Ana Menü" title="Geri"><span>↩</span><span class="cb-label">GERİ</span></button>
       <button class="ctrl-btn" id="btn-pause" data-tip="Duraklat" title="Duraklat"><span>⏸</span><span class="cb-label">DURAKLAT</span></button>
       <button class="ctrl-btn" id="btn-sound" data-tip="Ses Aç/Kapat" title="Ses"><span id="sound-icon">🔊</span><span class="cb-label">SES</span></button>
-      <button class="ctrl-btn" id="btn-theme-cm" data-tip="Tema Değiştir" title="Tema" onclick="toggleThemeCM()"><span id="theme-icon-cm">🌙</span><span class="cb-label">TEMA</span></button>
       <button class="ctrl-btn" id="btn-howto-ig" data-tip="Nasıl Oynanır?" title="Nasıl oynanır?"><span>❓</span><span class="cb-label">NASIL</span></button>
     </div>
   </div>
@@ -422,25 +397,6 @@ body.smash-mode .block:hover{filter:brightness(1.5) saturate(1.5);outline:2px da
     <div style="font-family:'Orbitron',sans-serif;font-size:22px;font-weight:900;color:#ef4444;margin-bottom:6px;">OYUN BİTTİ</div>
     <div style="font-size:13px;color:rgba(180,210,255,.55);margin-bottom:4px;">Grid doldu, hamle kalmadı!</div>
     <div style="font-family:'Orbitron',sans-serif;font-size:32px;font-weight:900;color:var(--glow-gold);margin:14px 0;text-shadow:0 0 20px rgba(251,191,36,.6);" id="go-score">0</div>
-    <!-- FIX: Oyun sonu istatistik paneli (ChatGPT + Claude önerisi) -->
-    <div id="go-stats" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px;text-align:center;">
-      <div style="background:rgba(0,180,255,.08);border:1px solid rgba(0,180,255,.15);border-radius:8px;padding:8px;">
-        <div style="font-size:10px;color:rgba(180,210,255,.5);letter-spacing:.1em;text-transform:uppercase;">Bölüm</div>
-        <div style="font-family:'Orbitron',sans-serif;font-size:16px;font-weight:800;color:#00b4ff;" id="go-level">1</div>
-      </div>
-      <div style="background:rgba(168,85,247,.08);border:1px solid rgba(168,85,247,.15);border-radius:8px;padding:8px;">
-        <div style="font-size:10px;color:rgba(180,210,255,.5);letter-spacing:.1em;text-transform:uppercase;">En Büyük Taş</div>
-        <div style="font-family:'Orbitron',sans-serif;font-size:16px;font-weight:800;color:#a855f7;" id="go-maxstone">2</div>
-      </div>
-      <div style="background:rgba(52,211,153,.08);border:1px solid rgba(52,211,153,.15);border-radius:8px;padding:8px;">
-        <div style="font-size:10px;color:rgba(180,210,255,.5);letter-spacing:.1em;text-transform:uppercase;">Toplam Merge</div>
-        <div style="font-family:'Orbitron',sans-serif;font-size:16px;font-weight:800;color:#34d399;" id="go-merges">0</div>
-      </div>
-      <div style="background:rgba(251,191,36,.08);border:1px solid rgba(251,191,36,.15);border-radius:8px;padding:8px;">
-        <div style="font-size:10px;color:rgba(180,210,255,.5);letter-spacing:.1em;text-transform:uppercase;">En Büyük Combo</div>
-        <div style="font-family:'Orbitron',sans-serif;font-size:16px;font-weight:800;color:#fbbf24;" id="go-maxcombo">0</div>
-      </div>
-    </div>
     <button class="btn-green" id="btn-restart-go">Tekrar Oyna</button>
   </div>
 </div>
@@ -494,17 +450,6 @@ body.smash-mode .block:hover{filter:brightness(1.5) saturate(1.5);outline:2px da
       <div>🔷 Aynı değerli komşu bloklara <b>basılı tut</b> — eşleşenler parlar.</div>
       <div>🔷 Bırakınca tüm eşleşen bloklar <b>birleşir</b>, yeni değer ortada kalır.</div>
       <div>🔷 Ne kadar çok taş birleşirse o kadar <b>yüksek combo</b> çarpanı!</div>
-      <div style="margin-top:10px;padding:8px 10px;background:rgba(0,180,255,.08);border:1px solid rgba(0,180,255,.2);border-radius:8px;">
-        <div style="font-family:'Orbitron',sans-serif;font-size:10px;color:#00b4ff;letter-spacing:.1em;margin-bottom:4px;">🔢 BİRLEŞME FORMÜLÜ</div>
-        <div style="font-size:12px;color:rgba(180,210,255,.9);">Yeni Değer = <b>Mevcut Değer × 2^⌈N/2⌉</b></div>
-        <div style="font-size:11px;color:rgba(180,210,255,.6);margin-top:3px;">N = birleşen taş sayısı</div>
-        <div style="font-size:11px;color:rgba(180,210,255,.6);">3 taş → ×2 &nbsp;|&nbsp; 5 taş → ×4 &nbsp;|&nbsp; 8 taş → ×16</div>
-      </div>
-      <div style="margin-top:10px;padding:8px 10px;background:rgba(52,211,153,.06);border:1px solid rgba(52,211,153,.15);border-radius:8px;">
-        <div style="font-family:'Orbitron',sans-serif;font-size:10px;color:#34d399;letter-spacing:.1em;margin-bottom:4px;">🪙 COİN KAZANIMI</div>
-        <div style="font-size:11px;color:rgba(180,210,255,.7);">3 taş → +1 🪙 &nbsp;|&nbsp; 6 taş → +2 🪙 &nbsp;|&nbsp; 9+ taş → +3 🪙</div>
-        <div style="font-size:11px;color:rgba(180,210,255,.6);">Bölüm tamamla → +50 🪙 bonus!</div>
-      </div>
       <div style="margin-top:8px;">🔄 <b>Değiştir</b> — temas eden 2 taşın yerini değiştirir</div>
       <div>↩️ <b>Geri Al</b> — son hamleyi geri alır</div>
       <div>🔨 <b>Yok Et</b> — bir bloğu patlatır</div>
@@ -589,11 +534,6 @@ let G = [];          // 2B dizi: G[satır][sütun] = taşın değeri (0 = boş)
 let score = 0;       // Toplam puan
 let coins = 30;      // Başlangıç coini — power-up satın almak için
 let targetIdx = 0;   // TARGETS dizisindeki aktif hedefin indeksi
-
-// FIX: Oyun sonu istatistik takibi
-let totalMerges = 0;   // Toplam merge sayısı
-let maxComboEver = 0;  // En büyük combo (taş sayısı)
-let maxStoneEver = 0;  // En büyük taş değeri
 
 // Power-up durum bayrakları: hangi mod aktif?
 let smashOn = false;     // Yok Et modu — tıklanan taşı siler
@@ -1556,14 +1496,7 @@ function doHoldMerge() {
     const comboBonus = count >= 8 ? 2.0 : count >= 5 ? 1.5 : count >= 3 ? 1.2 : 1.0;
     const mergeScore = Math.round(logV * (count + 1) * comboBonus);
     score += mergeScore;
-    // FIX: Coin ekonomisi — büyük merge daha çok coin verir (DeepSeek tespiti)
-    // Eski: sabit +1. Yeni: 1 + her 3 taşta +1 bonus (3-5 taş=+1, 6-8=+2, 9+=+3)
-    const coinEarned = 1 + Math.floor(count / 3);
-    coins += coinEarned;
-    // İstatistik takibi
-    totalMerges++;
-    if (count + 1 > maxComboEver) maxComboEver = count + 1;
-    if (newV > maxStoneEver) maxStoneEver = newV;
+    coins += 1;
 
     sfxMerge(newV);
     spawnPtcl(savedHC.r, savedHC.c, newV, count);
@@ -2231,11 +2164,6 @@ function triggerGameOver() {
   warnShownThisRound = false;
   sfxGO();
   document.getElementById('go-score').textContent = score.toLocaleString('tr');
-  // FIX: İstatistik panelini doldur
-  document.getElementById('go-level').textContent = targetIdx + 1;
-  document.getElementById('go-maxstone').textContent = maxStoneEver >= 1000 ? (maxStoneEver >= 1e6 ? (maxStoneEver/1e6).toFixed(1)+'M' : (maxStoneEver/1000).toFixed(0)+'K') : maxStoneEver;
-  document.getElementById('go-merges').textContent = totalMerges.toLocaleString('tr');
-  document.getElementById('go-maxcombo').textContent = maxComboEver + ' taş';
   setTimeout(() => document.getElementById('ov-go').classList.add('show'), 600);
 }
 
@@ -2470,7 +2398,6 @@ function clearSave() { localStorage.removeItem(SAVE_KEY); }
  */
 function startGame() {
   score = 0; coins = 30; targetIdx = 0;
-  totalMerges = 0; maxComboEver = 0; maxStoneEver = 0; // FIX: istatistik sıfırla
   gameStartTime = Date.now();
   clearSave();
   cancelHold(); cancelSwap();
@@ -2865,25 +2792,5 @@ requestAnimationFrame(() => {
     }
   }
 });
-
-// ── TEMA DEĞİŞTİRME (Crystal Merge) ──
-function toggleThemeCM() {
-  const html = document.documentElement;
-  const isLight = html.getAttribute('data-theme') === 'light';
-  html.setAttribute('data-theme', isLight ? 'dark' : 'light');
-  document.getElementById('theme-icon-cm').textContent = isLight ? '🌙' : '☀️';
-  try { localStorage.setItem('axydrop_theme', isLight ? 'dark' : 'light'); } catch(e){}
-}
-// Kaydedilmiş temayı uygula
-(function(){
-  try {
-    const t = localStorage.getItem('axydrop_theme');
-    if (t) {
-      document.documentElement.setAttribute('data-theme', t);
-      const ic = document.getElementById('theme-icon-cm');
-      if (ic) ic.textContent = t === 'light' ? '☀️' : '🌙';
-    }
-  } catch(e){}
-})();
 </script>
 </body>

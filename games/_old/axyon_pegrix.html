@@ -455,11 +455,11 @@
           <div class="sub" id="av">0 uçuyor</div>
         </div>
       </div>
-      <button class="btn-p" onclick="dropBall()">▼ TOP AT</button>
       <div class="card">
         <div class="sec-t">UPGRADES</div>
         <div id="ugs"></div>
       </div>
+      <button class="btn-p" onclick="dropBall()">▼ TOP AT</button>
       <div class="btn-g" onclick="prestige()">
         <div>⚡ PRESTIGE ⚡</div>
         <div class="bgs" id="psub">Skoru sıfırla, kalıcı çarpan kazan!</div>
@@ -572,36 +572,6 @@
     const BUCST = [15, 25, 60, 120, 400, 120, 60, 25, 15];
     function bCol(i) { return (isDark() ? BCDK : BCLT)[i]; }
 
-    /* ── SES SİSTEMİ ── */
-    let _ac = null;
-    function getAC() {
-      if (!_ac) { try { _ac = new (window.AudioContext || window.webkitAudioContext)(); } catch(e){} }
-      if (_ac && _ac.state === 'suspended') _ac.resume();
-      return _ac;
-    }
-    function playTone(freq, type, vol, dur) {
-      setTimeout(() => {
-        const ac = getAC(); if (!ac) return;
-        try {
-          const o = ac.createOscillator(), g = ac.createGain();
-          o.connect(g); g.connect(ac.destination);
-          o.type = type || 'sine'; o.frequency.value = freq;
-          g.gain.setValueAtTime(vol || 0.15, ac.currentTime);
-          g.gain.exponentialRampToValueAtTime(0.001, ac.currentTime + (dur || 0.12));
-          o.start(ac.currentTime); o.stop(ac.currentTime + (dur || 0.12) + 0.01);
-        } catch(e){}
-      }, 0);
-    }
-    function sfxPegHit()  { if (Math.random() > 0.5) playTone(300 + Math.random()*100, 'sine', 0.08, 0.07); }
-    function sfxBucketHit(val) {
-      const freq = val <= 0.25 ? 880 : val <= 1 ? 660 : val <= 2 ? 440 : val <= 5 ? 330 : 220;
-      playTone(freq, 'triangle', 0.20, 0.15);
-      setTimeout(() => playTone(freq * 1.5, 'sine', 0.07, 0.10), 50);
-    }
-    function sfxUpgrade()  { playTone(660,'sine',0.15,0.10); setTimeout(()=>playTone(880,'sine',0.12,0.12),90); setTimeout(()=>playTone(1100,'sine',0.09,0.14),180); }
-    function sfxPrestige() { [261,329,392,523,659,784,1046].forEach((f,i)=>setTimeout(()=>playTone(f,'sine',0.18,0.20),i*65)); }
-    function sfxDrop()     { playTone(200, 'sine', 0.09, 0.06); }
-
     /* STATE */
     const G = {
       score: 0, mult: 1, balls: [], particles: [], popups: [], rings: [],
@@ -628,57 +598,12 @@
     const fmt = v => v >= 1e6 ? `$${(v / 1e6).toFixed(2)}M` : v >= 1e3 ? `$${(v / 1e3).toFixed(2)}K` : `$${v.toFixed(2)}`;
     const earn = () => { const n = performance.now(); G.earns = G.earns.filter(e => n - e.t < 1000); return G.earns.reduce((s, e) => s + e.v, 0); };
 
-    /* ── İLERLEME KAYIT ── */
-    const PROGRESS_KEY = 'axp_progress';
-    let _saveTimer = 0;
-    function saveProgress() {
-      try {
-        const data = {
-          mult: G.mult, score: G.score, upgrades: {},
-          buckets: G.buckets.map(b => b.lvl), ts: Date.now()
-        };
-        Object.keys(G.upgrades).forEach(key => { data.upgrades[key] = G.upgrades[key].lvl; });
-        localStorage.setItem(PROGRESS_KEY, JSON.stringify(data));
-      } catch(e) {}
-    }
-    function loadProgress() {
-      try {
-        const raw = localStorage.getItem(PROGRESS_KEY);
-        if (!raw) return false;
-        const d = JSON.parse(raw);
-        if (!d || !d.upgrades) return false;
-        G.mult = d.mult || 1; G.score = d.score || 0;
-        Object.keys(d.upgrades).forEach(key => { if (G.upgrades[key]) G.upgrades[key].lvl = d.upgrades[key]; });
-        if (d.buckets) d.buckets.forEach((lvl, i) => { if (G.buckets[i]) G.buckets[i].lvl = lvl; });
-        // Çevrimdışı gelir (max 1 saat)
-        if (d.ts && d.score > 0) {
-          const elapsed = Math.min((Date.now() - d.ts) / 1000, 3600);
-          if (elapsed > 30) {
-            const avgVal = G.buckets.reduce((s,b) => s + b.val * b.lvl * (d.mult||1), 0) / G.buckets.length;
-            const offline = Math.round(avgVal * 0.5 * elapsed * 0.3);
-            if (offline > 0) {
-              G.score += offline;
-              setTimeout(() => {
-                const t = document.createElement('div');
-                t.style.cssText = 'position:fixed;top:70px;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,#3de8c0,#00b4ff);color:#0a0a1a;font-family:Orbitron,sans-serif;font-size:12px;font-weight:800;padding:8px 18px;border-radius:20px;z-index:999;';
-                const fv = v => v>=1e6?`$${(v/1e6).toFixed(2)}M`:v>=1e3?`$${(v/1e3).toFixed(2)}K`:`$${v.toFixed(2)}`;
-                t.textContent = `⏰ Çevrimdışı gelir: +${fv(offline)}`;
-                document.body.appendChild(t); setTimeout(() => t.remove(), 3500);
-              }, 1500);
-            }
-          }
-        }
-        return true;
-      } catch(e) { return false; }
-    }
-    function clearProgress() { try { localStorage.removeItem(PROGRESS_KEY); } catch(e) {} }
-
     /* INIT */
     function mkPegs() {
       G.pegs = [];
       const rows = 11, sx = 46, sy = 46, y0 = 62;
       const bucketY = H - 58;
-      const ballR = 10, pegR = 5.5;
+      const ballR = 8, pegR = 5.5;
       // Duvar ile çivi arasında topun rahatça geçebileceği min boşluk
       const wallMargin = ballR + pegR + 6; // = 19.5 → yuvarla 20
       for (let r = 0; r < rows; r++) {
@@ -701,13 +626,12 @@
       }));
     }
     mkPegs(); mkBuckets();
-    loadProgress();
 
     /* DROP */
     function dropBall(bx) {
       if (G.balls.length >= maxB() || G.paused) return;
       const x = bx !== undefined ? Math.max(12, Math.min(W - 12, bx)) : W / 2 + (Math.random() - .5) * 50;
-      sfxDrop(); G.balls.push({ x, y: 20, vx: (Math.random() - .5) * 1.4, vy: 1.8, r: 10, trail: [], hue: Math.random() * 360, dead: false, stuckFrames: 0, lastY: 20 });
+      G.balls.push({ x, y: 20, vx: (Math.random() - .5) * 1.4, vy: 1.8, r: 8, trail: [], hue: Math.random() * 360, dead: false, stuckFrames: 0, lastY: 20 });
     }
 
     /* FX */
@@ -777,7 +701,6 @@
             /* Her durumda (yaklaşıyor veya içeride kalmış) yansıt */
             if (vn < 0) {
               const restitution = 0.55 + Math.random() * 0.15;
-              if (Math.abs(vn) > 2) sfxPegHit();
               b.vx -= (1 + restitution) * vn * nx;
               b.vy -= (1 + restitution) * vn * ny;
 
@@ -828,7 +751,7 @@
               if (Math.random() < critC()) { v *= 15; lbl = `💥 ${fmt(v)}`; cl = '#c084fc'; sparks(b.x, bk.y - 15, '#c084fc', 40); ring(b.x, bk.y, '#c084fc'); }
               G.score += v; if (G.score > HS) { HS = G.score; setHS(HS); }
               G.earns.push({ v, t: performance.now() });
-              bk.lit = 1; sparks(b.x, bk.y + 10, bk.color, 18); ring(b.x, bk.y + 22, bk.color); sfxBucketHit(bk.val);
+              bk.lit = 1; sparks(b.x, bk.y + 10, bk.color, 18); ring(b.x, bk.y + 22, bk.color);
               pop(b.x, bk.y - 30, lbl, cl); b.dead = true; break;
             }
           }
@@ -967,20 +890,12 @@
       G.buckets.forEach(bk => {
         const th = T(), lit = bk.lit, bc = bk.color;
         if (lit > 0) { cx.shadowBlur = 26 * lit; cx.shadowColor = bc; }
-        // Kova arka plan dolgusu
-        cx.fillStyle = isDark() ? 'rgba(8,12,28,0.88)' : 'rgba(240,244,255,0.90)';
-        cx.fillRect(bk.x + 1, bk.y, bk.w - 2, bk.h);
         const fg = cx.createLinearGradient(bk.x, bk.y, bk.x, bk.y + bk.h);
-        const baseAlpha = lit > .05 ? Math.min(0.55 + lit * 0.3, 0.85) : 0.32;
-        fg.addColorStop(0, bc + Math.floor(baseAlpha * 255).toString(16).padStart(2, '0'));
-        fg.addColorStop(0.6, bc + Math.floor(baseAlpha * 0.5 * 255).toString(16).padStart(2, '0'));
-        fg.addColorStop(1, bc + '18');
+        const a1 = Math.floor((lit > .05 ? Math.min(lit * .6, .55) : .1) * 255).toString(16).padStart(2, '0');
+        fg.addColorStop(0, bc + a1); fg.addColorStop(1, bc + '0c');
         cx.fillStyle = fg; cx.fillRect(bk.x + 1, bk.y, bk.w - 2, bk.h);
-        cx.strokeStyle = bc + (lit > .05 ? 'ff' : '99'); cx.lineWidth = lit > .3 ? 2.5 : 1.5;
-        cx.strokeRect(bk.x + 1, bk.y, bk.w - 2, bk.h);
-        cx.fillStyle = bc + (lit > .05 ? 'cc' : '55');
-        cx.fillRect(bk.x + 1, bk.y, bk.w - 2, 3);
-        cx.shadowBlur = 0;
+        cx.strokeStyle = bc + (lit > .05 ? 'cc' : '55'); cx.lineWidth = lit > .3 ? 2 : 1;
+        cx.strokeRect(bk.x + 1, bk.y, bk.w - 2, bk.h); cx.shadowBlur = 0;
         const v = bk.val * bk.lvl * G.mult;
         const lbl = v < 1 ? `${Math.round(v * 100)}¢` : `$${v.toFixed(0)}`;
         cx.fillStyle = th.bTx(lit); cx.font = 'bold 11px Orbitron'; cx.textAlign = 'center';
@@ -1070,7 +985,7 @@
         if (k === 'crit') sub = `%${(critC() * 100).toFixed(1)} şans`;
         const d = document.createElement('div'); d.className = 'upg';
         d.innerHTML = `<div class="ui" style="background:${u.col}18;color:${u.col};border:1px solid ${u.col}30;">${u.ico}</div><div class="uin"><div class="un" style="color:${u.col}">${u.n}</div><div class="us">${sub}</div></div><div class="uc ${mx ? 'cm' : can ? 'cc' : 'cn'}">${mx ? 'MAX' : fmt(cost)}</div>`;
-        if (!mx) d.onclick = () => { const c = ucost(k); if (G.score >= c) { G.score -= c; u.lvl++; sparks(W / 2, H * .4, '#ffcc00', 20); sfxUpgrade(); } };
+        if (!mx) d.onclick = () => { const c = ucost(k); if (G.score >= c) { G.score -= c; u.lvl++; sparks(W / 2, H * .4, '#ffcc00', 20); } };
         d.addEventListener('mouseenter', e => showTooltip(e, k, u, u.col));
         d.addEventListener('mousemove',  e => { if (_ttVisible) positionTooltip(e); });
         d.addEventListener('mouseleave', hideTooltip);
@@ -1085,7 +1000,6 @@
       const pc = Math.pow(10, G.mult + 1); if (G.score < pc) return;
       G.mult++; G.score = 0; G.balls = [];
       Object.values(G.upgrades).forEach(u => { u.lvl = Math.max(u.n === 'OTO-ATIŞ' ? 0 : 1, Math.floor(u.lvl * .35)); });
-      sfxPrestige(); saveProgress();
       for (let i = 0; i < 90; i++)setTimeout(() => sparks(Math.random() * W, Math.random() * H, ['#ff00ee', '#00eeff', '#ffcc00', '#00ee88'][Math.floor(Math.random() * 4)], 14), i * 32);
     }
 
@@ -1109,7 +1023,6 @@
       G.upgrades.ball.lvl = 1; G.upgrades.grav.lvl = 1; G.upgrades.auto.lvl = 0;
       G.upgrades.bonus.lvl = 1; G.upgrades.crit.lvl = 1;
       G.buckets.forEach(b => { b.lvl = 1; b.lit = 0; });
-      clearProgress();
       _ls = _lhs = _lm = _lb = _la = -1;
       document.getElementById('pov').classList.add('off');
       document.getElementById('pbtn').textContent = '⏸';
@@ -1148,7 +1061,7 @@
     function getXY(e) { const r = cv.getBoundingClientRect(), sx = W / r.width, sy = H / r.height; return { x: (e.clientX - r.left) * sx, y: (e.clientY - r.top) * sy }; }
     function handleP(x, y) {
       if (G.paused) { togglePause(); return; }
-      for (const bk of G.buckets) { if (x >= bk.x && x < bk.x + bk.w && y >= bk.y) { const bc = Math.floor(bk.ucost * Math.pow(2.2, bk.lvl - 1)); if (G.score >= bc) { G.score -= bc; bk.lvl++; bk.lit = 1; sparks(x, H - 30, bk.color, 20); setTimeout(saveProgress, 1000); } return; } }
+      for (const bk of G.buckets) { if (x >= bk.x && x < bk.x + bk.w && y >= bk.y) { const bc = Math.floor(bk.ucost * Math.pow(2.2, bk.lvl - 1)); if (G.score >= bc) { G.score -= bc; bk.lvl++; bk.lit = 1; sparks(x, H - 30, bk.color, 20); } return; } }
       dropBall(x);
     }
     cv.addEventListener('click', e => { const { x, y } = getXY(e); handleP(x, y); });
@@ -1200,7 +1113,6 @@
       // UI: her 3 karede bir güncelle (performans)
       _uiTimer++;
       if (_uiTimer >= 3) { renderUI(); _uiTimer = 0; }
-      _saveTimer++; if (_saveTimer >= 300) { saveProgress(); _saveTimer = 0; }
     }
 
     _initTooltip();

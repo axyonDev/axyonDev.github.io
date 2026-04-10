@@ -35,7 +35,7 @@
       --col-gap: 5px;
       --block-h: 56px;
       --rows: 8;
-      --cols: 6;
+      --cols: 5;
       --grid-w: calc(var(--cols) * var(--col-w) + (var(--cols) - 1) * var(--col-gap));
     }
 
@@ -243,17 +243,6 @@
 
     .col-btn.drop-active {
       animation: colFlash 0.3s ease;
-    }
-    /* FIX: Sütun eşleşme vurgusu — nextVal ile üstteki taş eşleşiyorsa parlasın */
-    .col-btn.match-hint {
-      border-color: rgba(52, 211, 153, 0.8) !important;
-      color: #34d399 !important;
-      box-shadow: 0 0 10px rgba(52, 211, 153, 0.5), inset 0 0 8px rgba(52, 211, 153, 0.15);
-      animation: matchPulse 1.2s ease-in-out infinite;
-    }
-    @keyframes matchPulse {
-      0%, 100% { border-color: rgba(52,211,153,0.6); box-shadow: 0 0 6px rgba(52,211,153,0.3); }
-      50% { border-color: rgba(52,211,153,1); box-shadow: 0 0 14px rgba(52,211,153,0.7); }
     }
 
     @keyframes colFlash {
@@ -2334,7 +2323,7 @@
     window.addEventListener('resize', () => { resizeCanvas(); initStars(); });
 
     // ======= GAME STATE =======
-    const COLS = 6; // FIX: 5 → 6 sütun (Claude analizi: 5 çok kısıtlayıcı)
+    const COLS = 5;
     const ROWS = 8;
     const BLOCK_VALUES = [2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096, 8192, 16384];
 
@@ -2434,7 +2423,7 @@
       if (colOverlay) colOverlay.remove();
       colOverlay = document.createElement('div');
       colOverlay.id = 'col-touch-overlay';
-      colOverlay.style.cssText = `position:absolute;inset:0;display:grid;grid-template-columns:repeat(${COLS},1fr);z-index:20;pointer-events:none;border-radius:20px;overflow:hidden;`; for (let c = 0; c < COLS; c++) {
+      colOverlay.style.cssText = 'position:absolute;inset:0;display:grid;grid-template-columns:repeat(5,1fr);z-index:20;pointer-events:none;border-radius:20px;overflow:hidden;'; for (let c = 0; c < COLS; c++) {
         const zone = document.createElement('div');
         zone.style.cssText = 'pointer-events:auto;cursor:pointer;border-radius:10px;transition:background 0.15s;';
         zone.dataset.col = c;
@@ -2620,25 +2609,6 @@
         el2.style.color = styles2.color;
         el2.textContent = nextNextVal;
       }
-      updateColHints(v); // FIX: eşleşen sütun ok butonlarını vurgula
-    }
-
-    // FIX: Her sütunun en üst taşını nextVal ile karşılaştır, eşleşirse glow ekle
-    function updateColHints(val) {
-      for (let c = 0; c < COLS; c++) {
-        const btn = document.querySelector(`.col-btn[data-col="${c}"]`);
-        if (!btn) continue;
-        // Sütunun en üst dolu satırını bul
-        let topVal = 0;
-        for (let r = 0; r < ROWS; r++) {
-          if (grid[r][c]) { topVal = grid[r][c]; break; }
-        }
-        if (topVal === val) {
-          btn.classList.add('match-hint');
-        } else {
-          btn.classList.remove('match-hint');
-        }
-      }
     }
 
 
@@ -2798,29 +2768,33 @@
 
     function cascade() {
       function step() {
-        // FIX: Sıra değiştirildi → ÖNCE merge kontrol et, SONRA gravity uygula.
-        // Eski sıra (gravity→merge) şu soruna yol açıyordu:
-        //   8+8=16 oluşur → gravity çalışır → 16 sola/sağa kayar →
-        //   yeni konumundaki komşuyla birleşir (istenmeyen zincir).
-        // Yeni sıra: merge olan bloğun çevresi önce kontrol edilir,
-        // mıknatıs animasyonu tamamlanır, SONRA yerçekimi devreye girer.
-
-        // 1. Önce merge kontrol et
-        if (checkAllMerges()) {
-          // Merge animasyonu 160+150ms ≈ 320ms, biraz pay bırak
-          setTimeout(step, 400);
-          return;
-        }
-
-        // 2. Merge yok → yerçekimi uygula
+        // 1. Önce yerçekimi uygula
         let moved = applyGravity();
         if (moved) {
-          // Gravity animasyonu ~200ms, bitince merge+gravity döngüsüne dön
-          setTimeout(step, 240);
+          // Gravity animasyonu 200ms sürüyor, bitince merge kontrolü yap
+          setTimeout(() => {
+            if (checkAllMerges()) {
+              // Merge var, animasyonu 600ms bekle, sonra başa dön (gravity'den başla)
+              setTimeout(step, 600);
+            } else {
+              // Merge yok, işlem bitti, data-new'leri temizle ve kilidi aç
+              clearAllNewFlags();
+              dropLocked = false;
+              checkGameOver();
+              checkWinCondition();
+            }
+          }, 200);
           return;
         }
 
-        // 3. Ne merge ne gravity kaldı — temizle ve kilidi aç
+        // 2. Gravity yapılmadıysa (hiç hareket yok), merge kontrolü yap
+        if (checkAllMerges()) {
+          // Merge var, animasyonu bekle ve sonra başa dön
+          setTimeout(step, 600);
+          return;
+        }
+
+        // 3. Hiçbir işlem kalmadı, kilidi aç ve data-new'leri temizle
         clearAllNewFlags();
         dropLocked = false;
         checkGameOver();

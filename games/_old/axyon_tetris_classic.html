@@ -18,35 +18,6 @@
       --cols: 10;
       --rows: 20;
     }
-    /* ── LIGHT MODE (Tetris) ── */
-    [data-theme="light"] {
-      --bg: #e8eeff;
-      --panel: rgba(210,220,255,0.92);
-      --border: rgba(60,100,220,0.25);
-      --glow-blue: #1a6fd4;
-      --glow-purple: #7c3aed;
-      --glow-gold: #b45309;
-      --text: #1e1b4b;
-    }
-    [data-theme="light"] body { background: var(--bg); }
-    [data-theme="light"] body::before {
-      background: radial-gradient(ellipse 80% 60% at 50% 0%, rgba(100,140,255,0.1) 0%, transparent 70%),
-                  radial-gradient(ellipse 40% 40% at 80% 80%, rgba(120,60,200,0.07) 0%, transparent 60%);
-    }
-    [data-theme="light"] #logo { color: #1e1b4b; }
-    [data-theme="light"] .side-panel, [data-theme="light"] .panel-box {
-      background: rgba(215,225,255,0.85);
-      border-color: rgba(60,100,220,0.2);
-    }
-    [data-theme="light"] .score-box, [data-theme="light"] .stat-val { color: #1e1b4b; }
-    [data-theme="light"] .p-label { color: rgba(30,27,75,0.55); }
-    [data-theme="light"] .stat-label { color: rgba(30,27,75,0.45); }
-    [data-theme="light"] .overlay-screen { background: rgba(180,195,255,0.8); }
-    [data-theme="light"] .overlay-box { background: rgba(225,232,255,0.97); border-color: rgba(60,100,220,0.3); color: #1e1b4b; }
-    [data-theme="light"] .ov-stat-row { color: rgba(30,27,75,0.8); border-color: rgba(60,100,220,0.15); }
-    [data-theme="light"] .pu-btn { background: rgba(200,212,255,0.6); border-color: rgba(60,100,220,0.25); color: #2d3a8c; }
-    [data-theme="light"] #top-bar { background: rgba(210,220,255,0.9); border-color: rgba(60,100,220,0.2); }
-    [data-theme="light"] #board-container { background: rgba(180,200,255,0.25); border-color: rgba(60,100,220,0.3); }
     * { margin:0; padding:0; box-sizing:border-box; }
     body {
       background: var(--bg);
@@ -448,8 +419,7 @@
       <div class="val" id="best-val">0</div>
     </div>
   </div>
-  <div style="flex:1; display:flex; justify-content:flex-end; align-items:center; gap:5px;">
-    <button id="theme-btn-tetris" onclick="toggleThemeTetris()" style="background:var(--panel);border:1px solid var(--border);border-radius:8px;padding:5px 8px;font-size:14px;cursor:pointer;color:var(--text);transition:all .15s;">🌙</button>
+  <div style="flex:1; display:flex; justify-content:flex-end; align-items:center;">
     <button id="menu-btn" onclick="showMenu()">☰ MENU</button>
   </div>
 </div>
@@ -484,10 +454,6 @@
       <div class="stat-row m-hide">
         <div class="stat-val" id="tetris-count">0</div>
         <div class="stat-label">Tetris</div>
-      </div>
-      <div class="stat-row m-hide">
-        <div class="stat-val" id="b2b-count" style="color:#f97316;">0</div>
-        <div class="stat-label">B2B</div>
       </div>
       <div class="stat-row m-hide">
         <div class="stat-val" id="pieces-count">0</div>
@@ -630,8 +596,6 @@
       <div class="ov-stat-row">Parça Sayısı <span id="go-pieces">0</span></div>
       <div class="ov-stat-row">Tetris Sayısı <span id="go-tetris">0</span></div>
       <div class="ov-stat-row">En Uzun Kombo <span id="go-combo">0</span></div>
-      <div class="ov-stat-row">B2B Tetris <span id="go-b2b">0</span></div>
-      <div class="ov-stat-row" style="color:rgba(249,115,22,0.9);">APM <span id="go-apm" style="color:#f97316;font-weight:800;">0</span></div>
     </div>
     <div id="go-newbest" style="display:none;text-align:center;color:var(--glow-gold);font-size:0.85rem;margin-bottom:10px;font-weight:700;">🏆 Yeni Rekor!</div>
     <button class="ov-btn primary" onclick="startGame()">🔄 Tekrar Oyna</button>
@@ -843,12 +807,6 @@ let isFrozen = false;
 let ghostEnabled = true;
 let lockDelay = null;
 let lockDelayMs = 500;
-// FIX: Back-to-Back TETRIS takibi (Claude önerisi)
-let lastClearWasTetris = false;  // son silme TETRIS miydi?
-let b2bCount = 0;                // arka arkaya TETRIS sayacı
-// FIX: APM (Aksiyon/Dakika) takibi
-let actionCount = 0;             // toplam hareket sayısı
-let gameStartTime = 0;           // oyun başlangıç zamanı
 
 // Powers
 let nukeUses = 3, laserUses = 2, freezeUses = 2;
@@ -967,15 +925,14 @@ function drawCell(x, y, key, alpha=1, isGhost=false) {
   ctx.save();
   ctx.globalAlpha = alpha;
   if (isGhost) {
-    // FIX: Ghost parça kontrastı artırıldı (0.35→0.55, 0.15→0.28)
     ctx.strokeStyle = p.border;
     ctx.lineWidth = 2;
-    ctx.globalAlpha = 0.55;
+    ctx.globalAlpha = 0.35;
     ctx.fillStyle = 'rgba(0,0,0,0)';
     ctx.beginPath();
     ctx.roundRect(px+1, py+1, CS-2, CS-2, 5);
     ctx.stroke();
-    ctx.globalAlpha = 0.28;
+    ctx.globalAlpha = 0.15;
     ctx.fillStyle = p.color;
     ctx.fill();
   } else {
@@ -1101,20 +1058,19 @@ function drawHold() {
 function moveLeft() {
   if (!currentPiece || gameState!=='playing') return;
   if (isValid(currentPiece.key, currentPiece.rot, currentPiece.x-1, currentPiece.y)) {
-    currentPiece.x--; resetLockDelay(); redraw(); actionCount++; // APM
+    currentPiece.x--; resetLockDelay(); redraw();
   }
 }
 function moveRight() {
   if (!currentPiece || gameState!=='playing') return;
   if (isValid(currentPiece.key, currentPiece.rot, currentPiece.x+1, currentPiece.y)) {
-    currentPiece.x++; resetLockDelay(); redraw(); actionCount++; // APM
+    currentPiece.x++; resetLockDelay(); redraw();
   }
 }
 function moveDown(byGravity=false) {
   if (!currentPiece || gameState!=='playing') return false;
   if (isValid(currentPiece.key, currentPiece.rot, currentPiece.x, currentPiece.y+1)) {
-    currentPiece.y++; redraw(); if (!byGravity) actionCount++; // APM (yerçekimi sayılmaz)
-    return true;
+    currentPiece.y++; redraw(); return true;
   } else {
     if (!byGravity) lockPiece();
     return false;
@@ -1127,7 +1083,6 @@ function hardDrop() {
   currentPiece.y = gy;
   score += dropped*2;
   updateScore();
-  actionCount++; // APM
   lockPiece();
   playSound('drop');
 }
@@ -1161,7 +1116,6 @@ function rotate(dir=1) {
       currentPiece.y = ny;
       resetLockDelay();
       redraw();
-      actionCount++; // APM
       return;
     }
   }
@@ -1193,10 +1147,7 @@ function lockPiece() {
 
   if (cleared.length > 0) {
     animateClear(cleared, () => {
-      // FIX: azalan sırada splice — yukarıdan aşağıya yapılırsa indeksler kayar
-      // ve yanlış (boş) satırlar silinir. Büyükten küçüğe gidince indeks kayması olmaz.
-      const sortedDesc = [...cleared].sort((a,b) => b-a);
-      for (const r of sortedDesc) {
+      for (const r of cleared) {
         board.splice(r,1);
         board.unshift(Array(COLS).fill(null));
       }
@@ -1229,20 +1180,6 @@ function applyLineClear(n) {
   combo++;
   if (combo > 1) pts += 50 * combo * level;
   if (combo > maxCombo) maxCombo = combo;
-
-  // FIX: Back-to-Back TETRIS bonusu — arka arkaya 4 satır silinirse ×1.5
-  if (n === 4) {
-    if (lastClearWasTetris) {
-      pts = Math.round(pts * 1.5);
-      b2bCount++;
-      showClearText('B2B TETRIS! ×1.5 🔥', '#f97316', 4);
-    }
-    lastClearWasTetris = true;
-  } else {
-    lastClearWasTetris = false;
-    b2bCount = 0;
-  }
-
   score += pts;
   updateScore();
 
@@ -1452,9 +1389,6 @@ function updateStats() {
   document.getElementById('tetris-count').textContent = tetrisCount;
   document.getElementById('singles-val').textContent = singles;
   document.getElementById('doubles-val').textContent = doubles;
-  // FIX: B2B sayacını güncelle
-  const b2bEl = document.getElementById('b2b-count');
-  if (b2bEl) b2bEl.textContent = b2bCount > 0 ? `×${b2bCount}` : '—';
 }
 
 function showLevelUp() {
@@ -1544,9 +1478,6 @@ function startGame() {
   heldPiece = null; canHold = true;
   isFrozen = false;
   nukeUses=3; laserUses=2; freezeUses=2;
-  // FIX: B2B ve APM sıfırla
-  lastClearWasTetris = false; b2bCount = 0;
-  actionCount = 0; gameStartTime = Date.now();
   gameState = 'playing';
   updateScore();
   updateLevel();
@@ -1578,10 +1509,6 @@ function triggerGameOver() {
     document.getElementById('go-tetris').textContent = tetrisCount;
     document.getElementById('go-combo').textContent = maxCombo;
     document.getElementById('go-newbest').style.display = score>=best?'block':'none';
-    // FIX: B2B ve APM istatistiklerini doldur
-    document.getElementById('go-b2b').textContent = b2bCount;
-    const elapsedMin = Math.max((Date.now() - gameStartTime) / 60000, 0.0167);
-    document.getElementById('go-apm').textContent = Math.round(actionCount / elapsedMin);
     document.getElementById('ov-gameover').classList.add('show');
   }, 600);
 }
@@ -1737,26 +1664,6 @@ document.getElementById('touch-area').addEventListener('touchend', e=>{
 // ═══════════════════════════════════════════════════════
 document.getElementById('best-val').textContent = best.toLocaleString('tr');
 fitBoard();
-
-// ── TEMA DEĞİŞTİRME (Tetris) ──
-function toggleThemeTetris() {
-  const html = document.documentElement;
-  const isLight = html.getAttribute('data-theme') === 'light';
-  html.setAttribute('data-theme', isLight ? 'dark' : 'light');
-  const btn = document.getElementById('theme-btn-tetris');
-  if (btn) btn.textContent = isLight ? '🌙' : '☀️';
-  try { localStorage.setItem('tetris_theme', isLight ? 'dark' : 'light'); } catch(e){}
-}
-(function(){
-  try {
-    const t = localStorage.getItem('tetris_theme');
-    if (t) {
-      document.documentElement.setAttribute('data-theme', t);
-      const btn = document.getElementById('theme-btn-tetris');
-      if (btn) btn.textContent = t === 'light' ? '☀️' : '🌙';
-    }
-  } catch(e){}
-})();
 </script>
 </body>
 </html>
