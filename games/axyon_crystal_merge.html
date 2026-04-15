@@ -46,6 +46,28 @@ canvas#stars{position:fixed;inset:0;z-index:0;pointer-events:none;}
 
 #app{position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;width:100%;max-width:440px;height:100dvh;max-height:100dvh;padding:8px 10px 6px;gap:6px;justify-content:space-between;}
 
+/* BANNER REKLAM */
+#ad-banner{
+  position:fixed;bottom:0;left:0;right:0;z-index:50;
+  height:50px;
+  background:rgba(8,12,35,.97);
+  border-top:1px solid rgba(80,120,255,.18);
+  display:flex;align-items:center;justify-content:center;
+  backdrop-filter:blur(8px);
+}
+#ad-banner-inner{
+  width:100%;max-width:440px;height:100%;
+  display:flex;align-items:center;justify-content:center;
+  position:relative;
+}
+#ad-banner-label{
+  position:absolute;top:3px;left:8px;
+  font-size:8px;color:rgba(180,210,255,.25);
+  letter-spacing:.06em;font-family:'Nunito',sans-serif;
+}
+/* Sayfa içeriği banner'ın altına gömülmesin */
+body { padding-bottom: 50px; }
+
 /* HEADER */
 #header{display:flex;align-items:center;justify-content:space-between;width:100%;flex-shrink:0;gap:8px;}
 .score-panel{display:flex;flex-direction:column;background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:4px 10px;min-width:76px;backdrop-filter:blur(12px);}
@@ -339,6 +361,18 @@ body.smash-mode .block:hover{filter:brightness(1.5) saturate(1.5);outline:2px da
   </div>
 </div>
 
+<!-- BANNER REKLAM — alt şerit -->
+<div id="ad-banner">
+  <div id="ad-banner-inner">
+    <span id="ad-banner-label">REKLAM</span>
+    <!-- AdMob banner buraya Android tarafından inject edilir -->
+    <!-- Web önizleme için placeholder göster -->
+    <div id="ad-banner-placeholder" style="width:320px;height:50px;display:flex;align-items:center;justify-content:center;opacity:0.18;">
+      <span style="font-family:'Nunito',sans-serif;font-size:11px;color:rgba(180,210,255,.6);letter-spacing:.06em;">— Reklam Alanı (320×50) —</span>
+    </div>
+  </div>
+</div>
+
 <div id="rank-toast">🏆 Yeni rekor!</div>
 <div id="flash-overlay"></div>
 
@@ -389,6 +423,9 @@ body.smash-mode .block:hover{filter:brightness(1.5) saturate(1.5);outline:2px da
     <div style="font-size:11px;color:rgba(180,210,255,.5);text-transform:uppercase;letter-spacing:.12em;margin-bottom:6px;">ÖDÜLÜNÜZ</div>
     <div style="display:flex;align-items:center;justify-content:center;gap:6px;font-family:'Orbitron',sans-serif;font-weight:900;font-size:24px;color:#34d399;margin-bottom:20px;">🪙 <span id="lc-reward">+50</span></div>
     <button class="btn-green" id="btn-harika">HARİKA!</button>
+    <button id="btn-lc-2x" style="background:linear-gradient(135deg,rgba(52,211,153,.12),rgba(16,185,129,.12));border:1.5px solid rgba(52,211,153,.35);border-radius:14px;padding:10px;width:100%;font-family:'Nunito',sans-serif;font-size:13px;font-weight:800;color:#34d399;cursor:pointer;margin-top:8px;transition:all .15s;display:flex;align-items:center;justify-content:center;gap:6px;" onmouseover="this.style.background='linear-gradient(135deg,rgba(52,211,153,.22),rgba(16,185,129,.22))'" onmouseout="this.style.background='linear-gradient(135deg,rgba(52,211,153,.12),rgba(16,185,129,.12))'">
+      <span style="font-size:15px;">▶</span> Reklam İzle → <span style="font-family:'Orbitron',sans-serif;font-size:12px;">Ödülü 2× Kazan</span>
+    </button>
   </div>
 </div>
 
@@ -442,6 +479,9 @@ body.smash-mode .block:hover{filter:brightness(1.5) saturate(1.5);outline:2px da
       </div>
     </div>
     <button class="btn-green" id="btn-restart-go">Tekrar Oyna</button>
+    <button id="btn-go-watch-ad" style="background:linear-gradient(135deg,rgba(251,191,36,.15),rgba(245,158,11,.15));border:1.5px solid rgba(251,191,36,.4);border-radius:14px;padding:11px;width:100%;font-family:'Nunito',sans-serif;font-size:14px;font-weight:800;color:#fbbf24;cursor:pointer;margin-top:8px;transition:all .15s;display:flex;align-items:center;justify-content:center;gap:6px;" onmouseover="this.style.background='linear-gradient(135deg,rgba(251,191,36,.25),rgba(245,158,11,.25))'" onmouseout="this.style.background='linear-gradient(135deg,rgba(251,191,36,.15),rgba(245,158,11,.15))'">
+      <span style="font-size:16px;">▶</span> Reklam İzle → <span style="color:#34d399;font-family:'Orbitron',sans-serif;font-size:13px;">+100 🪙</span>
+    </button>
   </div>
 </div>
 
@@ -1341,7 +1381,7 @@ function showMergePreview(r, c, totalTiles, newV) {
     <div style="display:flex;gap:8px;align-items:center;justify-content:center;font-family:'Nunito',sans-serif;font-size:9px;font-weight:800;color:rgba(180,210,255,.7);">
       <span>🔷 ${totalTiles} taş</span>
       <span style="color:#fbbf24;">⭐ +${pts} puan</span>
-      <span style="color:#34d399;">🪙 +1</span>
+      <span style="color:#34d399;">🪙 +${1 + Math.floor((totalTiles - 2) / 3)}</span>
     </div>
   `;
 
@@ -2239,7 +2279,14 @@ function showDangerWarn() {
     icon.textContent = '💸';
     title.textContent = 'SON HAMLENİ YAP!';
     title.style.color = '#ef4444';
-    msg.innerHTML = 'Merge yapacak yer kalmadı ve<br><b>coin\'in yok.</b><br>Bu son hamlen!';
+    msg.innerHTML = 'Merge yapacak yer kalmadı ve<br><b>coin\'in yok.</b>';
+
+    // Reklam butonu
+    const adBtn = document.createElement('button');
+    adBtn.innerHTML = `<span style="font-size:15px;">▶</span> Reklam İzle → <span style="color:#34d399;font-family:'Orbitron',sans-serif;font-size:12px;">+80 🪙</span>`;
+    adBtn.style.cssText = 'background:linear-gradient(135deg,rgba(52,211,153,.12),rgba(16,185,129,.12));border:1.5px solid rgba(52,211,153,.35);border-radius:12px;padding:10px;width:100%;font-family:\'Nunito\',sans-serif;font-size:14px;font-weight:800;color:#34d399;cursor:pointer;margin-bottom:8px;display:flex;align-items:center;justify-content:center;gap:6px;';
+    adBtn.addEventListener('click', () => showRewardedAd('earn_coins'));
+    list.appendChild(adBtn);
   }
 
   tone(200, 'sawtooth', .1, .5);
@@ -2470,7 +2517,7 @@ function loadGame() {
     const raw = localStorage.getItem(SAVE_KEY);
     if (!raw) return false;
     const d = JSON.parse(raw);
-    if (Date.now() - d.ts > 86400000) { localStorage.removeItem(SAVE_KEY); return false; }
+    if (Date.now() - d.ts > 604800000) { localStorage.removeItem(SAVE_KEY); return false; } // 7 gün
     G = d.G; score = d.score; coins = d.coins;
     targetIdx = d.targetIdx; gameStartTime = d.gameStartTime || Date.now();
     return true;
@@ -2888,6 +2935,147 @@ requestAnimationFrame(() => {
       const startBtn = document.getElementById('btn-start');
       startModal.insertBefore(resumeBtn, startBtn);
     }
+  }
+});
+
+// ════════════════════════════════════════════════════════════════════
+// BÖLÜM 26 — REKLAM KÖPRÜSİ (AD BRIDGE)
+// Android WebView ↔ HTML iletişim katmanı.
+//
+// NASIL ÇALIŞIR?
+//   HTML → Android: window.Android.showRewardedAd('go_continue')
+//   Android → HTML: window.onAdRewarded('go_continue') çağrısı
+//
+// Android tarafında MainActivity'de:
+//   @JavascriptInterface
+//   fun showRewardedAd(placement: String) { ... }
+//
+// Reklam bittikten sonra Android şunu çağırır:
+//   webView.evaluateJavascript("window.onAdRewarded('$placement')", null)
+// ════════════════════════════════════════════════════════════════════
+
+// Aktif reklam talebi için bekleyen placement
+let pendingAdPlacement = null;
+
+/**
+ * Rewarded reklam göster.
+ * Android bridge varsa ona yönlendir, yoksa web önizlemesi için simüle et.
+ */
+function showRewardedAd(placement) {
+  pendingAdPlacement = placement;
+  if (window.Android && typeof window.Android.showRewardedAd === 'function') {
+    window.Android.showRewardedAd(placement);
+  } else {
+    // Web tarayıcısında test: 1.5sn sonra ödülü simüle et
+    const t = document.getElementById('rank-toast');
+    t.textContent = '▶ Reklam simülasyonu...';
+    t.classList.add('show');
+    setTimeout(() => {
+      t.classList.remove('show');
+      window.onAdRewarded(placement);
+    }, 1500);
+  }
+}
+
+/**
+ * Interstitial (tam ekran geçiş) reklam göster.
+ * Her 3 bölüm geçişinde çağrılır.
+ */
+let levelsSinceInterstitial = 0;
+function maybeShowInterstitial() {
+  levelsSinceInterstitial++;
+  if (levelsSinceInterstitial < 3) return;
+  levelsSinceInterstitial = 0;
+  if (window.Android && typeof window.Android.showInterstitialAd === 'function') {
+    window.Android.showInterstitialAd();
+  }
+  // Web tarafında interstitial simüle edilmez — sadece Android'de çalışır
+}
+
+/**
+ * Android'den çağrılan callback: reklam tamamlandı, ödülü ver.
+ * @param {string} placement - hangi reklamın tamamlandığı
+ */
+window.onAdRewarded = function(placement) {
+  switch (placement) {
+
+    case 'go_continue':
+      // Game Over: +100 coin, oyunu sıfırla
+      document.getElementById('ov-go').classList.remove('show');
+      coins += 100;
+      totalMerges = 0; maxComboEver = 0; maxStoneEver = 0;
+      gameStartTime = Date.now();
+      cancelHold(); cancelSwap();
+      smashOn = false; smashCharges = 0; hist = []; busy = false;
+      warnShownThisRound = false; lastMergeCount = 0;
+      active = true;
+      initGrid();
+      rebuildDOM();
+      applyGravity(false);
+      fitLayout();
+      updateHUD(); updateBestShort();
+      const t1 = document.getElementById('rank-toast');
+      t1.textContent = '🪙 +100 coin kazandın!';
+      t1.classList.add('show');
+      setTimeout(() => t1.classList.remove('show'), 2000);
+      break;
+
+    case 'lc_double':
+      // Level Clear: coin ödülünü iki katla
+      const reward = 30 + (targetIdx - 1) * 15; // targetIdx zaten artmış olduğu için -1
+      coins += reward; // aynı miktarı bir kez daha ver
+      updateHUD();
+      const rewardEl = document.getElementById('lc-reward');
+      if (rewardEl) rewardEl.textContent = '+' + (reward * 2) + ' (2×!)';
+      const t2 = document.getElementById('rank-toast');
+      t2.textContent = '🪙 Ödül ikiye katlandı!';
+      t2.classList.add('show');
+      setTimeout(() => t2.classList.remove('show'), 2000);
+      // 2x butonunu gizle — tekrar kullanılmasın
+      const lcBtn = document.getElementById('btn-lc-2x');
+      if (lcBtn) lcBtn.style.display = 'none';
+      break;
+
+    case 'earn_coins':
+      // Tıkanma ekranı: +80 coin
+      coins += 80;
+      updateHUD();
+      document.getElementById('ov-warn').classList.remove('show');
+      warnShownThisRound = false;
+      const t3 = document.getElementById('rank-toast');
+      t3.textContent = '🪙 +80 coin kazandın!';
+      t3.classList.add('show');
+      setTimeout(() => t3.classList.remove('show'), 2000);
+      break;
+  }
+};
+
+// Game Over → Reklam izle butonu
+document.getElementById('btn-go-watch-ad').addEventListener('click', () => {
+  showRewardedAd('go_continue');
+});
+
+// Level Clear → 2x Coin butonu
+document.getElementById('btn-lc-2x').addEventListener('click', () => {
+  // Buton bir kez kullanılabilir
+  document.getElementById('btn-lc-2x').disabled = true;
+  document.getElementById('btn-lc-2x').style.opacity = '0.5';
+  showRewardedAd('lc_double');
+});
+
+// Level Clear sonrası interstitial kontrolü (goNextLevel içine ek)
+const _origGoNextLevel = goNextLevel;
+goNextLevel = function() {
+  _origGoNextLevel();
+  setTimeout(() => maybeShowInterstitial(), 800);
+};
+
+// Banner reklamı Android'e bildirtme: sayfa hazır olduğunda
+window.addEventListener('load', () => {
+  if (window.Android && typeof window.Android.loadBannerAd === 'function') {
+    window.Android.loadBannerAd();
+    // Banner yüklenince placeholder'ı gizle
+    document.getElementById('ad-banner-placeholder').style.display = 'none';
   }
 });
 
