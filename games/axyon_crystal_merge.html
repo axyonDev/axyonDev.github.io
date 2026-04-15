@@ -321,12 +321,12 @@ body.smash-mode .block:hover{filter:brightness(1.5) saturate(1.5);outline:2px da
 
   <div id="header">
     <div class="score-panel">
-      <div class="sp-label">PUAN</div>
+      <div class="sp-label"><span data-i18n="score">SCORE</span></div>
       <div class="sp-val" id="score-val">0</div>
       <div class="coin-row">🪙 <span id="coin-val">30</span></div>
     </div>
     <div id="target-btn">
-      <div class="tb-label">🎯 HEDEF</div>
+      <div class="tb-label">🎯 <span data-i18n="target">TARGET</span></div>
       <div class="tb-val" id="target-val">2</div>
     </div>
     <div id="rank-btn" style="cursor:pointer;" onclick="toggleBestPanel()">
@@ -340,20 +340,20 @@ body.smash-mode .block:hover{filter:brightness(1.5) saturate(1.5);outline:2px da
   <div id="powerups">
     <!-- Üst satır: power-up'lar -->
     <div id="pu-row">
-      <button class="pu-btn" id="pu-hint" data-tip="Değiştir — 2 komşu taşın yerini değiştirir"><span class="pu-icon">🔄</span><span class="pu-cost">🪙40</span></button>
-      <button class="pu-btn" id="pu-undo" data-tip="Geri Al — son hamleyi geri alır"><span class="pu-icon">↩️</span><span class="pu-cost">🪙50</span></button>
-      <button class="pu-btn" id="pu-smash" data-tip="Yok Et — bir taşı patlatır"><span class="pu-icon">🔨</span><span class="pu-cost">🪙50</span></button>
-      <button class="pu-btn" id="pu-shuffle" data-tip="Karıştır — tüm taşları yeniden dağıtır"><span class="pu-icon">🔀</span><span class="pu-cost">🪙80</span></button>
-      <button class="pu-btn" id="pu-bomb" data-tip="Bomba — 3×3 alanı temizler"><span class="pu-icon">💣</span><span class="pu-cost">🪙120</span></button>
-      <button class="pu-btn" id="pu-freeze" style="position:relative;" data-tip="Dondur — bir sonraki spawnu atlar"><span class="pu-icon">❄️</span><span class="pu-cost">🪙60</span><div id="freeze-ind" style="display:none;position:absolute;top:2px;right:2px;font-size:9px;line-height:1;">🔒</div></button>
+      <button class="pu-btn" id="pu-hint" data-i18n-tip="tip_swap"><span class="pu-icon">🔄</span><span class="pu-cost">🪙40</span></button>
+      <button class="pu-btn" id="pu-undo" data-i18n-tip="tip_undo"><span class="pu-icon">↩️</span><span class="pu-cost">🪙50</span></button>
+      <button class="pu-btn" id="pu-smash" data-i18n-tip="tip_smash"><span class="pu-icon">🔨</span><span class="pu-cost">🪙50</span></button>
+      <button class="pu-btn" id="pu-shuffle" data-i18n-tip="tip_shuffle"><span class="pu-icon">🔀</span><span class="pu-cost">🪙80</span></button>
+      <button class="pu-btn" id="pu-bomb" data-i18n-tip="tip_bomb"><span class="pu-icon">💣</span><span class="pu-cost">🪙120</span></button>
+      <button class="pu-btn" id="pu-freeze" style="position:relative;" data-i18n-tip="tip_freeze"><span class="pu-icon">❄️</span><span class="pu-cost">🪙60</span><div id="freeze-ind" style="display:none;position:absolute;top:2px;right:2px;font-size:9px;line-height:1;">🔒</div></button>
     </div>
     <!-- Alt satır: kontrol butonları -->
     <div id="ctrl-row">
-      <button class="ctrl-btn" id="btn-undo-game" data-tip="Ana Menü" title="Geri"><span>↩</span><span class="cb-label">GERİ</span></button>
-      <button class="ctrl-btn" id="btn-pause" data-tip="Duraklat" title="Duraklat"><span>⏸</span><span class="cb-label">DURAKLAT</span></button>
-      <button class="ctrl-btn" id="btn-sound" data-tip="Ses Aç/Kapat" title="Ses"><span id="sound-icon">🔊</span><span class="cb-label">SES</span></button>
-      <button class="ctrl-btn" id="btn-theme-cm" data-tip="Tema Değiştir" title="Tema" onclick="toggleThemeCM()"><span id="theme-icon-cm">🌙</span><span class="cb-label">TEMA</span></button>
-      <button class="ctrl-btn" id="btn-howto-ig" data-tip="Nasıl Oynanır?" title="Nasıl oynanır?"><span>❓</span><span class="cb-label">NASIL</span></button>
+      <button class="ctrl-btn" id="btn-undo-game" data-i18n-tip="tip_menu"><span>☰</span><span class="cb-label" data-i18n="menu_btn">MENU</span></button>
+      <button class="ctrl-btn" id="btn-pause" data-i18n-tip="tip_pause"><span>⏸</span><span class="cb-label" data-i18n="pause_btn">PAUSE</span></button>
+      <button class="ctrl-btn" id="btn-sound" data-i18n-tip="tip_sound"><span id="sound-icon">🔊</span><span class="cb-label" data-i18n="sound">SOUND</span></button>
+      <button class="ctrl-btn" id="btn-theme-cm" data-i18n-tip="tip_theme" onclick="toggleThemeCM()"><span id="theme-icon-cm">🌙</span><span class="cb-label" data-i18n="theme">THEME</span></button>
+      <button class="ctrl-btn" id="btn-howto-ig" data-i18n-tip="tip_how"><span>❓</span><span class="cb-label" data-i18n="how">HOW</span></button>
     </div>
   </div>
   <div style="text-align:center;flex-shrink:0;padding-bottom:3px;">
@@ -364,7 +364,7 @@ body.smash-mode .block:hover{filter:brightness(1.5) saturate(1.5);outline:2px da
 <!-- BANNER REKLAM — alt şerit -->
 <div id="ad-banner">
   <div id="ad-banner-inner">
-    <span id="ad-banner-label">REKLAM</span>
+    <span id="ad-banner-label"><span data-i18n="ad_label">AD</span></span>
     <!-- AdMob banner buraya Android tarafından inject edilir -->
     <!-- Web önizleme için placeholder göster -->
     <div id="ad-banner-placeholder" style="width:320px;height:50px;display:flex;align-items:center;justify-content:center;opacity:0.18;">
@@ -373,7 +373,7 @@ body.smash-mode .block:hover{filter:brightness(1.5) saturate(1.5);outline:2px da
   </div>
 </div>
 
-<div id="rank-toast">🏆 Yeni rekor!</div>
+<div id="rank-toast"><span id="rank-toast-text">🏆 New Record!</span></div>
 <div id="flash-overlay"></div>
 
 <!-- ADMIN PANELİ — gizli, 5x title tıklama ile açılır -->
@@ -418,14 +418,39 @@ body.smash-mode .block:hover{filter:brightness(1.5) saturate(1.5);outline:2px da
   <div class="modal" style="border:2.5px solid rgba(251,191,36,.6);box-shadow:0 0 60px rgba(245,158,11,.35);position:relative;overflow:hidden;">
     <div style="position:absolute;inset:0;background:radial-gradient(ellipse at 50% 0%,rgba(251,191,36,.07) 0%,transparent 60%);pointer-events:none;"></div>
     <span style="font-size:52px;margin-bottom:8px;display:block;">🏆</span>
-    <div style="font-family:'Orbitron',sans-serif;font-weight:900;font-size:14px;color:#fbbf24;letter-spacing:.12em;text-transform:uppercase;margin-bottom:10px;">🎯 HEDEFE ULAŞILDI! 🎯</div>
+    <div style="font-family:'Orbitron',sans-serif;font-weight:900;font-size:14px;color:#fbbf24;letter-spacing:.12em;text-transform:uppercase;margin-bottom:10px;">🎯 <span data-i18n="target_reached">TARGET REACHED!</span> 🎯</div>
     <div style="background:rgba(0,0,0,.4);border:1.5px solid rgba(251,191,36,.4);border-radius:10px;padding:10px 20px;margin-bottom:12px;font-family:'Orbitron',sans-serif;font-weight:900;font-size:clamp(28px,8vw,40px);color:#fff;text-shadow:0 0 20px rgba(251,191,36,.6);" id="lc-target">2048</div>
-    <div style="font-size:11px;color:rgba(180,210,255,.5);text-transform:uppercase;letter-spacing:.12em;margin-bottom:6px;">ÖDÜLÜNÜZ</div>
+    <div style="font-size:11px;color:rgba(180,210,255,.5);text-transform:uppercase;letter-spacing:.12em;margin-bottom:6px;"><span data-i18n="your_reward">YOUR REWARD</span></div>
     <div style="display:flex;align-items:center;justify-content:center;gap:6px;font-family:'Orbitron',sans-serif;font-weight:900;font-size:24px;color:#34d399;margin-bottom:20px;">🪙 <span id="lc-reward">+50</span></div>
-    <button class="btn-green" id="btn-harika">HARİKA!</button>
+    <button class="btn-green" id="btn-harika"><span data-i18n="great">GREAT!</span></button>
     <button id="btn-lc-2x" style="background:linear-gradient(135deg,rgba(52,211,153,.12),rgba(16,185,129,.12));border:1.5px solid rgba(52,211,153,.35);border-radius:14px;padding:10px;width:100%;font-family:'Nunito',sans-serif;font-size:13px;font-weight:800;color:#34d399;cursor:pointer;margin-top:8px;transition:all .15s;display:flex;align-items:center;justify-content:center;gap:6px;" onmouseover="this.style.background='linear-gradient(135deg,rgba(52,211,153,.22),rgba(16,185,129,.22))'" onmouseout="this.style.background='linear-gradient(135deg,rgba(52,211,153,.12),rgba(16,185,129,.12))'">
-      <span style="font-size:15px;">▶</span> Reklam İzle → <span style="font-family:'Orbitron',sans-serif;font-size:12px;">Ödülü 2× Kazan</span>
+      <span style="font-size:15px;">▶</span> <span data-i18n="watch_ad_2x">Watch Ad → 2× Reward</span>
     </button>
+  </div>
+</div>
+
+<!-- OYUN İÇİ MENÜ -->
+<div class="ov" id="ov-menu">
+  <div class="modal" style="border:1.5px solid rgba(80,120,255,.3);box-shadow:0 0 50px rgba(0,60,200,.3);max-width:280px;">
+    <div style="font-size:36px;margin-bottom:8px;">☰</div>
+    <div style="font-family:'Orbitron',sans-serif;font-size:16px;font-weight:900;background:linear-gradient(90deg,#00b4ff,#a855f7);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;letter-spacing:.12em;margin-bottom:20px;" data-i18n="menu_title">MENU</div>
+    <button class="btn-purple" id="btn-menu-resume" style="margin-bottom:8px;"></button>
+    <button class="btn-ghost" id="btn-menu-mainmenu" style="margin-bottom:8px;"></button>
+    <button class="btn-ghost" id="btn-menu-lang" style="margin-bottom:8px;display:flex;align-items:center;justify-content:center;gap:8px;">
+      <span style="font-size:16px;">🌐</span>
+      <span data-i18n="language">Language</span>
+    </button>
+    <button class="btn-ghost" id="btn-menu-close" style="color:rgba(180,210,255,.4);font-size:13px;" data-i18n="cancel">Cancel</button>
+  </div>
+</div>
+
+<!-- DİL SEÇİCİ -->
+<div class="ov" id="ov-lang">
+  <div class="modal" style="border:1.5px solid rgba(0,180,255,.3);box-shadow:0 0 50px rgba(0,100,200,.3);max-width:340px;padding:20px 16px;">
+    <div style="font-size:28px;margin-bottom:6px;">🌐</div>
+    <div style="font-family:'Orbitron',sans-serif;font-size:13px;font-weight:900;color:#00b4ff;letter-spacing:.1em;margin-bottom:14px;" data-i18n="select_language">SELECT LANGUAGE</div>
+    <div id="lang-grid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:16px;max-height:55vh;overflow-y:auto;"></div>
+    <button class="btn-ghost" id="btn-lang-close" style="font-size:13px;" data-i18n="cancel">Cancel</button>
   </div>
 </div>
 
@@ -433,10 +458,10 @@ body.smash-mode .block:hover{filter:brightness(1.5) saturate(1.5);outline:2px da
 <div class="ov" id="ov-pause">
   <div class="modal" style="border:2px solid rgba(168,85,247,.4);box-shadow:0 0 50px rgba(168,85,247,.2);">
     <div style="font-size:44px;margin-bottom:10px;">⏸</div>
-    <div style="font-family:'Orbitron',sans-serif;font-size:22px;font-weight:900;color:#a855f7;margin-bottom:6px;">DURAKLADI</div>
-    <div style="font-size:13px;color:rgba(180,210,255,.55);margin-bottom:22px;">Puan: <span id="p-sc">0</span></div>
-    <button class="btn-purple" id="btn-resume">▶ Devam Et</button>
-    <button class="btn-ghost" id="btn-restart-p">Yeniden Başla</button>
+    <div style="font-family:'Orbitron',sans-serif;font-size:22px;font-weight:900;color:#a855f7;margin-bottom:6px;"><span data-i18n="paused">PAUSED</span></div>
+    <div style="font-size:13px;color:rgba(180,210,255,.55);margin-bottom:22px;"><span data-i18n="score">SCORE</span>: <span id="p-sc">0</span></div>
+    <button class="btn-purple" id="btn-resume"><span data-i18n="resume">▶ Resume</span></button>
+    <button class="btn-ghost" id="btn-restart-p"><span data-i18n="restart">Restart</span></button>
   </div>
 </div>
 
@@ -444,11 +469,11 @@ body.smash-mode .block:hover{filter:brightness(1.5) saturate(1.5);outline:2px da
 <div class="ov" id="ov-warn">
   <div class="modal" style="border:2px solid rgba(245,158,11,.5);box-shadow:0 0 50px rgba(245,158,11,.25);max-width:290px;">
     <div style="font-size:44px;margin-bottom:8px;" id="warn-icon">⚠️</div>
-    <div style="font-family:'Orbitron',sans-serif;font-size:15px;font-weight:900;color:#f59e0b;margin-bottom:8px;letter-spacing:.08em;" id="warn-title">DİKKAT!</div>
-    <div style="font-size:13px;color:rgba(180,210,255,.7);margin-bottom:16px;line-height:1.7;" id="warn-msg">Grid dolmak üzere.</div>
+    <div style="font-family:'Orbitron',sans-serif;font-size:15px;font-weight:900;color:#f59e0b;margin-bottom:8px;letter-spacing:.08em;" id="warn-title"><span data-i18n="warning">WARNING!</span></div>
+    <div style="font-size:13px;color:rgba(180,210,255,.7);margin-bottom:16px;line-height:1.7;" id="warn-msg"><span data-i18n="warn_msg">Grid is filling up.</span></div>
     <!-- Power-up önerileri -->
     <div id="warn-pu-list" style="display:flex;flex-direction:column;gap:6px;margin-bottom:16px;"></div>
-    <button class="btn-green" id="btn-warn-ok" style="margin-bottom:0;">Anladım, Devam</button>
+    <button class="btn-green" id="btn-warn-ok" style="margin-bottom:0;"><span data-i18n="ok_continue">OK, Continue</span></button>
   </div>
 </div>
 
@@ -456,31 +481,31 @@ body.smash-mode .block:hover{filter:brightness(1.5) saturate(1.5);outline:2px da
 <div class="ov" id="ov-go">
   <div class="modal" style="border:2px solid rgba(239,68,68,.4);box-shadow:0 0 50px rgba(239,68,68,.2);">
     <div style="font-size:52px;margin-bottom:10px;">💀</div>
-    <div style="font-family:'Orbitron',sans-serif;font-size:22px;font-weight:900;color:#ef4444;margin-bottom:6px;">OYUN BİTTİ</div>
-    <div style="font-size:13px;color:rgba(180,210,255,.55);margin-bottom:4px;">Grid doldu, hamle kalmadı!</div>
+    <div style="font-family:'Orbitron',sans-serif;font-size:22px;font-weight:900;color:#ef4444;margin-bottom:6px;"><span data-i18n="game_over">GAME OVER</span></div>
+    <div style="font-size:13px;color:rgba(180,210,255,.55);margin-bottom:4px;"><span data-i18n="go_msg">Grid is full, no moves left!</span></div>
     <div style="font-family:'Orbitron',sans-serif;font-size:32px;font-weight:900;color:var(--glow-gold);margin:14px 0;text-shadow:0 0 20px rgba(251,191,36,.6);" id="go-score">0</div>
     <!-- FIX: Oyun sonu istatistik paneli (ChatGPT + Claude önerisi) -->
     <div id="go-stats" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px;text-align:center;">
       <div style="background:rgba(0,180,255,.08);border:1px solid rgba(0,180,255,.15);border-radius:8px;padding:8px;">
-        <div style="font-size:10px;color:rgba(180,210,255,.5);letter-spacing:.1em;text-transform:uppercase;">Bölüm</div>
+        <div style="font-size:10px;color:rgba(180,210,255,.5);letter-spacing:.1em;text-transform:uppercase;"><span data-i18n="level">Level</span></div>
         <div style="font-family:'Orbitron',sans-serif;font-size:16px;font-weight:800;color:#00b4ff;" id="go-level">1</div>
       </div>
       <div style="background:rgba(168,85,247,.08);border:1px solid rgba(168,85,247,.15);border-radius:8px;padding:8px;">
-        <div style="font-size:10px;color:rgba(180,210,255,.5);letter-spacing:.1em;text-transform:uppercase;">En Büyük Taş</div>
+        <div style="font-size:10px;color:rgba(180,210,255,.5);letter-spacing:.1em;text-transform:uppercase;"><span data-i18n="best_tile">Best Tile</span></div>
         <div style="font-family:'Orbitron',sans-serif;font-size:16px;font-weight:800;color:#a855f7;" id="go-maxstone">2</div>
       </div>
       <div style="background:rgba(52,211,153,.08);border:1px solid rgba(52,211,153,.15);border-radius:8px;padding:8px;">
-        <div style="font-size:10px;color:rgba(180,210,255,.5);letter-spacing:.1em;text-transform:uppercase;">Toplam Merge</div>
+        <div style="font-size:10px;color:rgba(180,210,255,.5);letter-spacing:.1em;text-transform:uppercase;"><span data-i18n="total_merges">Total Merges</span></div>
         <div style="font-family:'Orbitron',sans-serif;font-size:16px;font-weight:800;color:#34d399;" id="go-merges">0</div>
       </div>
       <div style="background:rgba(251,191,36,.08);border:1px solid rgba(251,191,36,.15);border-radius:8px;padding:8px;">
-        <div style="font-size:10px;color:rgba(180,210,255,.5);letter-spacing:.1em;text-transform:uppercase;">En Büyük Combo</div>
+        <div style="font-size:10px;color:rgba(180,210,255,.5);letter-spacing:.1em;text-transform:uppercase;"><span data-i18n="best_combo">Best Combo</span></div>
         <div style="font-family:'Orbitron',sans-serif;font-size:16px;font-weight:800;color:#fbbf24;" id="go-maxcombo">0</div>
       </div>
     </div>
-    <button class="btn-green" id="btn-restart-go">Tekrar Oyna</button>
+    <button class="btn-green" id="btn-restart-go"><span data-i18n="play_again">Play Again</span></button>
     <button id="btn-go-watch-ad" style="background:linear-gradient(135deg,rgba(251,191,36,.15),rgba(245,158,11,.15));border:1.5px solid rgba(251,191,36,.4);border-radius:14px;padding:11px;width:100%;font-family:'Nunito',sans-serif;font-size:14px;font-weight:800;color:#fbbf24;cursor:pointer;margin-top:8px;transition:all .15s;display:flex;align-items:center;justify-content:center;gap:6px;" onmouseover="this.style.background='linear-gradient(135deg,rgba(251,191,36,.25),rgba(245,158,11,.25))'" onmouseout="this.style.background='linear-gradient(135deg,rgba(251,191,36,.15),rgba(245,158,11,.15))'">
-      <span style="font-size:16px;">▶</span> Reklam İzle → <span style="color:#34d399;font-family:'Orbitron',sans-serif;font-size:13px;">+100 🪙</span>
+      <span style="font-size:16px;">▶</span> <span data-i18n="watch_ad_continue">Watch Ad → +100 🪙</span>
     </button>
   </div>
 </div>
@@ -490,11 +515,11 @@ body.smash-mode .block:hover{filter:brightness(1.5) saturate(1.5);outline:2px da
   <div class="modal" style="border:1.5px solid rgba(80,120,255,.3);box-shadow:0 0 50px rgba(0,60,200,.3);">
     <div style="font-size:54px;margin-bottom:8px;">💎</div>
     <div style="font-family:'Orbitron',sans-serif;font-size:24px;font-weight:900;background:linear-gradient(90deg,#00b4ff,#a855f7,#fbbf24);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:2px;">AXY CRYSTAL</div>
-    <div style="font-family:'Orbitron',sans-serif;font-size:12px;font-weight:700;color:#a855f7;letter-spacing:.15em;margin-bottom:4px;">MERGE EDİSYONU</div>
+    <div style="font-family:'Orbitron',sans-serif;font-size:12px;font-weight:700;color:#a855f7;letter-spacing:.15em;margin-bottom:4px;"><span data-i18n="merge_edition">MERGE EDITION</span></div>
     <div style="font-family:'Nunito',sans-serif;font-size:10px;color:rgba(180,210,255,.3);letter-spacing:.1em;margin-bottom:16px;">v2.0 • 2026</div>
-    <button class="btn-green" id="btn-start">YENİ OYUN 🚀</button>
-    <button id="btn-howto" style="background:transparent;border:1.5px solid rgba(180,210,255,.2);border-radius:14px;padding:10px;width:100%;font-family:'Nunito',sans-serif;font-size:14px;font-weight:800;color:rgba(180,210,255,.55);cursor:pointer;margin-top:8px;transition:all .15s;" onmouseover="this.style.borderColor='rgba(180,210,255,.5)';this.style.color='rgba(180,210,255,.85)'" onmouseout="this.style.borderColor='rgba(180,210,255,.2)';this.style.color='rgba(180,210,255,.55)'">📖 Nasıl Oynanır?</button>
-    <button id="btn-reset-all" style="background:transparent;border:1.5px solid rgba(239,68,68,.2);border-radius:14px;padding:8px;width:100%;font-family:'Nunito',sans-serif;font-size:12px;font-weight:800;color:rgba(239,68,68,.4);cursor:pointer;margin-top:6px;transition:all .15s;" onmouseover="this.style.borderColor='rgba(239,68,68,.5)';this.style.color='rgba(239,68,68,.8)'" onmouseout="this.style.borderColor='rgba(239,68,68,.2)';this.style.color='rgba(239,68,68,.4)'">🗑 Tüm Verileri Sıfırla</button>
+    <button class="btn-green" id="btn-start"><span data-i18n="new_game">NEW GAME 🚀</span></button>
+    <button id="btn-howto" style="background:transparent;border:1.5px solid rgba(180,210,255,.2);border-radius:14px;padding:10px;width:100%;font-family:'Nunito',sans-serif;font-size:14px;font-weight:800;color:rgba(180,210,255,.55);cursor:pointer;margin-top:8px;transition:all .15s;" onmouseover="this.style.borderColor='rgba(180,210,255,.5)';this.style.color='rgba(180,210,255,.85)'" onmouseout="this.style.borderColor='rgba(180,210,255,.2)';this.style.color='rgba(180,210,255,.55)'"><span data-i18n="how_to_play_btn">📖 How to Play?</span></button>
+    <button id="btn-reset-all" style="background:transparent;border:1.5px solid rgba(239,68,68,.2);border-radius:14px;padding:8px;width:100%;font-family:'Nunito',sans-serif;font-size:12px;font-weight:800;color:rgba(239,68,68,.4);cursor:pointer;margin-top:6px;transition:all .15s;" onmouseover="this.style.borderColor='rgba(239,68,68,.5)';this.style.color='rgba(239,68,68,.8)'" onmouseout="this.style.borderColor='rgba(239,68,68,.2)';this.style.color='rgba(239,68,68,.4)'"><span data-i18n="reset_all">🗑 Reset All Data</span></button>
   </div>
 </div>
 
@@ -502,26 +527,26 @@ body.smash-mode .block:hover{filter:brightness(1.5) saturate(1.5);outline:2px da
 <div class="ov" id="ov-reset">
   <div class="modal" style="border:2px solid rgba(239,68,68,.4);box-shadow:0 0 50px rgba(239,68,68,.2);max-width:300px;">
     <div style="font-size:40px;margin-bottom:8px;">🗑</div>
-    <div style="font-family:'Orbitron',sans-serif;font-size:15px;font-weight:900;color:#ef4444;margin-bottom:16px;letter-spacing:.08em;">VERİ SİL</div>
+    <div style="font-family:'Orbitron',sans-serif;font-size:15px;font-weight:900;color:#ef4444;margin-bottom:16px;letter-spacing:.08em;"><span data-i18n="delete_data">DELETE DATA</span></div>
     <!-- Seçenekler -->
     <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:20px;text-align:left;">
       <label style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:8px 12px;background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.2);border-radius:10px;">
         <input type="checkbox" id="rst-bests" style="width:16px;height:16px;accent-color:#ef4444;cursor:pointer;">
         <div>
-          <div style="font-family:'Nunito',sans-serif;font-size:13px;font-weight:800;color:#e2f0ff;">🏆 En Yüksek Skorlar</div>
-          <div style="font-family:'Nunito',sans-serif;font-size:10px;color:rgba(180,210,255,.45);">Top-5 skor listesi</div>
+          <div style="font-family:'Nunito',sans-serif;font-size:13px;font-weight:800;color:#e2f0ff;"><span data-i18n="top_scores">🏆 Top Scores</span></div>
+          <div style="font-family:'Nunito',sans-serif;font-size:10px;color:rgba(180,210,255,.45);"><span data-i18n="top5_desc">Top-5 score list</span></div>
         </div>
       </label>
       <label style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:8px 12px;background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.2);border-radius:10px;">
         <input type="checkbox" id="rst-save" style="width:16px;height:16px;accent-color:#ef4444;cursor:pointer;">
         <div>
-          <div style="font-family:'Nunito',sans-serif;font-size:13px;font-weight:800;color:#e2f0ff;">💾 Kayıtlı Oyun</div>
-          <div style="font-family:'Nunito',sans-serif;font-size:10px;color:rgba(180,210,255,.45);">Kaldığın yerden devam verisi</div>
+          <div style="font-family:'Nunito',sans-serif;font-size:13px;font-weight:800;color:#e2f0ff;"><span data-i18n="saved_game">💾 Saved Game</span></div>
+          <div style="font-family:'Nunito',sans-serif;font-size:10px;color:rgba(180,210,255,.45);"><span data-i18n="saved_desc">Continue from where you left</span></div>
         </div>
       </label>
     </div>
-    <button class="btn-green" id="btn-reset-confirm" style="background:linear-gradient(135deg,#ef4444,#b91c1c);box-shadow:0 4px 18px rgba(239,68,68,.4);">Seçilenleri Sil</button>
-    <button class="btn-ghost" id="btn-reset-cancel" style="margin-top:8px;">Vazgeç</button>
+    <button class="btn-green" id="btn-reset-confirm" style="background:linear-gradient(135deg,#ef4444,#b91c1c);box-shadow:0 4px 18px rgba(239,68,68,.4);"><span data-i18n="delete_selected">Delete Selected</span></button>
+    <button class="btn-ghost" id="btn-reset-cancel" style="margin-top:8px;"><span data-i18n="cancel">Cancel</span></button>
   </div>
 </div>
 
@@ -529,31 +554,9 @@ body.smash-mode .block:hover{filter:brightness(1.5) saturate(1.5);outline:2px da
 <div class="ov" id="ov-howto">
   <div class="modal" style="border:1.5px solid rgba(0,180,255,.3);box-shadow:0 0 50px rgba(0,100,200,.3);max-width:310px;">
     <div style="font-size:36px;margin-bottom:8px;">📖</div>
-    <div style="font-family:'Orbitron',sans-serif;font-size:14px;font-weight:900;color:#00b4ff;letter-spacing:.1em;margin-bottom:16px;">NASIL OYNANIR?</div>
-    <div style="text-align:left;font-size:13px;color:rgba(180,210,255,.8);line-height:1.9;margin-bottom:20px;">
-      <div>🔷 Aynı değerli komşu bloklara <b>basılı tut</b> — eşleşenler parlar.</div>
-      <div>🔷 Bırakınca tüm eşleşen bloklar <b>birleşir</b>, yeni değer ortada kalır.</div>
-      <div>🔷 Ne kadar çok taş birleşirse o kadar <b>yüksek combo</b> çarpanı!</div>
-      <div style="margin-top:10px;padding:8px 10px;background:rgba(0,180,255,.08);border:1px solid rgba(0,180,255,.2);border-radius:8px;">
-        <div style="font-family:'Orbitron',sans-serif;font-size:10px;color:#00b4ff;letter-spacing:.1em;margin-bottom:4px;">🔢 BİRLEŞME FORMÜLÜ</div>
-        <div style="font-size:12px;color:rgba(180,210,255,.9);">Yeni Değer = <b>Mevcut Değer × 2^⌈N/2⌉</b></div>
-        <div style="font-size:11px;color:rgba(180,210,255,.6);margin-top:3px;">N = birleşen taş sayısı</div>
-        <div style="font-size:11px;color:rgba(180,210,255,.6);">3 taş → ×2 &nbsp;|&nbsp; 5 taş → ×4 &nbsp;|&nbsp; 8 taş → ×16</div>
-      </div>
-      <div style="margin-top:10px;padding:8px 10px;background:rgba(52,211,153,.06);border:1px solid rgba(52,211,153,.15);border-radius:8px;">
-        <div style="font-family:'Orbitron',sans-serif;font-size:10px;color:#34d399;letter-spacing:.1em;margin-bottom:4px;">🪙 COİN KAZANIMI</div>
-        <div style="font-size:11px;color:rgba(180,210,255,.7);">3 taş → +1 🪙 &nbsp;|&nbsp; 6 taş → +2 🪙 &nbsp;|&nbsp; 9+ taş → +3 🪙</div>
-        <div style="font-size:11px;color:rgba(180,210,255,.6);">Bölüm tamamla → +50 🪙 bonus!</div>
-      </div>
-      <div style="margin-top:8px;">🔄 <b>Değiştir</b> — temas eden 2 taşın yerini değiştirir</div>
-      <div>↩️ <b>Geri Al</b> — son hamleyi geri alır</div>
-      <div>🔨 <b>Yok Et</b> — bir bloğu patlatır</div>
-      <div>💣 <b>Bomba</b> — 3×3 alanı temizler</div>
-      <div>❄️ <b>Dondur</b> — bir sonraki spawn'u atlar</div>
-      <div>🔀 <b>Karıştır</b> — grid'i yeniden düzenler</div>
-      <div style="margin-top:8px;">🎯 Hedef değerine ulaş, <b>coin kazan</b>, devam et!</div>
-    </div>
-    <button class="btn-green" id="btn-howto-close">ANLADIM 👍</button>
+    <div style="font-family:'Orbitron',sans-serif;font-size:14px;font-weight:900;color:#00b4ff;letter-spacing:.1em;margin-bottom:16px;"><span data-i18n="how_to_play_title">HOW TO PLAY?</span></div>
+    <div id="howto-content" style="text-align:left;font-size:13px;color:rgba(180,210,255,.8);line-height:1.9;margin-bottom:20px;"></div>
+    <button class="btn-green" id="btn-howto-close"><span data-i18n="understood">GOT IT 👍</span></button>
   </div>
 </div>
 
@@ -1075,7 +1078,7 @@ function spawnTiles() {
     updateFreezeInd();
     const fbtn = document.getElementById('pu-freeze');
     if (fbtn) { fbtn.classList.remove('active'); fbtn.querySelector('.pu-icon').textContent = '❄️'; }
-    spawnFloat(-1, -1, '❄ SPAWN DURDURULDU');
+    spawnFloat(-1, -1, t('frozen'));
     return 0;
   }
 
@@ -1370,9 +1373,9 @@ function showMergePreview(r, c, totalTiles, newV) {
   const logV = Math.log2(newV);
   const comboBonus = count >= 8 ? 2.0 : count >= 5 ? 1.5 : count >= 3 ? 1.2 : 1.0;
   const pts = Math.round(logV * totalTiles * comboBonus);
-  const comboLabel = comboBonus >= 2.0 ? '🔥 COMBO ×8+' :
-                     comboBonus >= 1.5 ? '⚡ COMBO ×5+' :
-                     comboBonus >= 1.2 ? '✨ COMBO ×3+' : '';
+  const comboLabel = comboBonus >= 2.0 ? t('combo8') :
+                     comboBonus >= 1.5 ? t('combo5') :
+                     comboBonus >= 1.2 ? t('combo3') : '';
 
   badge.innerHTML = `
     <div style="font-family:'Orbitron',sans-serif;font-size:16px;font-weight:900;color:${col};line-height:1;letter-spacing:.04em;">${fmtTarget(newV)}</div>
@@ -2008,8 +2011,10 @@ function showLC(val) {
   const isNew = saveBest(score);
   if (isNew) {
     const t = document.getElementById('rank-toast');
-    t.textContent = '🏆 Yeni Rekor!';
-    t.classList.add('show');
+    const _t = document.getElementById('rank-toast');
+    const _ts = document.getElementById('rank-toast-text');
+    if (_ts) _ts.textContent = t('new_record'); else _t.textContent = t('new_record');
+    _t.classList.add('show');
     setTimeout(() => t.classList.remove('show'), 2500);
   }
 
@@ -2204,7 +2209,7 @@ function checkGO() {
   const fillRate = filled / (ROWS * COLS);
   if (fillRate >= 0.85 && mergeAvail < 3 && !warnShownThisRound) {
     const t = document.getElementById('rank-toast');
-    t.textContent = '⚠ Grid dolmak üzere — merge fırsatı azaldı!';
+    t.textContent = t('grid_warn');
     t.classList.add('show');
     setTimeout(() => t.classList.remove('show'), 2800);
   }
@@ -2239,10 +2244,10 @@ function showDangerWarn() {
   warnShownThisRound = true;
 
   const available = [];
-  if (coins >= PU_COST.shuffle) available.push({id:'shuffle', icon:'🔀', name:'Karıştır',  desc:'Tüm taşları yeniden dağıtır',    cost:PU_COST.shuffle});
-  if (coins >= PU_COST.bomb)    available.push({id:'bomb',    icon:'💣', name:'Bomba',     desc:'3×3 alanı temizler',              cost:PU_COST.bomb});
-  if (coins >= PU_COST.smash)   available.push({id:'smash',   icon:'🔨', name:'Yok Et',    desc:'Bir taşı patlatır',               cost:PU_COST.smash});
-  if (coins >= PU_COST.hint)    available.push({id:'hint',    icon:'🔄', name:'Değiştir',  desc:'2 taşın yerini değiştirir',       cost:PU_COST.hint});
+  if (coins >= PU_COST.shuffle) available.push({id:'shuffle', icon:'🔀', name:t('pu_shuffle'), desc:t('pu_shuffle_desc'), cost:PU_COST.shuffle});
+  if (coins >= PU_COST.bomb)    available.push({id:'bomb',    icon:'💣', name:t('pu_bomb'),    desc:t('pu_bomb_desc'),    cost:PU_COST.bomb});
+  if (coins >= PU_COST.smash)   available.push({id:'smash',   icon:'🔨', name:t('pu_smash'),   desc:t('pu_smash_desc'),   cost:PU_COST.smash});
+  if (coins >= PU_COST.hint)    available.push({id:'hint',    icon:'🔄', name:t('pu_swap'),    desc:t('pu_swap_desc'),    cost:PU_COST.hint});
 
   const title = document.getElementById('warn-title');
   const msg   = document.getElementById('warn-msg');
@@ -2252,9 +2257,9 @@ function showDangerWarn() {
 
   if (available.length > 0) {
     icon.textContent = '⚠️';
-    title.textContent = 'SIKIŞTIN!';
+    title.textContent = t('stuck');
     title.style.color = '#f59e0b';
-    msg.textContent = 'Merge yapacak komşu kalmadı. Bir power-up kullanabilirsin:';
+    msg.textContent = t('stuck_msg');
 
     available.forEach(pu => {
       const btn = document.createElement('button');
@@ -2262,8 +2267,8 @@ function showDangerWarn() {
       btn.innerHTML = `
         <span class="wp-icon">${pu.icon}</span>
         <span class="wp-info">
-          <span class="wp-name">${pu.name}</span>
-          <span class="wp-desc">${pu.desc}</span>
+          <span class="wp-name">${t('pu_'+pu.id) || pu.name}</span>
+          <span class="wp-desc">${t('pu_'+pu.id+'_desc') || pu.desc}</span>
         </span>
         <span class="wp-cost">🪙${pu.cost}</span>
       `;
@@ -2277,9 +2282,9 @@ function showDangerWarn() {
     });
   } else {
     icon.textContent = '💸';
-    title.textContent = 'SON HAMLENİ YAP!';
+    title.textContent = t('no_coin');
     title.style.color = '#ef4444';
-    msg.innerHTML = 'Merge yapacak yer kalmadı ve<br><b>coin\'in yok.</b>';
+    msg.innerHTML = t('no_coin_msg');
 
     // Reklam butonu
     const adBtn = document.createElement('button');
@@ -2440,12 +2445,12 @@ function spawnComboLabel(r, c, mult, count) {
   const lbl = document.createElement('div');
   lbl.className = 'combo-label';
 
-  const tierLabel = mult >= 2.0 ? '🔥 COMBO ×8+' : mult >= 1.5 ? '⚡ COMBO ×5+' : '✨ COMBO ×3+';
+  const tierLabel = mult >= 2.0 ? t('combo8') : mult >= 1.5 ? t('combo5') : t('combo3');
   const col       = mult >= 2.0 ? '#fb923c'       : mult >= 1.5 ? '#c084fc'       : '#fbbf24';
 
   lbl.innerHTML = `
     <div style="font-size:${mult>=2.0?28:mult>=1.5?25:22}px;color:${col};text-shadow:0 0 16px ${col};">${tierLabel}</div>
-    <div style="font-size:12px;color:rgba(255,255,255,.75);font-family:'Nunito',sans-serif;font-weight:800;letter-spacing:.06em;margin-top:3px;">${count+1} taş birden</div>
+    <div style="font-size:12px;color:rgba(255,255,255,.75);font-family:'Nunito',sans-serif;font-weight:800;letter-spacing:.06em;margin-top:3px;">${t('tiles_at_once',{n:count+1})}</div>
   `;
 
   // Önce görünmez ekle, gerçek boyutu ölç, sonra sınır içinde konumlandır
@@ -2754,11 +2759,99 @@ document.getElementById('btn-pause').addEventListener('click', () => {
 });
 
 document.getElementById('btn-undo-game').addEventListener('click', () => {
+  if (!active) return;
   cancelHold();
+  // Menü butonlarını çevir
+  document.getElementById('btn-menu-resume').textContent = t('resume');
+  document.getElementById('btn-menu-mainmenu').textContent = t('main_menu');
+  document.getElementById('ov-menu').classList.add('show');
+});
+
+// Menü — Devam Et
+document.getElementById('btn-menu-resume').addEventListener('click', () => {
+  document.getElementById('ov-menu').classList.remove('show');
+});
+
+// Menü — Ana Menü
+document.getElementById('btn-menu-mainmenu').addEventListener('click', () => {
+  document.getElementById('ov-menu').classList.remove('show');
   active = false;
   saveGame();
   document.getElementById('ov-start').classList.add('show');
 });
+
+// Menü — Dil Seçici aç
+document.getElementById('btn-menu-lang').addEventListener('click', () => {
+  document.getElementById('ov-menu').classList.remove('show');
+  openLangSelector();
+});
+
+// Menü — Kapat
+document.getElementById('btn-menu-close').addEventListener('click', () => {
+  document.getElementById('ov-menu').classList.remove('show');
+});
+
+// Dil seçici kapat
+document.getElementById('btn-lang-close').addEventListener('click', () => {
+  document.getElementById('ov-lang').classList.remove('show');
+});
+
+// Dil seçici aç ve doldur
+function openLangSelector() {
+  const LANG_META = [
+    { code:'tr', flag:'🇹🇷', name:'Türkçe' },
+    { code:'en', flag:'🇬🇧', name:'English' },
+    { code:'es', flag:'🇪🇸', name:'Español' },
+    { code:'fr', flag:'🇫🇷', name:'Français' },
+    { code:'de', flag:'🇩🇪', name:'Deutsch' },
+    { code:'it', flag:'🇮🇹', name:'Italiano' },
+    { code:'ru', flag:'🇷🇺', name:'Русский' },
+    { code:'ar', flag:'🇸🇦', name:'العربية' },
+    { code:'hi', flag:'🇮🇳', name:'हिन्दी' },
+    { code:'ur', flag:'🇵🇰', name:'اردو' },
+    { code:'bn', flag:'🇧🇩', name:'বাংলা' },
+    { code:'ko', flag:'🇰🇷', name:'한국어' },
+    { code:'ja', flag:'🇯🇵', name:'日本語' },
+    { code:'zh', flag:'🇨🇳', name:'中文' },
+    { code:'pt', flag:'🇧🇷', name:'Português' },
+    { code:'id', flag:'🇮🇩', name:'Indonesia' },
+    { code:'th', flag:'🇹🇭', name:'ภาษาไทย' },
+  ];
+
+  const grid = document.getElementById('lang-grid');
+  grid.innerHTML = '';
+
+  LANG_META.forEach(({ code, flag, name }) => {
+    const btn = document.createElement('button');
+    const isActive = code === LANG;
+    btn.style.cssText = `
+      background:${isActive ? 'rgba(0,180,255,.18)' : 'rgba(0,25,70,.4)'};
+      border:${isActive ? '1.5px solid #00b4ff' : '1px solid rgba(0,60,160,.2)'};
+      border-radius:10px; padding:8px 4px;
+      display:flex; flex-direction:column; align-items:center; gap:3px;
+      cursor:pointer; transition:all .15s;
+      font-family:'Nunito',sans-serif;
+    `;
+    btn.innerHTML = `
+      <span style="font-size:22px;line-height:1;">${flag}</span>
+      <span style="font-size:11px;font-weight:800;color:${isActive ? '#00b4ff' : '#e2f0ff'};text-align:center;line-height:1.2;">${name}</span>
+    `;
+    btn.addEventListener('click', () => {
+      LANG = code;
+      try { localStorage.setItem('axydrop_lang', code); } catch(e) {}
+      document.getElementById('ov-lang').classList.remove('show');
+      applyTranslations();
+      // Toast göster
+      const toast = document.getElementById('rank-toast');
+      toast.textContent = flag + ' ' + name;
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 1800);
+    });
+    grid.appendChild(btn);
+  });
+
+  document.getElementById('ov-lang').classList.add('show');
+}
 
 // Overlay butonları
 document.getElementById('btn-start').addEventListener('click', () => {
@@ -2927,7 +3020,7 @@ requestAnimationFrame(() => {
       resumeBtn.id = 'btn-resume-save';
       resumeBtn.className = 'btn-purple';
       resumeBtn.style.cssText = 'margin-bottom:0;margin-top:8px;';
-      resumeBtn.textContent = '▶ Kaldığım Yerden Devam Et';
+      resumeBtn.textContent = t('resume_save');
       resumeBtn.addEventListener('click', () => {
         document.getElementById('ov-start').classList.remove('show');
         resumeGame();
@@ -3015,7 +3108,7 @@ window.onAdRewarded = function(placement) {
       fitLayout();
       updateHUD(); updateBestShort();
       const t1 = document.getElementById('rank-toast');
-      t1.textContent = '🪙 +100 coin kazandın!';
+      t1.textContent = t('coins_earned', {n: 100});
       t1.classList.add('show');
       setTimeout(() => t1.classList.remove('show'), 2000);
       break;
@@ -3028,7 +3121,7 @@ window.onAdRewarded = function(placement) {
       const rewardEl = document.getElementById('lc-reward');
       if (rewardEl) rewardEl.textContent = '+' + (reward * 2) + ' (2×!)';
       const t2 = document.getElementById('rank-toast');
-      t2.textContent = '🪙 Ödül ikiye katlandı!';
+      t2.textContent = t('reward_doubled');
       t2.classList.add('show');
       setTimeout(() => t2.classList.remove('show'), 2000);
       // 2x butonunu gizle — tekrar kullanılmasın
@@ -3043,7 +3136,7 @@ window.onAdRewarded = function(placement) {
       document.getElementById('ov-warn').classList.remove('show');
       warnShownThisRound = false;
       const t3 = document.getElementById('rank-toast');
-      t3.textContent = '🪙 +80 coin kazandın!';
+      t3.textContent = t('coins_earned', {n: 80});
       t3.classList.add('show');
       setTimeout(() => t3.classList.remove('show'), 2000);
       break;
@@ -3078,6 +3171,756 @@ window.addEventListener('load', () => {
     document.getElementById('ad-banner-placeholder').style.display = 'none';
   }
 });
+
+// ════════════════════════════════════════════════════════════════════
+// BÖLÜM 27 — ÇOKLU DİL SİSTEMİ (i18n)
+// 11 dil: TR, EN, ES, FR, DE, IT, RU, AR, KO, JA, ZH
+// Telefon dilini otomatik algılar. Arapça için RTL desteği var.
+// ════════════════════════════════════════════════════════════════════
+
+const STRINGS = {
+  tr: {
+    score:'PUAN', target:'HEDEF', back:'GERİ', menu_btn:'MENÜ', pause_btn:'DURAKLAT',
+    sound:'SES', theme:'TEMA', how:'NASIL',
+    menu_title:'MENÜ', main_menu:'Ana Menüye Dön', language:'Dil', select_language:'DİL SEÇ',
+    merge_edition:'MERGE EDİSYONU', new_game:'YENİ OYUN 🚀',
+    how_to_play_btn:'📖 Nasıl Oynanır?', reset_all:'🗑 Tüm Verileri Sıfırla',
+    target_reached:'HEDEFE ULAŞILDI!', your_reward:'ÖDÜLÜNÜZ', great:'HARİKA!',
+    watch_ad_2x:'▶ Reklam İzle → Ödülü 2× Kazan',
+    paused:'DURAKLADI', resume:'▶ Devam Et', restart:'Yeniden Başla',
+    warning:'DİKKAT!', warn_msg:'Grid dolmak üzere.', ok_continue:'Anladım, Devam',
+    stuck:'SIKIŞTIN!', stuck_msg:'Merge yapacak komşu kalmadı. Bir power-up kullan:',
+    no_coin:'SON HAMLENİ YAP!', no_coin_msg:'Merge yapacak yer kalmadı ve coin\'in yok.',
+    watch_ad_coins:'▶ Reklam İzle → +80 🪙',
+    game_over:'OYUN BİTTİ', go_msg:'Grid doldu, hamle kalmadı!',
+    play_again:'Tekrar Oyna', watch_ad_continue:'▶ Reklam İzle → +100 🪙',
+    level:'Bölüm', best_tile:'En Büyük Taş', total_merges:'Toplam Merge', best_combo:'En Büyük Combo',
+    delete_data:'VERİ SİL', top_scores:'🏆 En Yüksek Skorlar', top5_desc:'Top-5 skor listesi',
+    saved_game:'💾 Kayıtlı Oyun', saved_desc:'Kaldığın yerden devam verisi',
+    delete_selected:'Seçilenleri Sil', cancel:'Vazgeç',
+    how_to_play_title:'NASIL OYNANIR?', understood:'ANLADIM 👍',
+    new_record:'🏆 Yeni Rekor!', grid_warn:'⚠ Grid dolmak üzere — merge fırsatı azaldı!',
+    resume_save:'▶ Kaldığım Yerden Devam Et', ad_label:'REKLAM',
+    tip_swap:'Değiştir — 2 komşu taşın yerini değiştirir',
+    tip_undo:'Geri Al — son hamleyi geri alır',
+    tip_smash:'Yok Et — bir taşı patlatır',
+    tip_shuffle:'Karıştır — tüm taşları yeniden dağıtır',
+    tip_bomb:'Bomba — 3×3 alanı temizler',
+    tip_freeze:'Dondur — bir sonraki spawnu atlar',
+    tip_menu:'Ana Menü', tip_pause:'Duraklat',
+    tip_sound:'Ses Aç/Kapat', tip_theme:'Tema Değiştir', tip_how:'Nasıl Oynanır?',
+    pu_swap:'Değiştir', pu_swap_desc:'2 taşın yerini değiştirir',
+    pu_bomb:'Bomba', pu_bomb_desc:'3×3 alanı temizler',
+    pu_smash:'Yok Et', pu_smash_desc:'Bir taşı patlatır',
+    pu_shuffle:'Karıştır', pu_shuffle_desc:'Tüm taşları yeniden dağıtır',
+    frozen:'❄ SPAWN DURDURULDU',
+    coins_earned:'🪙 +{n} coin kazandın!', reward_doubled:'🪙 Ödül ikiye katlandı!',
+    combo8:'🔥 COMBO ×8+', combo5:'⚡ COMBO ×5+', combo3:'✨ COMBO ×3+',
+    tiles_at_once:'{n} taş birden',
+  },
+  en: {
+    score:'SCORE', target:'TARGET', back:'BACK', menu_btn:'MENU', pause_btn:'PAUSE',
+    sound:'SOUND', theme:'THEME', how:'HOW',
+    menu_title:'MENU', main_menu:'Main Menu', language:'Language', select_language:'SELECT LANGUAGE',
+    merge_edition:'MERGE EDITION', new_game:'NEW GAME 🚀',
+    how_to_play_btn:'📖 How to Play?', reset_all:'🗑 Reset All Data',
+    target_reached:'TARGET REACHED!', your_reward:'YOUR REWARD', great:'GREAT!',
+    watch_ad_2x:'▶ Watch Ad → 2× Reward',
+    paused:'PAUSED', resume:'▶ Resume', restart:'Restart',
+    warning:'WARNING!', warn_msg:'Grid is filling up.', ok_continue:'OK, Continue',
+    stuck:'STUCK!', stuck_msg:'No adjacent matches left. Use a power-up:',
+    no_coin:'LAST MOVE!', no_coin_msg:'No moves left and no coins.',
+    watch_ad_coins:'▶ Watch Ad → +80 🪙',
+    game_over:'GAME OVER', go_msg:'Grid is full, no moves left!',
+    play_again:'Play Again', watch_ad_continue:'▶ Watch Ad → +100 🪙',
+    level:'Level', best_tile:'Best Tile', total_merges:'Total Merges', best_combo:'Best Combo',
+    delete_data:'DELETE DATA', top_scores:'🏆 Top Scores', top5_desc:'Top-5 score list',
+    saved_game:'💾 Saved Game', saved_desc:'Continue from where you left',
+    delete_selected:'Delete Selected', cancel:'Cancel',
+    how_to_play_title:'HOW TO PLAY?', understood:'GOT IT 👍',
+    new_record:'🏆 New Record!', grid_warn:'⚠ Grid filling up — fewer merge options!',
+    resume_save:'▶ Continue Saved Game', ad_label:'AD',
+    tip_swap:'Swap — swap 2 adjacent tiles', tip_undo:'Undo — revert last move',
+    tip_smash:'Smash — destroy one tile', tip_shuffle:'Shuffle — rearrange all tiles',
+    tip_bomb:'Bomb — clear 3×3 area', tip_freeze:'Freeze — skip next spawn',
+    tip_menu:'Main Menu', tip_pause:'Pause', tip_sound:'Sound On/Off',
+    tip_theme:'Change Theme', tip_how:'How to Play?',
+    pu_swap:'Swap', pu_swap_desc:'Swaps 2 adjacent tiles',
+    pu_bomb:'Bomb', pu_bomb_desc:'Clears 3×3 area',
+    pu_smash:'Smash', pu_smash_desc:'Destroys one tile',
+    pu_shuffle:'Shuffle', pu_shuffle_desc:'Rearranges all tiles',
+    frozen:'❄ SPAWN SKIPPED',
+    coins_earned:'🪙 +{n} coins earned!', reward_doubled:'🪙 Reward doubled!',
+    combo8:'🔥 COMBO ×8+', combo5:'⚡ COMBO ×5+', combo3:'✨ COMBO ×3+',
+    tiles_at_once:'{n} tiles at once',
+  },
+  es: {
+    score:'PUNTOS', target:'META', back:'VOLVER', menu_btn:'MENÚ', pause_btn:'PAUSA',
+    sound:'SONIDO', theme:'TEMA', how:'CÓMO',
+    menu_title:'MENÚ', main_menu:'Menú principal', language:'Idioma', select_language:'SELECCIONAR IDIOMA', merge_edition:'EDICIÓN MERGE', new_game:'NUEVO JUEGO 🚀',
+    how_to_play_btn:'📖 ¿Cómo jugar?', reset_all:'🗑 Borrar todo',
+    target_reached:'¡META ALCANZADA!', your_reward:'TU RECOMPENSA', great:'¡GENIAL!',
+    watch_ad_2x:'▶ Ver anuncio → 2× Recompensa',
+    paused:'EN PAUSA', resume:'▶ Continuar', restart:'Reiniciar',
+    warning:'¡ATENCIÓN!', warn_msg:'La cuadrícula se está llenando.', ok_continue:'Entendido',
+    stuck:'¡ATASCADO!', stuck_msg:'Sin movimientos posibles. Usa un power-up:',
+    no_coin:'¡ÚLTIMO MOVIMIENTO!', no_coin_msg:'Sin movimientos y sin monedas.',
+    watch_ad_coins:'▶ Ver anuncio → +80 🪙',
+    game_over:'FIN DEL JUEGO', go_msg:'¡Cuadrícula llena, sin movimientos!',
+    play_again:'Jugar de nuevo', watch_ad_continue:'▶ Ver anuncio → +100 🪙',
+    level:'Nivel', best_tile:'Mejor ficha', total_merges:'Total fusiones', best_combo:'Mejor combo',
+    delete_data:'BORRAR DATOS', top_scores:'🏆 Mejores puntos', top5_desc:'Lista top-5',
+    saved_game:'💾 Partida guardada', saved_desc:'Continuar partida',
+    delete_selected:'Borrar seleccionado', cancel:'Cancelar',
+    how_to_play_title:'¿CÓMO JUGAR?', understood:'ENTENDIDO 👍',
+    new_record:'🏆 ¡Nuevo récord!', grid_warn:'⚠ Cuadrícula casi llena',
+    resume_save:'▶ Continuar partida guardada', ad_label:'ANUNCIO',
+    tip_swap:'Intercambiar — cambia 2 fichas adyacentes', tip_undo:'Deshacer — revierte el último movimiento',
+    tip_smash:'Destruir — elimina una ficha', tip_shuffle:'Mezclar — reorganiza todas las fichas',
+    tip_bomb:'Bomba — limpia área 3×3', tip_freeze:'Congelar — omite el próximo spawn',
+    tip_menu:'Menú principal', tip_pause:'Pausa', tip_sound:'Sonido on/off',
+    tip_theme:'Cambiar tema', tip_how:'¿Cómo jugar?',
+    pu_swap:'Cambiar', pu_swap_desc:'Intercambia 2 fichas',
+    pu_bomb:'Bomba', pu_bomb_desc:'Limpia área 3×3',
+    pu_smash:'Destruir', pu_smash_desc:'Elimina una ficha',
+    pu_shuffle:'Mezclar', pu_shuffle_desc:'Reorganiza las fichas',
+    frozen:'❄ SPAWN OMITIDO',
+    combo8:'🔥 COMBO ×8+', combo5:'⚡ COMBO ×5+', combo3:'✨ COMBO ×3+',
+    tiles_at_once:'{n} fichas a la vez',
+    coins_earned:'🪙 +{n} monedas ganadas!', reward_doubled:'🪙 ¡Recompensa duplicada!',
+  },
+  fr: {
+    score:'SCORE', target:'OBJECTIF', back:'RETOUR', menu_btn:'MENU', pause_btn:'PAUSE',
+    sound:'SON', theme:'THÈME', how:'AIDE',
+    menu_title:'MENU', main_menu:'Menu principal', language:'Langue', select_language:'CHOISIR LA LANGUE', merge_edition:'ÉDITION FUSION', new_game:'NOUVELLE PARTIE 🚀',
+    how_to_play_btn:'📖 Comment jouer?', reset_all:'🗑 Tout réinitialiser',
+    target_reached:'OBJECTIF ATTEINT!', your_reward:'VOTRE RÉCOMPENSE', great:'SUPER!',
+    watch_ad_2x:'▶ Voir pub → Récompense ×2',
+    paused:'EN PAUSE', resume:'▶ Continuer', restart:'Recommencer',
+    warning:'ATTENTION!', warn_msg:'La grille se remplit.', ok_continue:'OK, Continuer',
+    stuck:'BLOQUÉ!', stuck_msg:'Aucune fusion possible. Utilisez un power-up:',
+    no_coin:'DERNIER COUP!', no_coin_msg:'Plus de mouvements et plus de pièces.',
+    watch_ad_coins:'▶ Voir pub → +80 🪙',
+    game_over:'JEU TERMINÉ', go_msg:'Grille pleine, plus de mouvements!',
+    play_again:'Rejouer', watch_ad_continue:'▶ Voir pub → +100 🪙',
+    level:'Niveau', best_tile:'Meilleure tuile', total_merges:'Total fusions', best_combo:'Meilleur combo',
+    delete_data:'SUPPRIMER', top_scores:'🏆 Meilleurs scores', top5_desc:'Liste top-5',
+    saved_game:'💾 Partie sauvegardée', saved_desc:'Continuer la partie',
+    delete_selected:'Supprimer sélection', cancel:'Annuler',
+    how_to_play_title:'COMMENT JOUER?', understood:'COMPRIS 👍',
+    new_record:'🏆 Nouveau record!', grid_warn:'⚠ Grille presque pleine',
+    resume_save:'▶ Continuer la partie sauvegardée', ad_label:'PUB',
+    tip_swap:'Échanger — échange 2 tuiles adjacentes', tip_undo:'Annuler — revient au dernier coup',
+    tip_smash:'Détruire — élimine une tuile', tip_shuffle:'Mélanger — réorganise les tuiles',
+    tip_bomb:'Bombe — nettoie zone 3×3', tip_freeze:'Geler — ignore le prochain spawn',
+    tip_menu:'Menu principal', tip_pause:'Pause', tip_sound:'Son on/off',
+    tip_theme:'Changer thème', tip_how:'Comment jouer?',
+    pu_swap:'Échanger', pu_swap_desc:'Échange 2 tuiles',
+    pu_bomb:'Bombe', pu_bomb_desc:'Nettoie zone 3×3',
+    pu_smash:'Détruire', pu_smash_desc:'Élimine une tuile',
+    pu_shuffle:'Mélanger', pu_shuffle_desc:'Réorganise les tuiles',
+    frozen:'❄ SPAWN IGNORÉ',
+    combo8:'🔥 COMBO ×8+', combo5:'⚡ COMBO ×5+', combo3:'✨ COMBO ×3+',
+    tiles_at_once:'{n} tuiles d\'un coup',
+    coins_earned:'🪙 +{n} pièces gagnées!', reward_doubled:'🪙 Récompense doublée!',
+  },
+  de: {
+    score:'PUNKTE', target:'ZIEL', back:'ZURÜCK', menu_btn:'MENÜ', pause_btn:'PAUSE',
+    sound:'TON', theme:'THEMA', how:'HILFE',
+    menu_title:'MENÜ', main_menu:'Hauptmenü', language:'Sprache', select_language:'SPRACHE WÄHLEN', merge_edition:'MERGE EDITION', new_game:'NEUES SPIEL 🚀',
+    how_to_play_btn:'📖 Wie spielt man?', reset_all:'🗑 Alles zurücksetzen',
+    target_reached:'ZIEL ERREICHT!', your_reward:'IHRE BELOHNUNG', great:'SUPER!',
+    watch_ad_2x:'▶ Werbung ansehen → 2× Belohnung',
+    paused:'PAUSIERT', resume:'▶ Weiterspielen', restart:'Neu starten',
+    warning:'ACHTUNG!', warn_msg:'Das Raster füllt sich.', ok_continue:'OK, Weiter',
+    stuck:'FESTSTECKEND!', stuck_msg:'Keine Züge möglich. Nutze einen Power-up:',
+    no_coin:'LETZTER ZUG!', no_coin_msg:'Keine Züge und keine Münzen mehr.',
+    watch_ad_coins:'▶ Werbung ansehen → +80 🪙',
+    game_over:'SPIEL VORBEI', go_msg:'Raster voll, keine Züge mehr!',
+    play_again:'Nochmal spielen', watch_ad_continue:'▶ Werbung ansehen → +100 🪙',
+    level:'Level', best_tile:'Bestes Feld', total_merges:'Fusionen gesamt', best_combo:'Bestes Kombo',
+    delete_data:'DATEN LÖSCHEN', top_scores:'🏆 Bestenliste', top5_desc:'Top-5 Liste',
+    saved_game:'💾 Gespeichertes Spiel', saved_desc:'Spiel fortsetzen',
+    delete_selected:'Auswahl löschen', cancel:'Abbrechen',
+    how_to_play_title:'WIE SPIELT MAN?', understood:'VERSTANDEN 👍',
+    new_record:'🏆 Neuer Rekord!', grid_warn:'⚠ Raster fast voll',
+    resume_save:'▶ Gespeichertes Spiel fortsetzen', ad_label:'WERBUNG',
+    tip_swap:'Tauschen — 2 benachbarte Felder tauschen', tip_undo:'Rückgängig — letzten Zug zurücknehmen',
+    tip_smash:'Zerstören — ein Feld entfernen', tip_shuffle:'Mischen — alle Felder neu anordnen',
+    tip_bomb:'Bombe — 3×3 Bereich leeren', tip_freeze:'Einfrieren — nächsten Spawn überspringen',
+    tip_menu:'Hauptmenü', tip_pause:'Pause', tip_sound:'Ton an/aus',
+    tip_theme:'Thema ändern', tip_how:'Wie spielt man?',
+    pu_swap:'Tauschen', pu_swap_desc:'Tauscht 2 Felder',
+    pu_bomb:'Bombe', pu_bomb_desc:'Leert 3×3 Bereich',
+    pu_smash:'Zerstören', pu_smash_desc:'Entfernt ein Feld',
+    pu_shuffle:'Mischen', pu_shuffle_desc:'Ordnet alle Felder neu',
+    frozen:'❄ SPAWN ÜBERSPRUNGEN',
+    combo8:'🔥 COMBO ×8+', combo5:'⚡ COMBO ×5+', combo3:'✨ COMBO ×3+',
+    tiles_at_once:'{n} Felder auf einmal',
+    coins_earned:'🪙 +{n} Münzen erhalten!', reward_doubled:'🪙 Belohnung verdoppelt!',
+  },
+  it: {
+    score:'PUNTEGGIO', target:'OBIETTIVO', back:'INDIETRO', menu_btn:'MENU', pause_btn:'PAUSA',
+    sound:'SUONO', theme:'TEMA', how:'AIUTO',
+    menu_title:'MENU', main_menu:'Menu principale', language:'Lingua', select_language:'SCEGLI LINGUA', merge_edition:'EDIZIONE MERGE', new_game:'NUOVA PARTITA 🚀',
+    how_to_play_btn:'📖 Come si gioca?', reset_all:'🗑 Ripristina tutto',
+    target_reached:'OBIETTIVO RAGGIUNTO!', your_reward:'IL TUO PREMIO', great:'OTTIMO!',
+    watch_ad_2x:'▶ Guarda pubblicità → Premio ×2',
+    paused:'IN PAUSA', resume:'▶ Continua', restart:'Ricomincia',
+    warning:'ATTENZIONE!', warn_msg:'La griglia si sta riempiendo.', ok_continue:'OK, Continua',
+    stuck:'BLOCCATO!', stuck_msg:'Nessuna mossa possibile. Usa un power-up:',
+    no_coin:'ULTIMA MOSSA!', no_coin_msg:'Nessuna mossa e nessuna moneta.',
+    watch_ad_coins:'▶ Guarda pub → +80 🪙',
+    game_over:'PARTITA FINITA', go_msg:'Griglia piena, nessuna mossa!',
+    play_again:'Gioca ancora', watch_ad_continue:'▶ Guarda pub → +100 🪙',
+    level:'Livello', best_tile:'Tessera migliore', total_merges:'Fusioni totali', best_combo:'Combo migliore',
+    delete_data:'ELIMINA DATI', top_scores:'🏆 Punteggi migliori', top5_desc:'Lista top-5',
+    saved_game:'💾 Partita salvata', saved_desc:'Continua la partita',
+    delete_selected:'Elimina selezionati', cancel:'Annulla',
+    how_to_play_title:'COME SI GIOCA?', understood:'CAPITO 👍',
+    new_record:'🏆 Nuovo record!', grid_warn:'⚠ Griglia quasi piena',
+    resume_save:'▶ Continua partita salvata', ad_label:'PUB',
+    tip_swap:'Scambia — scambia 2 tessere adiacenti', tip_undo:'Annulla — ripristina ultima mossa',
+    tip_smash:'Distruggi — rimuove una tessera', tip_shuffle:'Mescola — riorganizza le tessere',
+    tip_bomb:'Bomba — svuota area 3×3', tip_freeze:'Congela — salta il prossimo spawn',
+    tip_menu:'Menu principale', tip_pause:'Pausa', tip_sound:'Suono on/off',
+    tip_theme:'Cambia tema', tip_how:'Come si gioca?',
+    pu_swap:'Scambia', pu_swap_desc:'Scambia 2 tessere',
+    pu_bomb:'Bomba', pu_bomb_desc:'Svuota area 3×3',
+    pu_smash:'Distruggi', pu_smash_desc:'Rimuove una tessera',
+    pu_shuffle:'Mescola', pu_shuffle_desc:'Riorganizza le tessere',
+    frozen:'❄ SPAWN SALTATO',
+    combo8:'🔥 COMBO ×8+', combo5:'⚡ COMBO ×5+', combo3:'✨ COMBO ×3+',
+    tiles_at_once:'{n} tessere insieme',
+    coins_earned:'🪙 +{n} monete guadagnate!', reward_doubled:'🪙 Premio raddoppiato!',
+  },
+  ru: {
+    score:'ОЧКИ', target:'ЦЕЛЬ', back:'НАЗАД', menu_btn:'МЕНЮ', pause_btn:'ПАУЗА',
+    sound:'ЗВУК', theme:'ТЕМА', how:'КАК',
+    menu_title:'МЕНЮ', main_menu:'Главное меню', language:'Язык', select_language:'ВЫБОР ЯЗЫКА', merge_edition:'ИЗДАНИЕ СЛИЯНИЙ', new_game:'НОВАЯ ИГРА 🚀',
+    how_to_play_btn:'📖 Как играть?', reset_all:'🗑 Сбросить всё',
+    target_reached:'ЦЕЛЬ ДОСТИГНУТА!', your_reward:'ВАШ ПРИЗ', great:'ОТЛИЧНО!',
+    watch_ad_2x:'▶ Смотреть рекламу → Приз ×2',
+    paused:'НА ПАУЗЕ', resume:'▶ Продолжить', restart:'Начать заново',
+    warning:'ВНИМАНИЕ!', warn_msg:'Сетка заполняется.', ok_continue:'OK, Продолжить',
+    stuck:'ЗАСТРЯЛИ!', stuck_msg:'Нет доступных ходов. Используйте усиление:',
+    no_coin:'ПОСЛЕДНИЙ ХОД!', no_coin_msg:'Нет ходов и монет.',
+    watch_ad_coins:'▶ Смотреть рекламу → +80 🪙',
+    game_over:'ИГРА ОКОНЧЕНА', go_msg:'Сетка заполнена, ходов нет!',
+    play_again:'Играть снова', watch_ad_continue:'▶ Смотреть рекламу → +100 🪙',
+    level:'Уровень', best_tile:'Лучшая плитка', total_merges:'Всего слияний', best_combo:'Лучшее комбо',
+    delete_data:'УДАЛИТЬ ДАННЫЕ', top_scores:'🏆 Лучшие счета', top5_desc:'Топ-5 счетов',
+    saved_game:'💾 Сохранённая игра', saved_desc:'Продолжить игру',
+    delete_selected:'Удалить выбранное', cancel:'Отмена',
+    how_to_play_title:'КАК ИГРАТЬ?', understood:'ПОНЯТНО 👍',
+    new_record:'🏆 Новый рекорд!', grid_warn:'⚠ Сетка почти заполнена',
+    resume_save:'▶ Продолжить сохранённую игру', ad_label:'РЕКЛАМА',
+    tip_swap:'Поменять — меняет 2 соседние плитки', tip_undo:'Отменить — возвращает последний ход',
+    tip_smash:'Уничтожить — убирает одну плитку', tip_shuffle:'Перемешать — переставляет все плитки',
+    tip_bomb:'Бомба — очищает область 3×3', tip_freeze:'Заморозить — пропускает следующий спавн',
+    tip_menu:'Главное меню', tip_pause:'Пауза', tip_sound:'Звук вкл/выкл',
+    tip_theme:'Сменить тему', tip_how:'Как играть?',
+    pu_swap:'Поменять', pu_swap_desc:'Меняет 2 плитки',
+    pu_bomb:'Бомба', pu_bomb_desc:'Очищает 3×3',
+    pu_smash:'Уничтожить', pu_smash_desc:'Убирает плитку',
+    pu_shuffle:'Перемешать', pu_shuffle_desc:'Переставляет плитки',
+    frozen:'❄ СПАВН ПРОПУЩЕН',
+    combo8:'🔥 COMBO ×8+', combo5:'⚡ COMBO ×5+', combo3:'✨ COMBO ×3+',
+    tiles_at_once:'{n} плитки сразу',
+    coins_earned:'🪙 +{n} монет получено!', reward_doubled:'🪙 Приз удвоен!',
+  },
+  ar: {
+    score:'النقاط', target:'الهدف', back:'رجوع', menu_btn:'قائمة', pause_btn:'إيقاف',
+    sound:'صوت', theme:'مظهر', how:'مساعدة',
+    menu_title:'القائمة', main_menu:'القائمة الرئيسية', language:'اللغة', select_language:'اختر اللغة', merge_edition:'إصدار الدمج', new_game:'لعبة جديدة 🚀',
+    how_to_play_btn:'📖 كيف تلعب؟', reset_all:'🗑 إعادة تعيين الكل',
+    target_reached:'تم الوصول للهدف!', your_reward:'مكافأتك', great:'رائع!',
+    watch_ad_2x:'▶ شاهد إعلاناً → مكافأة ×2',
+    paused:'متوقف', resume:'▶ استمرار', restart:'إعادة البدء',
+    warning:'تحذير!', warn_msg:'الشبكة تمتلئ.', ok_continue:'حسناً، تابع',
+    stuck:'عالق!', stuck_msg:'لا حركات متاحة. استخدم قوة:',
+    no_coin:'آخر حركة!', no_coin_msg:'لا حركات ولا عملات.',
+    watch_ad_coins:'▶ شاهد إعلاناً → +80 🪙',
+    game_over:'انتهت اللعبة', go_msg:'الشبكة ممتلئة، لا حركات!',
+    play_again:'العب مجدداً', watch_ad_continue:'▶ شاهد إعلاناً → +100 🪙',
+    level:'المستوى', best_tile:'أفضل بلاطة', total_merges:'إجمالي الدمج', best_combo:'أفضل تحرك',
+    delete_data:'حذف البيانات', top_scores:'🏆 أعلى النقاط', top5_desc:'قائمة أفضل 5',
+    saved_game:'💾 لعبة محفوظة', saved_desc:'تابع من حيث توقفت',
+    delete_selected:'حذف المحدد', cancel:'إلغاء',
+    how_to_play_title:'كيف تلعب؟', understood:'فهمت 👍',
+    new_record:'🏆 رقم قياسي جديد!', grid_warn:'⚠ الشبكة تكاد تمتلئ',
+    resume_save:'▶ تابع اللعبة المحفوظة', ad_label:'إعلان',
+    tip_swap:'تبديل — يبدل بلاطتين متجاورتين', tip_undo:'تراجع — يعكس الحركة الأخيرة',
+    tip_smash:'تحطيم — يزيل بلاطة واحدة', tip_shuffle:'خلط — يعيد ترتيب الكل',
+    tip_bomb:'قنبلة — تنظف منطقة 3×3', tip_freeze:'تجميد — يتخطى الظهور التالي',
+    tip_menu:'القائمة الرئيسية', tip_pause:'إيقاف مؤقت', tip_sound:'صوت تشغيل/إيقاف',
+    tip_theme:'تغيير المظهر', tip_how:'كيف تلعب؟',
+    pu_swap:'تبديل', pu_swap_desc:'يبدل بلاطتين',
+    pu_bomb:'قنبلة', pu_bomb_desc:'تنظف 3×3',
+    pu_smash:'تحطيم', pu_smash_desc:'يزيل بلاطة',
+    pu_shuffle:'خلط', pu_shuffle_desc:'يعيد ترتيب الكل',
+    frozen:'❄ تم تخطي الظهور',
+    combo8:'🔥 COMBO ×8+', combo5:'⚡ COMBO ×5+', combo3:'✨ COMBO ×3+',
+    tiles_at_once:'{n} بلاطات دفعة واحدة',
+    coins_earned:'🪙 +{n} عملة مكتسبة!', reward_doubled:'🪙 تضاعفت المكافأة!',
+  },
+  ko: {
+    score:'점수', target:'목표', back:'뒤로', menu_btn:'메뉴', pause_btn:'일시정지',
+    sound:'소리', theme:'테마', how:'방법',
+    menu_title:'메뉴', main_menu:'메인 메뉴', language:'언어', select_language:'언어 선택', merge_edition:'합치기 에디션', new_game:'새 게임 🚀',
+    how_to_play_btn:'📖 게임 방법?', reset_all:'🗑 전체 초기화',
+    target_reached:'목표 달성!', your_reward:'당신의 보상', great:'훌륭해요!',
+    watch_ad_2x:'▶ 광고 보기 → 보상 ×2',
+    paused:'일시정지', resume:'▶ 계속하기', restart:'다시 시작',
+    warning:'주의!', warn_msg:'격자가 채워지고 있습니다.', ok_continue:'확인, 계속',
+    stuck:'막혔어요!', stuck_msg:'가능한 이동 없음. 파워업 사용:',
+    no_coin:'마지막 이동!', no_coin_msg:'이동과 코인이 없습니다.',
+    watch_ad_coins:'▶ 광고 보기 → +80 🪙',
+    game_over:'게임 오버', go_msg:'격자 가득, 이동 불가!',
+    play_again:'다시 하기', watch_ad_continue:'▶ 광고 보기 → +100 🪙',
+    level:'레벨', best_tile:'최고 타일', total_merges:'총 합치기', best_combo:'최고 콤보',
+    delete_data:'데이터 삭제', top_scores:'🏆 최고 점수', top5_desc:'상위 5위 목록',
+    saved_game:'💾 저장된 게임', saved_desc:'이어서 하기',
+    delete_selected:'선택 삭제', cancel:'취소',
+    how_to_play_title:'게임 방법?', understood:'알겠어요 👍',
+    new_record:'🏆 새 기록!', grid_warn:'⚠ 격자가 거의 가득',
+    resume_save:'▶ 저장된 게임 계속', ad_label:'광고',
+    tip_swap:'교체 — 인접한 타일 2개 교환', tip_undo:'실행 취소 — 마지막 이동 되돌리기',
+    tip_smash:'부수기 — 타일 하나 제거', tip_shuffle:'섞기 — 모든 타일 재배열',
+    tip_bomb:'폭탄 — 3×3 영역 제거', tip_freeze:'동결 — 다음 생성 건너뛰기',
+    tip_menu:'메인 메뉴', tip_pause:'일시정지', tip_sound:'소리 켜기/끄기',
+    tip_theme:'테마 변경', tip_how:'게임 방법?',
+    pu_swap:'교체', pu_swap_desc:'타일 2개 교환',
+    pu_bomb:'폭탄', pu_bomb_desc:'3×3 영역 제거',
+    pu_smash:'부수기', pu_smash_desc:'타일 하나 제거',
+    pu_shuffle:'섞기', pu_shuffle_desc:'모든 타일 재배열',
+    frozen:'❄ 스폰 건너뜀',
+    combo8:'🔥 COMBO ×8+', combo5:'⚡ COMBO ×5+', combo3:'✨ COMBO ×3+',
+    tiles_at_once:'한 번에 {n}개',
+    coins_earned:'🪙 +{n} 코인 획득!', reward_doubled:'🪙 보상 두 배!',
+  },
+  ja: {
+    score:'スコア', target:'目標', back:'戻る', menu_btn:'メニュー', pause_btn:'一時停止',
+    sound:'音', theme:'テーマ', how:'方法',
+    menu_title:'メニュー', main_menu:'メインメニュー', language:'言語', select_language:'言語を選択', merge_edition:'マージエディション', new_game:'新しいゲーム 🚀',
+    how_to_play_btn:'📖 遊び方？', reset_all:'🗑 全てリセット',
+    target_reached:'目標達成！', your_reward:'あなたへのご褒美', great:'すごい！',
+    watch_ad_2x:'▶ 広告を見る → 報酬×2',
+    paused:'一時停止中', resume:'▶ 続ける', restart:'やり直す',
+    warning:'注意！', warn_msg:'グリッドが埋まってきています。', ok_continue:'OK、続ける',
+    stuck:'詰まった！', stuck_msg:'利用可能な動きがありません。パワーアップを使用:',
+    no_coin:'最後の動き！', no_coin_msg:'動きもコインもありません。',
+    watch_ad_coins:'▶ 広告を見る → +80 🪙',
+    game_over:'ゲームオーバー', go_msg:'グリッドが一杯、動けない！',
+    play_again:'もう一度', watch_ad_continue:'▶ 広告を見る → +100 🪙',
+    level:'レベル', best_tile:'最高タイル', total_merges:'合計マージ', best_combo:'最高コンボ',
+    delete_data:'データ削除', top_scores:'🏆 ハイスコア', top5_desc:'トップ5リスト',
+    saved_game:'💾 保存済みゲーム', saved_desc:'続きから遊ぶ',
+    delete_selected:'選択を削除', cancel:'キャンセル',
+    how_to_play_title:'遊び方？', understood:'わかった 👍',
+    new_record:'🏆 新記録！', grid_warn:'⚠ グリッドがほぼ一杯',
+    resume_save:'▶ 保存済みゲームを続ける', ad_label:'広告',
+    tip_swap:'スワップ — 隣接する2つのタイルを交換', tip_undo:'元に戻す — 最後の動きを戻す',
+    tip_smash:'粉砕 — タイルを1つ除去', tip_shuffle:'シャッフル — 全タイルを再配置',
+    tip_bomb:'爆弾 — 3×3エリアをクリア', tip_freeze:'凍結 — 次のスポーンをスキップ',
+    tip_menu:'メインメニュー', tip_pause:'一時停止', tip_sound:'音のオン/オフ',
+    tip_theme:'テーマ変更', tip_how:'遊び方？',
+    pu_swap:'スワップ', pu_swap_desc:'タイル2つを交換',
+    pu_bomb:'爆弾', pu_bomb_desc:'3×3エリアをクリア',
+    pu_smash:'粉砕', pu_smash_desc:'タイルを1つ除去',
+    pu_shuffle:'シャッフル', pu_shuffle_desc:'全タイルを再配置',
+    frozen:'❄ スポーンスキップ',
+    combo8:'🔥 COMBO ×8+', combo5:'⚡ COMBO ×5+', combo3:'✨ COMBO ×3+',
+    tiles_at_once:'一度に{n}タイル',
+    coins_earned:'🪙 +{n}コイン獲得！', reward_doubled:'🪙 報酬2倍！',
+  },
+  zh: {
+    score:'分数', target:'目标', back:'返回', menu_btn:'菜单', pause_btn:'暂停',
+    sound:'音效', theme:'主题', how:'教程',
+    menu_title:'菜单', main_menu:'主菜单', language:'语言', select_language:'选择语言', merge_edition:'合并版', new_game:'新游戏 🚀',
+    how_to_play_btn:'📖 怎么玩？', reset_all:'🗑 重置所有',
+    target_reached:'达成目标！', your_reward:'您的奖励', great:'太棒了！',
+    watch_ad_2x:'▶ 观看广告 → 奖励×2',
+    paused:'已暂停', resume:'▶ 继续', restart:'重新开始',
+    warning:'注意！', warn_msg:'网格快满了。', ok_continue:'好的，继续',
+    stuck:'卡住了！', stuck_msg:'没有可用的移动。使用强化道具：',
+    no_coin:'最后一步！', no_coin_msg:'没有移动和金币了。',
+    watch_ad_coins:'▶ 观看广告 → +80 🪙',
+    game_over:'游戏结束', go_msg:'网格已满，无法移动！',
+    play_again:'再玩一次', watch_ad_continue:'▶ 观看广告 → +100 🪙',
+    level:'关卡', best_tile:'最高方块', total_merges:'总合并数', best_combo:'最佳连击',
+    delete_data:'删除数据', top_scores:'🏆 最高分', top5_desc:'前5名列表',
+    saved_game:'💾 已保存游戏', saved_desc:'从上次继续',
+    delete_selected:'删除所选', cancel:'取消',
+    how_to_play_title:'怎么玩？', understood:'明白了 👍',
+    new_record:'🏆 新纪录！', grid_warn:'⚠ 网格快满了',
+    resume_save:'▶ 继续已保存游戏', ad_label:'广告',
+    tip_swap:'交换 — 交换2个相邻方块', tip_undo:'撤销 — 撤回上一步',
+    tip_smash:'粉碎 — 移除一个方块', tip_shuffle:'洗牌 — 重新排列所有方块',
+    tip_bomb:'炸弹 — 清除3×3区域', tip_freeze:'冻结 — 跳过下一次生成',
+    tip_menu:'主菜单', tip_pause:'暂停', tip_sound:'音效开/关',
+    tip_theme:'更换主题', tip_how:'怎么玩？',
+    pu_swap:'交换', pu_swap_desc:'交换2个方块',
+    pu_bomb:'炸弹', pu_bomb_desc:'清除3×3区域',
+    pu_smash:'粉碎', pu_smash_desc:'移除一个方块',
+    pu_shuffle:'洗牌', pu_shuffle_desc:'重新排列方块',
+    frozen:'❄ 生成已跳过',
+    combo8:'🔥 COMBO ×8+', combo5:'⚡ COMBO ×5+', combo3:'✨ COMBO ×3+',
+    tiles_at_once:'一次{n}个方块',
+    coins_earned:'🪙 获得+{n}金币！', reward_doubled:'🪙 奖励翻倍！',
+  },
+  hi: {
+    score:'अंक', target:'लक्ष्य', back:'वापस', menu_btn:'मेनू', pause_btn:'रुकें',
+    sound:'ध्वनि', theme:'थीम', how:'तरीका',
+    menu_title:'मेनू', main_menu:'मुख्य मेनू', language:'भाषा', select_language:'भाषा चुनें', merge_edition:'मर्ज संस्करण', new_game:'नया खेल 🚀',
+    how_to_play_btn:'📖 कैसे खेलें?', reset_all:'🗑 सब रीसेट करें',
+    target_reached:'लक्ष्य प्राप्त!', your_reward:'आपका इनाम', great:'शानदार!',
+    watch_ad_2x:'▶ विज्ञापन देखें → इनाम ×2',
+    paused:'रुका हुआ', resume:'▶ जारी रखें', restart:'फिर से शुरू',
+    warning:'सावधान!', warn_msg:'ग्रिड भर रही है।', ok_continue:'ठीक है, जारी रखें',
+    stuck:'फंस गए!', stuck_msg:'कोई चाल उपलब्ध नहीं। पावर-अप उपयोग करें:',
+    no_coin:'आखिरी चाल!', no_coin_msg:'कोई चाल और सिक्के नहीं।',
+    watch_ad_coins:'▶ विज्ञापन देखें → +80 🪙',
+    game_over:'खेल खत्म', go_msg:'ग्रिड भरी, कोई चाल नहीं!',
+    play_again:'फिर खेलें', watch_ad_continue:'▶ विज्ञापन देखें → +100 🪙',
+    level:'स्तर', best_tile:'सर्वश्रेष्ठ टाइल', total_merges:'कुल मर्ज', best_combo:'सर्वश्रेष्ठ कॉम्बो',
+    delete_data:'डेटा हटाएं', top_scores:'🏆 शीर्ष अंक', top5_desc:'टॉप-5 सूची',
+    saved_game:'💾 सहेजा गया खेल', saved_desc:'जहाँ छोड़ा वहाँ से जारी रखें',
+    delete_selected:'चुने हुए हटाएं', cancel:'रद्द करें',
+    how_to_play_title:'कैसे खेलें?', understood:'समझ गया 👍',
+    new_record:'🏆 नया रिकॉर्ड!', grid_warn:'⚠ ग्रिड लगभग भरी',
+    resume_save:'▶ सहेजा गया खेल जारी रखें', ad_label:'विज्ञापन',
+    tip_swap:'बदलें — 2 पड़ोसी टाइलें बदलें', tip_undo:'पूर्ववत — आखिरी चाल वापस लें',
+    tip_smash:'तोड़ें — एक टाइल हटाएं', tip_shuffle:'फेरबदल — सभी टाइलें पुनर्व्यवस्थित करें',
+    tip_bomb:'बम — 3×3 क्षेत्र साफ करें', tip_freeze:'फ्रीज — अगला स्पॉन छोड़ें',
+    tip_menu:'मुख्य मेनू', tip_pause:'रुकें', tip_sound:'ध्वनि चालू/बंद',
+    tip_theme:'थीम बदलें', tip_how:'कैसे खेलें?',
+    pu_swap:'बदलें', pu_swap_desc:'2 टाइलें बदलता है',
+    pu_bomb:'बम', pu_bomb_desc:'3×3 साफ करता है',
+    pu_smash:'तोड़ें', pu_smash_desc:'एक टाइल हटाता है',
+    pu_shuffle:'फेरबदल', pu_shuffle_desc:'टाइलें पुनर्व्यवस्थित करता है',
+    frozen:'❄ स्पॉन छोड़ा गया',
+    combo8:'🔥 COMBO ×8+', combo5:'⚡ COMBO ×5+', combo3:'✨ COMBO ×3+',
+    tiles_at_once:'एक साथ {n} टाइलें',
+    coins_earned:'🪙 +{n} सिक्के मिले!', reward_doubled:'🪙 इनाम दोगुना!',
+  },
+  ur: {
+    score:'اسکور', target:'ہدف', back:'واپس', menu_btn:'مینو', pause_btn:'رکیں',
+    sound:'آواز', theme:'تھیم', how:'طریقہ',
+    menu_title:'مینو', main_menu:'مرکزی مینو', language:'زبان', select_language:'زبان منتخب کریں', merge_edition:'مرج ایڈیشن', new_game:'نیا کھیل 🚀',
+    how_to_play_btn:'📖 کیسے کھیلیں؟', reset_all:'🗑 سب ری سیٹ کریں',
+    target_reached:'ہدف حاصل ہوگیا!', your_reward:'آپ کا انعام', great:'شاندار!',
+    watch_ad_2x:'▶ اشتہار دیکھیں → انعام ×2',
+    paused:'رکا ہوا', resume:'▶ جاری رکھیں', restart:'دوبارہ شروع',
+    warning:'خبردار!', warn_msg:'گرڈ بھر رہی ہے۔', ok_continue:'ٹھیک ہے، جاری رکھیں',
+    stuck:'پھنس گئے!', stuck_msg:'کوئی چال دستیاب نہیں۔ پاور-اپ استعمال کریں:',
+    no_coin:'آخری چال!', no_coin_msg:'کوئی چال اور سکے نہیں۔',
+    watch_ad_coins:'▶ اشتہار دیکھیں → +80 🪙',
+    game_over:'کھیل ختم', go_msg:'گرڈ بھری، کوئی چال نہیں!',
+    play_again:'دوبارہ کھیلیں', watch_ad_continue:'▶ اشتہار دیکھیں → +100 🪙',
+    level:'سطح', best_tile:'بہترین ٹائل', total_merges:'کل مرج', best_combo:'بہترین کومبو',
+    delete_data:'ڈیٹا حذف کریں', top_scores:'🏆 بہترین اسکور', top5_desc:'ٹاپ-5 فہرست',
+    saved_game:'💾 محفوظ کھیل', saved_desc:'جہاں چھوڑا وہاں سے جاری رکھیں',
+    delete_selected:'منتخب حذف کریں', cancel:'منسوخ کریں',
+    how_to_play_title:'کیسے کھیلیں؟', understood:'سمجھ گئے 👍',
+    new_record:'🏆 نیا ریکارڈ!', grid_warn:'⚠ گرڈ تقریباً بھری',
+    resume_save:'▶ محفوظ کھیل جاری رکھیں', ad_label:'اشتہار',
+    tip_swap:'بدلیں — 2 پڑوسی ٹائلیں بدلیں', tip_undo:'واپس — آخری چال واپس لیں',
+    tip_smash:'توڑیں — ایک ٹائل ہٹائیں', tip_shuffle:'ردوبدل — تمام ٹائلیں ترتیب دیں',
+    tip_bomb:'بم — 3×3 علاقہ صاف کریں', tip_freeze:'منجمد — اگلا اسپاون چھوڑیں',
+    tip_menu:'مرکزی مینو', tip_pause:'رکیں', tip_sound:'آواز آن/آف',
+    tip_theme:'تھیم بدلیں', tip_how:'کیسے کھیلیں؟',
+    pu_swap:'بدلیں', pu_swap_desc:'2 ٹائلیں بدلتا ہے',
+    pu_bomb:'بم', pu_bomb_desc:'3×3 صاف کرتا ہے',
+    pu_smash:'توڑیں', pu_smash_desc:'ایک ٹائل ہٹاتا ہے',
+    pu_shuffle:'ردوبدل', pu_shuffle_desc:'ٹائلیں ترتیب دیتا ہے',
+    frozen:'❄ اسپاون چھوڑا گیا',
+    combo8:'🔥 COMBO ×8+', combo5:'⚡ COMBO ×5+', combo3:'✨ COMBO ×3+',
+    tiles_at_once:'ایک ساتھ {n} ٹائلیں',
+    coins_earned:'🪙 +{n} سکے ملے!', reward_doubled:'🪙 انعام دوگنا!',
+  },
+  pt: {
+    score:'PONTOS', target:'META', back:'VOLTAR', menu_btn:'MENU', pause_btn:'PAUSAR',
+    sound:'SOM', theme:'TEMA', how:'AJUDA',
+    menu_title:'MENU', main_menu:'Menu principal', language:'Idioma', select_language:'SELECIONAR IDIOMA', merge_edition:'EDIÇÃO MERGE', new_game:'NOVO JOGO 🚀',
+    how_to_play_btn:'📖 Como jogar?', reset_all:'🗑 Resetar tudo',
+    target_reached:'META ALCANÇADA!', your_reward:'SUA RECOMPENSA', great:'INCRÍVEL!',
+    watch_ad_2x:'▶ Ver anúncio → Recompensa ×2',
+    paused:'PAUSADO', resume:'▶ Continuar', restart:'Recomeçar',
+    warning:'ATENÇÃO!', warn_msg:'A grade está enchendo.', ok_continue:'OK, Continuar',
+    stuck:'TRAVADO!', stuck_msg:'Sem movimentos possíveis. Use um power-up:',
+    no_coin:'ÚLTIMO MOVIMENTO!', no_coin_msg:'Sem movimentos e sem moedas.',
+    watch_ad_coins:'▶ Ver anúncio → +80 🪙',
+    game_over:'FIM DE JOGO', go_msg:'Grade cheia, sem movimentos!',
+    play_again:'Jogar novamente', watch_ad_continue:'▶ Ver anúncio → +100 🪙',
+    level:'Nível', best_tile:'Melhor peça', total_merges:'Total de fusões', best_combo:'Melhor combo',
+    delete_data:'APAGAR DADOS', top_scores:'🏆 Melhores pontos', top5_desc:'Lista top-5',
+    saved_game:'💾 Jogo salvo', saved_desc:'Continuar de onde parou',
+    delete_selected:'Apagar selecionados', cancel:'Cancelar',
+    how_to_play_title:'COMO JOGAR?', understood:'ENTENDI 👍',
+    new_record:'🏆 Novo recorde!', grid_warn:'⚠ Grade quase cheia',
+    resume_save:'▶ Continuar jogo salvo', ad_label:'ANÚNCIO',
+    tip_swap:'Trocar — troca 2 peças adjacentes', tip_undo:'Desfazer — reverte último movimento',
+    tip_smash:'Destruir — remove uma peça', tip_shuffle:'Embaralhar — reorganiza todas as peças',
+    tip_bomb:'Bomba — limpa área 3×3', tip_freeze:'Congelar — pula próximo spawn',
+    tip_menu:'Menu principal', tip_pause:'Pausar', tip_sound:'Som ligar/desligar',
+    tip_theme:'Mudar tema', tip_how:'Como jogar?',
+    pu_swap:'Trocar', pu_swap_desc:'Troca 2 peças',
+    pu_bomb:'Bomba', pu_bomb_desc:'Limpa área 3×3',
+    pu_smash:'Destruir', pu_smash_desc:'Remove uma peça',
+    pu_shuffle:'Embaralhar', pu_shuffle_desc:'Reorganiza as peças',
+    frozen:'❄ SPAWN PULADO',
+    combo8:'🔥 COMBO ×8+', combo5:'⚡ COMBO ×5+', combo3:'✨ COMBO ×3+',
+    tiles_at_once:'{n} peças de uma vez',
+    coins_earned:'🪙 +{n} moedas ganhas!', reward_doubled:'🪙 Recompensa dobrada!',
+  },
+  id: {
+    score:'SKOR', target:'TARGET', back:'KEMBALI', menu_btn:'MENU', pause_btn:'JEDA',
+    sound:'SUARA', theme:'TEMA', how:'CARA',
+    menu_title:'MENU', main_menu:'Menu utama', language:'Bahasa', select_language:'PILIH BAHASA', merge_edition:'EDISI GABUNG', new_game:'GAME BARU 🚀',
+    how_to_play_btn:'📖 Cara bermain?', reset_all:'🗑 Reset semua',
+    target_reached:'TARGET TERCAPAI!', your_reward:'HADIAHMU', great:'LUAR BIASA!',
+    watch_ad_2x:'▶ Tonton iklan → Hadiah ×2',
+    paused:'DIJEDA', resume:'▶ Lanjutkan', restart:'Mulai ulang',
+    warning:'PERHATIAN!', warn_msg:'Kisi-kisi hampir penuh.', ok_continue:'OK, Lanjutkan',
+    stuck:'TERJEBAK!', stuck_msg:'Tidak ada gerakan tersedia. Gunakan power-up:',
+    no_coin:'GERAKAN TERAKHIR!', no_coin_msg:'Tidak ada gerakan dan koin.',
+    watch_ad_coins:'▶ Tonton iklan → +80 🪙',
+    game_over:'GAME OVER', go_msg:'Kisi-kisi penuh, tidak ada gerakan!',
+    play_again:'Main lagi', watch_ad_continue:'▶ Tonton iklan → +100 🪙',
+    level:'Level', best_tile:'Ubin terbaik', total_merges:'Total gabungan', best_combo:'Combo terbaik',
+    delete_data:'HAPUS DATA', top_scores:'🏆 Skor tertinggi', top5_desc:'Daftar top-5',
+    saved_game:'💾 Game tersimpan', saved_desc:'Lanjutkan dari terakhir',
+    delete_selected:'Hapus yang dipilih', cancel:'Batal',
+    how_to_play_title:'CARA BERMAIN?', understood:'MENGERTI 👍',
+    new_record:'🏆 Rekor baru!', grid_warn:'⚠ Kisi-kisi hampir penuh',
+    resume_save:'▶ Lanjutkan game tersimpan', ad_label:'IKLAN',
+    tip_swap:'Tukar — tukar 2 ubin berdekatan', tip_undo:'Urungkan — kembalikan gerakan terakhir',
+    tip_smash:'Hancurkan — hapus satu ubin', tip_shuffle:'Acak — atur ulang semua ubin',
+    tip_bomb:'Bom — bersihkan area 3×3', tip_freeze:'Bekukan — lewati spawn berikutnya',
+    tip_menu:'Menu utama', tip_pause:'Jeda', tip_sound:'Suara nyala/mati',
+    tip_theme:'Ganti tema', tip_how:'Cara bermain?',
+    pu_swap:'Tukar', pu_swap_desc:'Menukar 2 ubin',
+    pu_bomb:'Bom', pu_bomb_desc:'Membersihkan 3×3',
+    pu_smash:'Hancurkan', pu_smash_desc:'Menghapus satu ubin',
+    pu_shuffle:'Acak', pu_shuffle_desc:'Mengatur ulang ubin',
+    frozen:'❄ SPAWN DILEWATI',
+    combo8:'🔥 COMBO ×8+', combo5:'⚡ COMBO ×5+', combo3:'✨ COMBO ×3+',
+    tiles_at_once:'{n} ubin sekaligus',
+    coins_earned:'🪙 +{n} koin didapat!', reward_doubled:'🪙 Hadiah digandakan!',
+  },
+  bn: {
+    score:'স্কোর', target:'লক্ষ্য', back:'পিছনে', menu_btn:'মেনু', pause_btn:'বিরতি',
+    sound:'শব্দ', theme:'থিম', how:'পদ্ধতি',
+    menu_title:'মেনু', main_menu:'প্রধান মেনু', language:'ভাষা', select_language:'ভাষা নির্বাচন করুন', merge_edition:'মার্জ সংস্করণ', new_game:'নতুন গেম 🚀',
+    how_to_play_btn:'📖 কীভাবে খেলবেন?', reset_all:'🗑 সব রিসেট করুন',
+    target_reached:'লক্ষ্য অর্জিত!', your_reward:'আপনার পুরস্কার', great:'অসাধারণ!',
+    watch_ad_2x:'▶ বিজ্ঞাপন দেখুন → পুরস্কার ×2',
+    paused:'বিরতিতে', resume:'▶ চালিয়ে যান', restart:'আবার শুরু করুন',
+    warning:'সতর্কতা!', warn_msg:'গ্রিড ভরে যাচ্ছে।', ok_continue:'ঠিক আছে, চালিয়ে যান',
+    stuck:'আটকে গেছি!', stuck_msg:'কোনো চাল নেই। পাওয়ার-আপ ব্যবহার করুন:',
+    no_coin:'শেষ চাল!', no_coin_msg:'কোনো চাল ও কয়েন নেই।',
+    watch_ad_coins:'▶ বিজ্ঞাপন দেখুন → +80 🪙',
+    game_over:'গেম শেষ', go_msg:'গ্রিড পূর্ণ, কোনো চাল নেই!',
+    play_again:'আবার খেলুন', watch_ad_continue:'▶ বিজ্ঞাপন দেখুন → +100 🪙',
+    level:'স্তর', best_tile:'সেরা টাইল', total_merges:'মোট মার্জ', best_combo:'সেরা কম্বো',
+    delete_data:'ডেটা মুছুন', top_scores:'🏆 সেরা স্কোর', top5_desc:'শীর্ষ-5 তালিকা',
+    saved_game:'💾 সংরক্ষিত গেম', saved_desc:'যেখানে ছেড়েছিলেন সেখান থেকে চালিয়ে যান',
+    delete_selected:'নির্বাচিত মুছুন', cancel:'বাতিল করুন',
+    how_to_play_title:'কীভাবে খেলবেন?', understood:'বুঝেছি 👍',
+    new_record:'🏆 নতুন রেকর্ড!', grid_warn:'⚠ গ্রিড প্রায় পূর্ণ',
+    resume_save:'▶ সংরক্ষিত গেম চালিয়ে যান', ad_label:'বিজ্ঞাপন',
+    tip_swap:'বদলান — 2টি সংলগ্ন টাইল বদলান', tip_undo:'পূর্বাবস্থা — শেষ চাল ফেরান',
+    tip_smash:'ভাঙুন — একটি টাইল সরান', tip_shuffle:'এলোমেলো — সব টাইল পুনর্বিন্যাস করুন',
+    tip_bomb:'বোমা — 3×3 এলাকা পরিষ্কার করুন', tip_freeze:'হিমায়িত — পরবর্তী স্পন এড়িয়ে যান',
+    tip_menu:'মূল মেনু', tip_pause:'বিরতি', tip_sound:'শব্দ চালু/বন্ধ',
+    tip_theme:'থিম পরিবর্তন', tip_how:'কীভাবে খেলবেন?',
+    pu_swap:'বদলান', pu_swap_desc:'2টি টাইল বদলায়',
+    pu_bomb:'বোমা', pu_bomb_desc:'3×3 পরিষ্কার করে',
+    pu_smash:'ভাঙুন', pu_smash_desc:'একটি টাইল সরায়',
+    pu_shuffle:'এলোমেলো', pu_shuffle_desc:'টাইল পুনর্বিন্যাস করে',
+    frozen:'❄ স্পন এড়ানো হয়েছে',
+    combo8:'🔥 COMBO ×8+', combo5:'⚡ COMBO ×5+', combo3:'✨ COMBO ×3+',
+    tiles_at_once:'একসাথে {n}টি টাইল',
+    coins_earned:'🪙 +{n} কয়েন পাওয়া গেছে!', reward_doubled:'🪙 পুরস্কার দ্বিগুণ!',
+  },
+  th: {
+    score:'คะแนน', target:'เป้าหมาย', back:'กลับ', menu_btn:'เมนู', pause_btn:'หยุด',
+    sound:'เสียง', theme:'ธีม', how:'วิธี',
+    menu_title:'เมนู', main_menu:'เมนูหลัก', language:'ภาษา', select_language:'เลือกภาษา', merge_edition:'เวอร์ชันรวม', new_game:'เกมใหม่ 🚀',
+    how_to_play_btn:'📖 วิธีเล่น?', reset_all:'🗑 รีเซ็ตทั้งหมด',
+    target_reached:'ถึงเป้าหมายแล้ว!', your_reward:'รางวัลของคุณ', great:'เยี่ยมมาก!',
+    watch_ad_2x:'▶ ดูโฆษณา → รางวัล ×2',
+    paused:'หยุดชั่วคราว', resume:'▶ เล่นต่อ', restart:'เริ่มใหม่',
+    warning:'ระวัง!', warn_msg:'กริดกำลังจะเต็ม', ok_continue:'ตกลง ดำเนินต่อ',
+    stuck:'ติดขัด!', stuck_msg:'ไม่มีการเคลื่อนที่ที่เป็นไปได้ ใช้พาวเวอร์อัพ:',
+    no_coin:'การเคลื่อนที่สุดท้าย!', no_coin_msg:'ไม่มีการเคลื่อนที่และเหรียญ',
+    watch_ad_coins:'▶ ดูโฆษณา → +80 🪙',
+    game_over:'เกมจบ', go_msg:'กริดเต็ม ไม่มีการเคลื่อนที่!',
+    play_again:'เล่นอีกครั้ง', watch_ad_continue:'▶ ดูโฆษณา → +100 🪙',
+    level:'ระดับ', best_tile:'ไทล์ที่ดีที่สุด', total_merges:'รวมการรวม', best_combo:'คอมโบที่ดีที่สุด',
+    delete_data:'ลบข้อมูล', top_scores:'🏆 คะแนนสูงสุด', top5_desc:'รายการ 5 อันดับ',
+    saved_game:'💾 เกมที่บันทึกไว้', saved_desc:'เล่นต่อจากที่หยุด',
+    delete_selected:'ลบที่เลือก', cancel:'ยกเลิก',
+    how_to_play_title:'วิธีเล่น?', understood:'เข้าใจแล้ว 👍',
+    new_record:'🏆 สถิติใหม่!', grid_warn:'⚠ กริดเกือบเต็ม',
+    resume_save:'▶ เล่นต่อจากที่บันทึก', ad_label:'โฆษณา',
+    tip_swap:'สลับ — สลับ 2 ไทล์ที่อยู่ติดกัน', tip_undo:'เลิกทำ — ยกเลิกการเคลื่อนที่ล่าสุด',
+    tip_smash:'ทุบ — ลบไทล์หนึ่งอัน', tip_shuffle:'สับ — จัดเรียงไทล์ใหม่ทั้งหมด',
+    tip_bomb:'ระเบิด — ล้างพื้นที่ 3×3', tip_freeze:'แช่แข็ง — ข้ามการเกิดถัดไป',
+    tip_menu:'เมนูหลัก', tip_pause:'หยุดชั่วคราว', tip_sound:'เสียงเปิด/ปิด',
+    tip_theme:'เปลี่ยนธีม', tip_how:'วิธีเล่น?',
+    pu_swap:'สลับ', pu_swap_desc:'สลับ 2 ไทล์',
+    pu_bomb:'ระเบิด', pu_bomb_desc:'ล้างพื้นที่ 3×3',
+    pu_smash:'ทุบ', pu_smash_desc:'ลบไทล์หนึ่งอัน',
+    pu_shuffle:'สับ', pu_shuffle_desc:'จัดเรียงไทล์ใหม่',
+    frozen:'❄ ข้ามการเกิด',
+    combo8:'🔥 COMBO ×8+', combo5:'⚡ COMBO ×5+', combo3:'✨ COMBO ×3+',
+    tiles_at_once:'{n} ไทล์พร้อมกัน',
+    coins_earned:'🪙 ได้รับ +{n} เหรียญ!', reward_doubled:'🪙 รางวัลเพิ่มเป็นสองเท่า!',
+  },
+};
+
+// Dil tespiti
+function detectLang() {
+  const saved = localStorage.getItem('axydrop_lang');
+  if (saved && STRINGS[saved]) return saved;
+  const nav = (navigator.language || navigator.userLanguage || 'en').toLowerCase().split('-')[0];
+  const map = { tr:'tr', en:'en', es:'es', fr:'fr', de:'de', it:'it', ru:'ru', ar:'ar', ko:'ko', ja:'ja', zh:'zh', hi:'hi', ur:'ur', pt:'pt', id:'id', bn:'bn', th:'th' };
+  return map[nav] || 'en';
+}
+
+let LANG = detectLang();
+
+// Çeviri fonksiyonu
+function t(key, vars) {
+  const s = (STRINGS[LANG] || STRINGS.en);
+  let str = s[key] || STRINGS.en[key] || key;
+  if (vars) Object.keys(vars).forEach(k => { str = str.replace('{'+k+'}', vars[k]); });
+  return str;
+}
+
+// DOM'a çevirileri uygula
+function applyTranslations() {
+  // RTL — Arapça
+  document.documentElement.dir = (LANG === 'ar' || LANG === 'ur') ? 'rtl' : 'ltr';
+
+  // data-i18n elementleri
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    el.textContent = t(el.dataset.i18n);
+  });
+
+  // data-i18n-tip (tooltip)
+  document.querySelectorAll('[data-i18n-tip]').forEach(el => {
+    el.setAttribute('data-tip', t(el.dataset.i18nTip));
+  });
+
+  // Power-up buton ipuçları güncelle
+  const puIds = {
+    'pu-hint': 'tip_swap', 'pu-undo': 'tip_undo', 'pu-smash': 'tip_smash',
+    'pu-shuffle': 'tip_shuffle', 'pu-bomb': 'tip_bomb', 'pu-freeze': 'tip_freeze',
+  };
+  Object.entries(puIds).forEach(([id, key]) => {
+    const el = document.getElementById(id);
+    if (el) el.setAttribute('data-tip', t(key));
+  });
+
+  // Ctrl buton ipuçları
+  const ctrlIds = {
+    'btn-undo-game':'tip_menu','btn-pause':'tip_pause',
+    'btn-sound':'tip_sound','btn-theme-cm':'tip_theme','btn-howto-ig':'tip_how',
+  };
+  Object.entries(ctrlIds).forEach(([id, key]) => {
+    const el = document.getElementById(id);
+    if (el) el.setAttribute('data-tip', t(key));
+  });
+
+  // How-to-play içeriği
+  const howtoEl = document.getElementById('howto-content');
+  if (howtoEl) {
+    const HTP = {
+      tr: {
+        i1:'🔷 Aynı değerli komşu bloklara <b>basılı tut</b> — eşleşenler parlar.',
+        i2:'🔷 Bırakınca tüm eşleşen bloklar <b>birleşir</b>, yeni değer ortada kalır.',
+        i3:'🔷 Ne kadar çok taş birleşirse o kadar <b>yüksek combo</b> çarpanı!',
+        formula:'🔢 BİRLEŞME FORMÜLÜ', formula_eq:'Yeni Değer = <b>Mevcut Değer × 2^⌈N/2⌉</b>',
+        n_desc:'N = birleşen taş sayısı', n_vals:'3 taş → ×2 &nbsp;|&nbsp; 5 taş → ×4 &nbsp;|&nbsp; 8 taş → ×16',
+        coin_title:'🪙 COİN KAZANIMI', coin_vals:'3 taş → +1 🪙 &nbsp;|&nbsp; 6 taş → +2 🪙 &nbsp;|&nbsp; 9+ taş → +3 🪙',
+        coin_bonus:'Bölüm tamamla → bonus coin!',
+        pu1:'🔄 <b>Değiştir</b> — 2 taşın yerini değiştirir', pu2:'↩️ <b>Geri Al</b> — son hamleyi geri alır',
+        pu3:'🔨 <b>Yok Et</b> — bir bloğu patlatır', pu4:'💣 <b>Bomba</b> — 3×3 alanı temizler',
+        pu5:'❄️ <b>Dondur</b> — bir sonraki spawnu atlar', pu6:'🔀 <b>Karıştır</b> — grid\'i yeniden düzenler',
+        goal:'🎯 Hedef değerine ulaş, <b>coin kazan</b>, devam et!',
+      },
+      en: {
+        i1:'🔷 <b>Hold</b> on matching adjacent tiles — they will glow.',
+        i2:'🔷 Release to <b>merge</b> all matching tiles into one.',
+        i3:'🔷 More tiles merged = higher <b>combo</b> multiplier!',
+        formula:'🔢 MERGE FORMULA', formula_eq:'New Value = <b>Current × 2^⌈N/2⌉</b>',
+        n_desc:'N = number of merged tiles', n_vals:'3 tiles → ×2 &nbsp;|&nbsp; 5 → ×4 &nbsp;|&nbsp; 8 → ×16',
+        coin_title:'🪙 COIN REWARDS', coin_vals:'3 tiles → +1 🪙 &nbsp;|&nbsp; 6 → +2 🪙 &nbsp;|&nbsp; 9+ → +3 🪙',
+        coin_bonus:'Complete a level → bonus coins!',
+        pu1:'🔄 <b>Swap</b> — swap 2 adjacent tiles', pu2:'↩️ <b>Undo</b> — revert last move',
+        pu3:'🔨 <b>Smash</b> — destroy one tile', pu4:'💣 <b>Bomb</b> — clear 3×3 area',
+        pu5:'❄️ <b>Freeze</b> — skip next spawn', pu6:'🔀 <b>Shuffle</b> — rearrange all tiles',
+        goal:'🎯 Reach the target, <b>earn coins</b>, keep going!',
+      },
+      es: {
+        i1:'🔷 <b>Mantén presionado</b> en fichas iguales adyacentes — brillarán.',
+        i2:'🔷 Suelta para <b>fusionar</b> todas las fichas iguales.',
+        i3:'🔷 Más fichas fusionadas = mayor <b>multiplicador combo</b>!',
+        formula:'🔢 FÓRMULA DE FUSIÓN', formula_eq:'Valor nuevo = <b>Actual × 2^⌈N/2⌉</b>',
+        n_desc:'N = número de fichas fusionadas', n_vals:'3 → ×2 &nbsp;|&nbsp; 5 → ×4 &nbsp;|&nbsp; 8 → ×16',
+        coin_title:'🪙 MONEDAS', coin_vals:'3 fichas → +1 🪙 &nbsp;|&nbsp; 6 → +2 🪙 &nbsp;|&nbsp; 9+ → +3 🪙',
+        coin_bonus:'¡Completa un nivel → monedas bonus!',
+        pu1:'🔄 <b>Intercambiar</b> — cambia 2 fichas', pu2:'↩️ <b>Deshacer</b> — revierte último movimiento',
+        pu3:'🔨 <b>Destruir</b> — elimina una ficha', pu4:'💣 <b>Bomba</b> — limpia área 3×3',
+        pu5:'❄️ <b>Congelar</b> — omite spawn', pu6:'🔀 <b>Mezclar</b> — reorganiza las fichas',
+        goal:'🎯 Alcanza el objetivo, <b>gana monedas</b>, ¡sigue!',
+      },
+    };
+
+    // Diğer diller için İngilizce kullan
+    const h = HTP[LANG] || HTP.en;
+    howtoEl.innerHTML = `
+      <div>${h.i1}</div><div>${h.i2}</div><div>${h.i3}</div>
+      <div style="margin-top:10px;padding:8px 10px;background:rgba(0,180,255,.08);border:1px solid rgba(0,180,255,.2);border-radius:8px;">
+        <div style="font-family:'Orbitron',sans-serif;font-size:10px;color:#00b4ff;letter-spacing:.1em;margin-bottom:4px;">${h.formula}</div>
+        <div style="font-size:12px;color:rgba(180,210,255,.9);">${h.formula_eq}</div>
+        <div style="font-size:11px;color:rgba(180,210,255,.6);margin-top:3px;">${h.n_desc}</div>
+        <div style="font-size:11px;color:rgba(180,210,255,.6);">${h.n_vals}</div>
+      </div>
+      <div style="margin-top:10px;padding:8px 10px;background:rgba(52,211,153,.06);border:1px solid rgba(52,211,153,.15);border-radius:8px;">
+        <div style="font-family:'Orbitron',sans-serif;font-size:10px;color:#34d399;letter-spacing:.1em;margin-bottom:4px;">${h.coin_title}</div>
+        <div style="font-size:11px;color:rgba(180,210,255,.7);">${h.coin_vals}</div>
+        <div style="font-size:11px;color:rgba(180,210,255,.6);">${h.coin_bonus}</div>
+      </div>
+      <div style="margin-top:8px;">${h.pu1}</div><div>${h.pu2}</div>
+      <div>${h.pu3}</div><div>${h.pu4}</div><div>${h.pu5}</div><div>${h.pu6}</div>
+      <div style="margin-top:8px;">${h.goal}</div>
+    `;
+  }
+
+  // Menü overlay buton metinleri
+  const menuResume = document.getElementById('btn-menu-resume');
+  const menuMain   = document.getElementById('btn-menu-mainmenu');
+  const menuClose  = document.getElementById('btn-menu-close');
+  if (menuResume) menuResume.textContent = t('resume');
+  if (menuMain)   menuMain.textContent   = t('main_menu');
+  if (menuClose)  menuClose.textContent  = t('cancel');
+}
+
+// JS içindeki dinamik metinleri çevir
+// (spawnFloat, showDangerWarn, rank-toast vb. JS'te oluşturulan metinler)
+function applyDynamicTranslations() {
+  // showDangerWarn içindeki pu isimleri ve desc'ler zaten JS'te kullanılıyor
+  // Bunları t() ile sarıyoruz — showDangerWarn fonksiyonunu override edelim
+}
+
+// Sayfa yüklenince uygula
+document.addEventListener('DOMContentLoaded', applyTranslations);
+// Eğer DOMContentLoaded geçtiyse hemen uygula
+if (document.readyState !== 'loading') applyTranslations();
 
 // ── TEMA DEĞİŞTİRME (Crystal Merge) ──
 function toggleThemeCM() {
