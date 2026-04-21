@@ -1,0 +1,318 @@
+{
+  "id": "m0",
+  "label": "Başlangıç",
+  "icon": "🚀",
+  "color": "#7eb8f7",
+  "lessons": [
+    {
+      "id": "print",
+      "icon": "🖨️",
+      "locked": false,
+      "title": "print() Fonksiyonu",
+      "desc": "Ekrana bir şeyler yazdırmak — Python'ın sana seslenmesi.",
+      "lesson": "<div class=\"lesson-text\">\n\n    <div class=\"section-h\"><div class=\"bar\" style=\"background:var(--purple)\"></div><h3>print() nedir? — Bilgisayarın sana konuşması</h3></div>\n    <p>Düşün ki bir hesap makinesi yaptın. Sonucu hesapladı ama ekranda hiçbir şey çıkmıyor. Kafayı yersin, değil mi? İşte <code>print()</code> tam bu yüzden var — yazdığın kodun <strong>sonucunu ekrana çıkarır</strong>, yoksa Python sessizce çalışır, kimse bir şey görmez.</p>\n    <div class=\"box tip\"><span class=\"box-icon\">💡</span><span><strong>En basit haliyle:</strong> <code>print(\"Merhaba Dünya\")</code> — parantez aç, tırnak içine ne yazmak istiyorsan yaz, parantez kapat. Çalıştır. Bitti.</span></div>\n    <div class=\"code-block runnable\"><div class=\"cb-header\"><div class=\"cb-dots\"></div><span class=\"cb-label\">ilk_adim.py</span><span class=\"cb-run-tag\">▶</span></div><div class=\"cb-body\"><span class=\"fn\">print</span>(<span class=\"st\">\"Merhaba Dünya\"</span>)<br>\n<span class=\"fn\">print</span>(<span class=\"st\">\"Ben Python'um!\"</span>)<br>\n<span class=\"fn\">print</span>(<span class=\"nm\">42</span>)          <span class=\"cm\"># Sayılar da çalışır</span><br>\n<span class=\"fn\">print</span>(<span class=\"nm\">3.14</span>)        <span class=\"cm\"># Ondalıklı da</span><br>\n<span class=\"fn\">print</span>(<span class=\"kw\">True</span>)        <span class=\"cm\"># Hatta evet/hayır bile</span></div><textarea class=\"cb-src\" style=\"display:none\">print(\"Merhaba Dunya\")\nprint(\"Ben Python'um!\")\nprint(42)\nprint(3.14)\nprint(True)</textarea></div>\n    <div class=\"box why\"><span class=\"box-icon\">🤔</span><span><strong>Neden fonksiyon oldu?</strong> Python 2'de <code>print \"merhaba\"</code> diye yazılıyordu. Python 3'te parantezli fonksiyon yapıldı. Böylece <code>sep</code>, <code>end</code> gibi ekstra seçenekler verilebiliyor. Fonksiyon olmasa bu mümkün olmazdı.</span></div>\n\n    <div class=\"section-h\"><div class=\"bar\" style=\"background:var(--blue)\"></div><h3>Birden fazla şey yazdırmak — sep parametresi</h3></div>\n    <p>Virgülle birden fazla şey verince Python hepsini yan yana yazar — arasına otomatik <strong>boşluk</strong> koyar. Ama bu boşluğu değiştirmek istersen <code>sep</code> parametresini kullanırsın. <em>sep</em> = separator = ayırıcı demek.</p>\n    <p>Günlük hayat örneği: İsim ve soyisim yazdırıyorsun. Aralarına tire mi, boşluk mu, virgül mi istiyorsun? Sen seçiyorsun:</p>\n    <div class=\"code-block runnable\"><div class=\"cb-header\"><div class=\"cb-dots\"></div><span class=\"cb-label\">sep_ornekleri.py</span><span class=\"cb-run-tag\">▶</span></div><div class=\"cb-body\"><span class=\"fn\">print</span>(<span class=\"st\">\"Ahmet\"</span>, <span class=\"st\">\"Yılmaz\"</span>)                   <span class=\"cm\"># Ahmet Yılmaz</span><br>\n<span class=\"fn\">print</span>(<span class=\"st\">\"Ahmet\"</span>, <span class=\"st\">\"Yılmaz\"</span>, sep=<span class=\"st\">\"-\"</span>)          <span class=\"cm\"># Ahmet-Yılmaz</span><br>\n<span class=\"fn\">print</span>(<span class=\"st\">\"Ahmet\"</span>, <span class=\"st\">\"Yılmaz\"</span>, sep=<span class=\"st\">\", \"</span>)         <span class=\"cm\"># Ahmet, Yılmaz</span><br>\n<span class=\"fn\">print</span>(<span class=\"st\">\"Ahmet\"</span>, <span class=\"st\">\"Yılmaz\"</span>, sep=<span class=\"st\">\"\"</span>)           <span class=\"cm\"># AhmetYılmaz</span><br><br>\n<span class=\"cm\"># Klasör yolu gibi yazdır: usr/local/bin</span><br>\n<span class=\"fn\">print</span>(<span class=\"st\">\"usr\"</span>, <span class=\"st\">\"local\"</span>, <span class=\"st\">\"bin\"</span>, sep=<span class=\"st\">\"/\"</span>)     <span class=\"cm\"># usr/local/bin</span><br><br>\n<span class=\"cm\"># Tarih formatı: 2024.04.21</span><br>\n<span class=\"fn\">print</span>(<span class=\"nm\">2024</span>, <span class=\"nm\">4</span>, <span class=\"nm\">21</span>, sep=<span class=\"st\">\".\"</span>)              <span class=\"cm\"># 2024.4.21</span></div><textarea class=\"cb-src\" style=\"display:none\">print(\"Ahmet\", \"Yilmaz\")\nprint(\"Ahmet\", \"Yilmaz\", sep=\"-\")\nprint(\"Ahmet\", \"Yilmaz\", sep=\", \")\nprint(\"Ahmet\", \"Yilmaz\", sep=\"\")\nprint(\"usr\", \"local\", \"bin\", sep=\"/\")\nprint(2024, 4, 21, sep=\".\")</textarea></div>\n    <div class=\"box tip\"><span class=\"box-icon\">💡</span><span><code>sep=\"\"</code> (boş string) verince araya hiçbir şey konmaz. Kelimeler bitişik çıkar.</span></div>\n\n    <div class=\"section-h\"><div class=\"bar\" style=\"background:var(--blue)\"></div><h3>Her print neden yeni satıra geçiyor? — end parametresi</h3></div>\n    <p>Her <code>print()</code> yazdıktan sonra <strong>otomatik olarak bir alt satıra geçer</strong>. Neden? Çünkü gizlice <code>end=\"\\n\"</code> parametresi çalışır. <code>\\n</code> \"yeni satır\" demek. Bunu değiştirebilirsin:</p>\n    <div class=\"code-block runnable\"><div class=\"cb-header\"><div class=\"cb-dots\"></div><span class=\"cb-label\">end_ornekleri.py</span><span class=\"cb-run-tag\">▶</span></div><div class=\"cb-body\"><span class=\"cm\"># Normalde her print ayrı satır:</span><br>\n<span class=\"fn\">print</span>(<span class=\"st\">\"Birinci\"</span>)<br>\n<span class=\"fn\">print</span>(<span class=\"st\">\"İkinci\"</span>)<br><br>\n<span class=\"cm\"># end=\"\" ile aynı satırda devam:</span><br>\n<span class=\"fn\">print</span>(<span class=\"st\">\"Yükleniyor\"</span>, end=<span class=\"st\">\"\"</span>)<br>\n<span class=\"fn\">print</span>(<span class=\"st\">\".\"</span>, end=<span class=\"st\">\"\"</span>)<br>\n<span class=\"fn\">print</span>(<span class=\"st\">\".\"</span>, end=<span class=\"st\">\"\"</span>)<br>\n<span class=\"fn\">print</span>(<span class=\"st\">\".\"</span>)   <span class=\"cm\"># → Yükleniyor...</span><br><br>\n<span class=\"cm\"># 1'den 5'e yan yana yaz:</span><br>\n<span class=\"kw\">for</span> i <span class=\"kw\">in</span> <span class=\"fn\">range</span>(<span class=\"nm\">1</span>, <span class=\"nm\">6</span>):<br>\n&nbsp;&nbsp;&nbsp;&nbsp;<span class=\"fn\">print</span>(i, end=<span class=\"st\">\"  \"</span>)   <span class=\"cm\"># → 1  2  3  4  5</span></div><textarea class=\"cb-src\" style=\"display:none\">print(\"Birinci\")\nprint(\"Ikinci\")\nprint(\"---\")\nprint(\"Yukleniyor\", end=\"\")\nprint(\".\", end=\"\")\nprint(\".\", end=\"\")\nprint(\".\")\nprint(\"---\")\nfor i in range(1, 6):\n    print(i, end=\"  \")\nprint()</textarea></div>\n    <div class=\"box tip\"><span class=\"box-icon\">💡</span><span><code>end=\" \"</code> gibi herhangi bir şey yazabilirsin. Boşluk, virgül, emoji bile koyabilirsin!</span></div>\n\n    <div class=\"section-h\"><div class=\"bar\" style=\"background:var(--blue)\"></div><h3>Kaçış karakterleri — Yazılamayan karakterler nasıl yazılır?</h3></div>\n    <p>String içinde bazı şeyleri doğrudan yazamazsın — mesela yeni satır. Klavyede Enter'a bassak string biter! Bunun için <strong>ters eğik çizgi (\\)</strong> ile başlayan özel kodlar var:</p>\n    <table class=\"cmp-table\">\n      <tr><th>Kod</th><th>Ne yapar?</th><th>Örnek çıktı</th></tr>\n      <tr><td><code>\\n</code></td><td>Yeni satıra geç</td><td class=\"ok\">Satır 1↵Satır 2</td></tr>\n      <tr><td><code>\\t</code></td><td>Tab (girinti) ekle</td><td class=\"ok\">İsim:&nbsp;&nbsp;&nbsp;&nbsp;Ahmet</td></tr>\n      <tr><td><code>\\\"</code></td><td>Tırnak içinde tırnak</td><td class=\"ok\">O dedi ki: \"Harika!\"</td></tr>\n      <tr><td><code>\\\\</code></td><td>Tek ters eğik çizgi</td><td class=\"ok\">C:\\Users\\Ahmet</td></tr>\n    </table>\n    <div class=\"code-block runnable\"><div class=\"cb-header\"><div class=\"cb-dots\"></div><span class=\"cb-label\">kacis_karakterler.py</span><span class=\"cb-run-tag\">▶</span></div><div class=\"cb-body\"><span class=\"fn\">print</span>(<span class=\"st\">\"Satır 1\\nSatır 2\\nSatır 3\"</span>)<br>\n<span class=\"fn\">print</span>(<span class=\"st\">\"Ad:\\tAhmet\"</span>)<br>\n<span class=\"fn\">print</span>(<span class=\"st\">\"O dedi ki: \\\"Python harika!\\\"\"</span>)<br>\n<span class=\"fn\">print</span>(<span class=\"st\">\"C:\\\\Users\\\\Ahmet\"</span>)</div><textarea class=\"cb-src\" style=\"display:none\">print(\"Satir 1\\nSatir 2\\nSatir 3\")\nprint(\"Ad:\\tAhmet\")\nprint('O dedi ki: \"Python harika!\"')\nprint(\"C:\\\\Users\\\\Ahmet\")</textarea></div>\n\n    <div class=\"section-h\"><div class=\"bar\" style=\"background:var(--amber)\"></div><h3>f-string — Değişkeni metnin içine göm</h3></div>\n    <p>Bir değişkenin değerini metin içinde göstermek istersen <strong>f-string</strong> kullanırsın. String'in başına <code>f</code> harfi koy, sonra süslü parantez içine değişken adını yaz:</p>\n    <div class=\"code-block runnable\"><div class=\"cb-header\"><div class=\"cb-dots\"></div><span class=\"cb-label\">fstring.py</span><span class=\"cb-run-tag\">▶</span></div><div class=\"cb-body\">isim = <span class=\"st\">\"Zeynep\"</span><br>\nyas = <span class=\"nm\">17</span><br>\n<span class=\"fn\">print</span>(<span class=\"st\">f\"Merhaba {isim}! {yas} yaşındasın.\"</span>)<br>\n<span class=\"cm\"># → Merhaba Zeynep! 17 yaşındasın.</span><br><br>\n<span class=\"cm\"># Hesap da yapabilirsin:</span><br>\nfiyat = <span class=\"nm\">45</span><br>\nadet = <span class=\"nm\">3</span><br>\n<span class=\"fn\">print</span>(<span class=\"st\">f\"Toplam: {fiyat * adet} TL\"</span>)<br>\n<span class=\"cm\"># → Toplam: 135 TL</span></div><textarea class=\"cb-src\" style=\"display:none\">isim = \"Zeynep\"\nyas = 17\nprint(f\"Merhaba {isim}! {yas} yasinda.\")\nfiyat = 45\nadet = 3\nprint(f\"Toplam: {fiyat * adet} TL\")</textarea></div>\n    <div class=\"box tip\"><span class=\"box-icon\">💡</span><span>f-string içinde süslü parantez <code>{}</code> içine sadece değişken değil, her türlü hesaplama da yazabilirsin: <code>f\"{2 + 2}\"</code>, <code>f\"{isim.upper()}\"</code>...</span></div>\n\n    <div class=\"section-h\"><div class=\"bar\" style=\"background:var(--green)\"></div><h3>Gerçek hayat: Kafe makbuzu yazdır</h3></div>\n    <p>Şimdi hepsini bir araya getirerek gerçekçi bir çıktı yapalım. print() ile düzgün hizalanmış bir makbuz:</p>\n    <div class=\"code-block runnable\"><div class=\"cb-header\"><div class=\"cb-dots\"></div><span class=\"cb-label\">makbuz.py</span><span class=\"cb-run-tag\">▶</span></div><div class=\"cb-body\"><span class=\"fn\">print</span>(<span class=\"st\">\"=\" * 30</span>)<br>\n<span class=\"fn\">print</span>(<span class=\"st\">f\"{'KAFE MAKBUZU':^30}\"</span>)   <span class=\"cm\"># ^30 = 30 karakterde ortala</span><br>\n<span class=\"fn\">print</span>(<span class=\"st\">\"=\" * 30</span>)<br>\n<span class=\"fn\">print</span>(<span class=\"st\">f\"{'Espresso':<15}{'35 TL':>12}\"</span>)   <span class=\"cm\"># < sola, > sağa hizala</span><br>\n<span class=\"fn\">print</span>(<span class=\"st\">f\"{'Cheesecake':<15}{'75 TL':>12}\"</span>)<br>\n<span class=\"fn\">print</span>(<span class=\"st\">f\"{'Su':<15}{'10 TL':>12}\"</span>)<br>\n<span class=\"fn\">print</span>(<span class=\"st\">\"-\" * 30</span>)<br>\n<span class=\"fn\">print</span>(<span class=\"st\">f\"{'TOPLAM':<15}{'120 TL':>12}\"</span>)<br>\n<span class=\"fn\">print</span>(<span class=\"st\">\"=\" * 30</span>)</div><textarea class=\"cb-src\" style=\"display:none\">print(\"=\" * 30)\nprint(f\"{'KAFE MAKBUZU':^30}\")\nprint(\"=\" * 30)\nprint(f\"{'Espresso':<15}{'35 TL':>12}\")\nprint(f\"{'Cheesecake':<15}{'75 TL':>12}\")\nprint(f\"{'Su':<15}{'10 TL':>12}\")\nprint(\"-\" * 30)\nprint(f\"{'TOPLAM':<15}{'120 TL':>12}\")\nprint(\"=\" * 30)</textarea></div>\n    <div class=\"box deep\"><span class=\"box-icon\">🧠</span><span><strong>Hizalama sırları:</strong> <code>:^30</code> — 30 karakterde ortala. <code>:<15</code> — 15 karakterde sola hizala. <code>:>12</code> — 12 karakterde sağa hizala. Bu sayede her satır aynı sütunda hizalanır, düzgün tablo çıkar.</span></div>\n    <div class=\"box alt\"><span class=\"box-icon\">⚖️</span><span><strong>Gerçek projede print() yerine ne kullanmalısın?</strong> Büyük yazılımlarda <code>logging</code> modülü tercih edilir. Çünkü <code>print()</code>i üretim ortamında kolayca kapatabilirsin, zaman damgası ekleyebilirsin, hata seviyesi belirleyebilirsin. Ama öğrenmek ve denemek için <code>print()</code> her zaman doğru araç!</span></div>\n    <div class=\"lesson-nav\"><button class=\"nav-btn go\" onclick=\"switchPhase(1)\">🧠 Teste Geç →</button></div>\n  </div>",
+      "quiz": [
+        {
+          "q": "print(\"Ahmet\", \"Yılmaz\", sep=\"-\") çıktısı nedir?",
+          "opts": [
+            "Ahmet Yılmaz",
+            "Ahmet-Yılmaz",
+            "AhmetYılmaz",
+            "Ahmet, Yılmaz"
+          ],
+          "ans": 1,
+          "exp": "sep parametresi argümanlar arasına konur. sep=\"-\" deyince araya tire gelir."
+        },
+        {
+          "q": "Her print() neden yeni satıra geçer?",
+          "opts": [
+            "Python kuralı böyle",
+            "end=\"\\n\" varsayılan değeri yüzünden",
+            "sep parametresi yüzünden",
+            "Otomatik değil, elle geçiyoruz"
+          ],
+          "ans": 1,
+          "exp": "print() içinde gizlice end=\"\\n\" çalışır. \\n yeni satır demek. end=\"\" yazarsan bu olmaz."
+        },
+        {
+          "q": "print(\"Yükleniyor\", end=\"\") ne yapar?",
+          "opts": [
+            "Hiçbir şey yazmaz",
+            "Yükleniyor yazar, sonra yeni satıra geçmez",
+            "Yükleniyor\\n yazar",
+            "Hata verir"
+          ],
+          "ans": 1,
+          "exp": "end=\"\" olunca satır sonu eklenmez. Bir sonraki print aynı satırda devam eder."
+        },
+        {
+          "q": "f-string'de değişkeni nereye yazarsın?",
+          "opts": [
+            "Köşeli parantez içine []",
+            "Süslü parantez içine {}",
+            "Düz parantez içine ()",
+            "Tırnak dışına"
+          ],
+          "ans": 1,
+          "exp": "f\"...\" içinde {degisken} şeklinde yazarsın. Python otomatik olarak değeri yerleştirir."
+        },
+        {
+          "q": "print(\"=\" * 10) ne çıktı verir?",
+          "opts": [
+            "= * 10",
+            "10 tane = yan yana",
+            "Hata",
+            "= 10"
+          ],
+          "ans": 1,
+          "exp": "\"=\" * 10 ifadesi \"==========\" (10 eşittir işareti) üretir. Sonra print onu ekrana yazar."
+        }
+      ],
+      "fills": [
+        {
+          "code": "<span class=\"fn\">print</span>(<span class=\"st\">\"A\"</span>, <span class=\"st\">\"B\"</span>, sep=<input class=\"blank\" data-ans='\"-\"' placeholder=\"?\" style=\"width:40px\">)  <span class=\"cm\"># A-B</span>",
+          "hint": "Tire: tırnak içinde - işareti"
+        },
+        {
+          "code": "<span class=\"fn\">print</span>(<span class=\"st\">\"Yükleniyor\"</span>, end=<input class=\"blank\" data-ans='\"\"' placeholder=\"?\" style=\"width:35px\">)  <span class=\"cm\"># yeni satır yok</span>",
+          "hint": "Boş string: iki tırnak yan yana"
+        },
+        {
+          "code": "<span class=\"fn\">print</span>(<span class=\"st\">\"Satır1<input class=\"blank\" data-ans=\"\\n\" placeholder=\"?\" style=\"width:28px\">Satır2\"</span>)  <span class=\"cm\"># iki satır</span>",
+          "hint": "Yeni satır kaçış karakteri: ters eğik çizgi + n"
+        },
+        {
+          "code": "<span class=\"fn\">print</span>(<span class=\"st\">\"=\" <input class=\"blank\" data-ans=\"*\" placeholder=\"?\" style=\"width:25px\"> <span class=\"nm\">20</span></span>)  <span class=\"cm\"># 20 tane =</span>",
+          "hint": "String çarpma: yıldız işareti"
+        },
+        {
+          "code": "isim = <span class=\"st\">\"Ali\"</span>\n<span class=\"fn\">print</span>(<span class=\"st\"><input class=\"blank\" data-ans=\"f\" placeholder=\"?\" style=\"width:22px\">\"{isim} merhaba\"</span>)",
+          "hint": "f-string için string başına koyulan harf"
+        }
+      ],
+      "drag": [
+        {
+          "code": "print(\"A\", \"B\", <span class=\"hl\">___</span>=\"-\")",
+          "ans": "sep",
+          "opts": [
+            "sep",
+            "end",
+            "file",
+            "flush",
+            "tab"
+          ],
+          "exp": "sep = argümanlar arasındaki ayırıcı"
+        },
+        {
+          "code": "print(\"Yükleniyor\", <span class=\"hl\">___</span>=\"\")",
+          "ans": "end",
+          "opts": [
+            "end",
+            "sep",
+            "file",
+            "flush",
+            "stop"
+          ],
+          "exp": "end = satır sonuna eklenen karakter"
+        },
+        {
+          "code": "<span class=\"hl\">___</span>(42)  # ekrana yazar",
+          "ans": "print",
+          "opts": [
+            "print",
+            "input",
+            "len",
+            "type",
+            "range"
+          ],
+          "exp": "print() değerleri ekrana yazar"
+        },
+        {
+          "code": "print(1, 2, 3)  # varsayılan sep = <span class=\"hl\">___</span>",
+          "ans": " ",
+          "opts": [
+            " ",
+            "-",
+            "\\n",
+            "",
+            ","
+          ],
+          "exp": "Varsayılan ayırıcı tek boşluktur"
+        },
+        {
+          "code": "# f-string: <span class=\"hl\">___</span>isim<span class=\"hl\">___</span> şeklinde",
+          "ans": "{",
+          "opts": [
+            "{",
+            "[",
+            "(",
+            "<",
+            "#"
+          ],
+          "exp": "f-string içinde değişkeni süslü parantez { } arasına yazarsın"
+        }
+      ],
+      "code": {
+        "task": "Bir arkadaşına mesaj yaz! Adını, yaşını ve favori konuyu kullanarak güzel hizalanmış bir tanıtım kartı yazdır. print(), f-string ve hizalama (:^, :<, :>) kullan.",
+        "starter": "# Tanıtım Kartı — Aşağıdaki adımları tamamla:\n# 1) ad, yas, konu değişkenlerini tanımla\n# 2) print(\"=\" * 32) ile üst çizgi çiz\n# 3) f-string ile ad, yas ve konu yazdır\n# 4) Hizalama için :^32 (ortala), :<15 (sola), :>15 (sağa) kullan\n\n",
+        "hint": "f\"{metin:^32}\" — 32 karakterde ortala. f\"{metin:<12}\" — 12 karakterde sola. f\"{deger:>18}\" — 18 karakterde sağa hizala.",
+        "checkFn": "(code)=>{\n      const hasPrint=(code.match(/print/g)||[]).length>=4;\n      const hasFmt=code.includes('f\"')||code.includes(\"f'\");\n      const hasAlign=code.includes(':<')||code.includes(':>')||code.includes(':^');\n      const hasVar=/[a-z_]+ ?= ?[\"']/.test(code);\n      let p=(hasPrint?3:0)+(hasFmt?3:0)+(hasAlign?2:0)+(hasVar?2:0);\n      return{pts:p,max:10,ok:p>=6,msg:p>=9?'Mükemmel kart! 🎉':p>=6?'Güzel iş, hizalama çok düzgün!':'f-string ve :< :> :^ hizalamayı dene.'};\n    }"
+      }
+    },
+    {
+      "id": "input",
+      "icon": "⌨️",
+      "locked": true,
+      "title": "input() ve Yorumlar",
+      "desc": "Kullanıcıdan veri al, koduna açıklama ekle — ve neden her zaman str döner?",
+      "lesson": "<div class=\"lesson-text\">\n\n    <div class=\"section-h\"><div class=\"bar\" style=\"background:var(--purple)\"></div><h3>input() — Neden Her Zaman String?</h3></div>\n    <p>Python tasarımcıları bir karar vermek zorundaydı: kullanıcı bir şey yazdığında Python ne tür veri varsaymalı? Sayı mı? Metin mi? Tarih mi? Cevabı bilemezdi. Bu yüzden <strong>her zaman metin (str)</strong> döndürür — ne yazılırsa yazılsın.</p>\n    <div class=\"box why\"><span class=\"box-icon\">🤔</span><span><strong>Neden str?</strong> Kullanıcı \"Ahmet\" de girebilir, \"42\" de girebilir. Python ikisini de okumak zorundadır. String her şeyi kapsayan ortak payda. Sonra sen, hangi tipe ihtiyacın varsa o tipe çevirirsin.</span></div>\n\n    <div class=\"code-block runnable\"><div class=\"cb-header\"><div class=\"cb-dots\"></div><span class=\"cb-label\">input_str.py</span><span class=\"cb-run-tag\">▶</span></div><div class=\"cb-body\"><span class=\"cm\"># input() her zaman str döndürür</span><br>\nsayi_str = <span class=\"fn\">input</span>(<span class=\"st\">\"Bir sayı gir: \"</span>)   <span class=\"cm\"># Kullanıcı: 42</span><br>\n<span class=\"fn\">print</span>(<span class=\"fn\">type</span>(sayi_str))              <span class=\"cm\"># &lt;class 'str'&gt;</span><br>\n<span class=\"fn\">print</span>(sayi_str + sayi_str)          <span class=\"cm\"># \"4242\" ← birleşme! toplama değil!</span><br><br>\n<span class=\"cm\"># Sayıya çevirmek gerekiyor</span><br>\nsayi_int = <span class=\"fn\">int</span>(sayi_str)<br>\n<span class=\"fn\">print</span>(sayi_int + sayi_int)          <span class=\"cm\"># 84 ← gerçek toplama</span></div><textarea class=\"cb-src\" style=\"display:none\"># Skulpt'te input olmadığı için degiskene atıyoruz\nsayi_str = \"42\"\nprint(type(sayi_str))\nprint(sayi_str + sayi_str)\nsayi_int = int(sayi_str)\nprint(sayi_int + sayi_int)</textarea></div>\n\n    <div class=\"section-h\"><div class=\"bar\" style=\"background:var(--blue)\"></div><h3>Tip Dönüşüm Zinciri — int(input(...))</h3></div>\n    <p>Standart kalıp: <code>int(input(\"...\"))</code>. Önce <code>input()</code> string getirir, <code>int()</code> sayıya çevirir. Parantezler iç içedir:</p>\n    <div class=\"code-block runnable\"><div class=\"cb-header\"><div class=\"cb-dots\"></div><span class=\"cb-label\">tip_cevirme.py</span><span class=\"cb-run-tag\">▶</span></div><div class=\"cb-body\"><span class=\"cm\"># Tam sayı almak</span><br>\nyas = <span class=\"fn\">int</span>(<span class=\"fn\">input</span>(<span class=\"st\">\"Yaşın: \"</span>))<br><br>\n<span class=\"cm\"># Ondalıklı sayı almak</span><br>\nboy = <span class=\"fn\">float</span>(<span class=\"fn\">input</span>(<span class=\"st\">\"Boyun (metre): \"</span>))<br><br>\n<span class=\"cm\"># String kalsın (isim, şehir vs)</span><br>\nisim = <span class=\"fn\">input</span>(<span class=\"st\">\"Adın: \"</span>)  <span class=\"cm\"># dönüşüm gerekmez</span><br><br>\n<span class=\"cm\"># Test için sabit değer kullanalım</span><br>\nyas = <span class=\"nm\">25</span><br>\nboy = <span class=\"nm\">1.78</span><br>\nisim = <span class=\"st\">\"Zeynep\"</span><br>\n<span class=\"fn\">print</span>(<span class=\"st\">f\"{isim}, {yas} yaş, {boy}m\"</span>)</div><textarea class=\"cb-src\" style=\"display:none\">yas = 25\nboy = 1.78\nisim = \"Zeynep\"\nprint(f\"{isim}, {yas} yas, {boy}m\")\n# int() ne yapar:\nprint(type(int(\"42\")))\n# float() ne yapar:\nprint(type(float(\"3.14\")))</textarea></div>\n\n    <div class=\"box warn\"><span class=\"box-icon\">⚠️</span><span><strong>int(\"3.14\") HATA verir!</strong> Ondalıklı yazılmış bir stringi <code>int()</code> ile çeviremezsin. Doğru yol: önce <code>float(\"3.14\")</code>, sonra <code>int(3.14)</code>. Yani <code>int(float(\"3.14\"))</code>.</span></div>\n\n    <div class=\"section-h\"><div class=\"bar\" style=\"background:var(--amber)\"></div><h3>Yorum Satırları — Sadece Açıklama Değil</h3></div>\n    <p>Yorumlar sadece \"şu satır şunu yapıyor\" diye açıklamak için değildir. Profesyoneller yorumu şu durumlarda kullanır:</p>\n    <div class=\"code-block runnable\"><div class=\"cb-header\"><div class=\"cb-dots\"></div><span class=\"cb-label\">yorumlar_derinlemesine.py</span><span class=\"cb-run-tag\">▶</span></div><div class=\"cb-body\"><span class=\"cm\"># 1. NEDEN yapıldığını açıkla (NASIL değil, kod zaten gösteriyor)</span><br>\nyas += <span class=\"nm\">1</span>  <span class=\"cm\"># doğum günü geçti, yaşı artır</span><br><br>\n<span class=\"cm\"># 2. Beklenmedik davranışı uyar</span><br>\nsonuc = <span class=\"fn\">int</span>(fiyat * <span class=\"nm\">1.18</span>)  <span class=\"cm\"># KDV: float hassasiyet için int alındı</span><br><br>\n<span class=\"cm\"># 3. Kodu geçici olarak devre dışı bırak</span><br>\n<span class=\"cm\"># print(\"debug:\", x)  ← test için pasife alındı</span><br><br>\n<span class=\"cm\"># 4. TODO/FIXME/NOTE işaretleri</span><br>\n<span class=\"cm\"># TODO: veritabanından al, şimdilik sabit</span><br>\nkullanici = <span class=\"st\">\"admin\"</span></div><textarea class=\"cb-src\" style=\"display:none\"># Yorum satirlari asagida\nyas = 20\nyas += 1  # dogum gunu gecti, yasi artir\nfiyat = 100\nsonuc = int(fiyat * 1.18)  # KDV dahil fiyat\nprint(\"KDV dahil:\", sonuc)\nkullanici = \"admin\"  # TODO: veritabanindan al\nprint(\"Kullanici:\", kullanici)</textarea></div>\n    <div class=\"box why\"><span class=\"box-icon\">🤔</span><span><strong>Kötü yorum nedir?</strong> <code>x = x + 1  # x'e 1 ekle</code> — bu gereksiz, kodu okuyan zaten görüyor. İyi yorum: <code>x = x + 1  # her request için sayacı artır</code>. Neden yapıldığını yaz, ne yapıldığını değil.</span></div>\n\n    <div class=\"section-h\"><div class=\"bar\" style=\"background:var(--blue)\"></div><h3>Çok Satırlı Yorum: \"\"\" vs #</h3></div>\n    <div class=\"code-block runnable\"><div class=\"cb-header\"><div class=\"cb-dots\"></div><span class=\"cb-label\">cok_satirli.py</span><span class=\"cb-run-tag\">▶</span></div><div class=\"cb-body\"><span class=\"cm\">\"\"\"</span><br>\n<span class=\"cm\">Bu fonksiyon BMI hesaplar.</span><br>\n<span class=\"cm\">Parametre: agirlik (kg), boy (metre)</span><br>\n<span class=\"cm\">Döndürür: float (BMI değeri)</span><br>\n<span class=\"cm\">\"\"\"</span><br><br>\n<span class=\"cm\"># Alternatif: ardışık # satırları</span><br>\n<span class=\"cm\"># Bu fonksiyon BMI hesaplar.</span><br>\n<span class=\"cm\"># Parametre: agirlik (kg), boy (metre)</span></div><textarea class=\"cb-src\" style=\"display:none\"># Uclu tirnak yorum degil, string'dir!\ns = \"\"\"\nBu bir string\nbircok satirli\n\"\"\"\nprint(s)\nprint(type(s))</textarea></div>\n    <div class=\"box alt\"><span class=\"box-icon\">⚖️</span><span><strong>\"\"\"...\"\"\" teknik olarak yorum DEĞİLDİR.</strong> Çok satırlı bir string'dir. Sadece değişkene atanmadığında Python onu görmezden gelir. Gerçek çok satırlı yorumlar için ya <code>#</code> kullan ya da IDE'nin blok yorum özelliğini. Fonksiyon/sınıf açıklaması için ise <code>\"\"\"</code> kullanmak standarttır (docstring).</span></div>\n\n    <div class=\"lesson-nav\"><button class=\"nav-btn go\" onclick=\"switchPhase(1)\">🧠 Teste Geç →</button></div>\n  </div>",
+      "quiz": [
+        {
+          "q": "Kullanıcı \"42\" yazsa bile input() ne döndürür?",
+          "opts": [
+            "int (42)",
+            "float (42.0)",
+            "str (\"42\")",
+            "Girişe göre değişir"
+          ],
+          "ans": 2,
+          "exp": "input() HER ZAMAN str döndürür. Tip dönüşümünü sen yapmalısın."
+        },
+        {
+          "q": "\"3.14\" stringini int'e çevirmek için doğru yol?",
+          "opts": [
+            "int(\"3.14\")",
+            "float(int(\"3.14\"))",
+            "int(float(\"3.14\"))",
+            "str(int(\"3.14\"))"
+          ],
+          "ans": 2,
+          "exp": "Önce float'a çevir (3.14), sonra int'e (3). Direkt int(\"3.14\") hata verir."
+        },
+        {
+          "q": "Hangisi KÖTÜ bir yorum örneğidir?",
+          "opts": [
+            "# KDV için 1.18 çarpıyoruz",
+            "# i'ye 1 ekle",
+            "# Kullanıcı girişini temizle",
+            "# Listeyi alfabetik sırala"
+          ],
+          "ans": 1,
+          "exp": "\"i'ye 1 ekle\" kodu tekrar söyler. İyi yorum NEDEN'i açıklar, NASIL'ı değil."
+        },
+        {
+          "q": "int(input(\"Sayı: \")) ne yapar?",
+          "opts": [
+            "Önce int'e çevirir, sonra input alır",
+            "Input'u çalıştırır, dönen string'i int'e çevirir",
+            "Sadece int girmesine izin verir",
+            "Hata verir"
+          ],
+          "ans": 1,
+          "exp": "İçteki input() önce çalışır, string döndürür. Sonra int() o stringi sayıya çevirir."
+        },
+        {
+          "q": "int(input()) yerine int(float(input())) ne zaman gerekir?",
+          "opts": [
+            "Her zaman",
+            "Kullanıcı 3.14 girebilirse",
+            "Hiçbir zaman",
+            "Sadece sayılarda"
+          ],
+          "ans": 1,
+          "exp": "int(\"3.14\") hata verir; önce float, sonra int: int(float(\"3.14\"))=3"
+        }
+      ],
+      "fills": [
+        {
+          "code": "isim = <input class=\"blank\" data-ans=\"input\" placeholder=\"?\" style=\"width:55px\">(<span class=\"st\">\"Adın: \"</span>)",
+          "hint": "Klavyeden veri alan fonksiyon"
+        },
+        {
+          "code": "yas = <input class=\"blank\" data-ans=\"int\" placeholder=\"?\" style=\"width:40px\">(<span class=\"fn\">input</span>(<span class=\"st\">\"Yaşın: \"</span>))  <span class=\"cm\"># string→int</span>",
+          "hint": "Tam sayıya çeviren fonksiyon"
+        },
+        {
+          "code": "<input class=\"blank\" data-ans=\"#\" placeholder=\"?\" style=\"width:22px\"> Bu satır Python tarafından atlanır",
+          "hint": "Yorum başlatan tek karakter"
+        },
+        {
+          "code": "boy = <input class=\"blank\" data-ans=\"float\" placeholder=\"?\" style=\"width:50px\">(<span class=\"fn\">input</span>(<span class=\"st\">\"Boyun: \"</span>))  <span class=\"cm\"># ondalıklı</span>",
+          "hint": "Ondalıklı sayıya çeviren fonksiyon"
+        },
+        {
+          "code": "yas = <span class=\"fn\">int</span>(<input class=\"blank\" data-ans=\"input\" placeholder=\"?\" style=\"width:55px\">(<span class=\"st\">\"Yaşın: \"</span>))",
+          "hint": "Klavye okuma fonksiyonu"
+        }
+      ],
+      "drag": [
+        {
+          "code": "sayi = <span class=\"hl\">___</span>(input(\"Sayı: \"))",
+          "ans": "int",
+          "opts": [
+            "int",
+            "str",
+            "float",
+            "bool",
+            "len"
+          ],
+          "exp": "int() string'i tam sayıya çevirir"
+        },
+        {
+          "code": "boy = <span class=\"hl\">___</span>(input(\"Boy: \"))",
+          "ans": "float",
+          "opts": [
+            "float",
+            "int",
+            "str",
+            "bool",
+            "type"
+          ],
+          "exp": "float() ondalıklı sayıya çevirir"
+        },
+        {
+          "code": "type(input(\"...\"))  →  <span class=\"hl\">___</span>",
+          "ans": "str",
+          "opts": [
+            "str",
+            "int",
+            "float",
+            "bool",
+            "None"
+          ],
+          "exp": "input() her zaman str döndürür"
+        },
+        {
+          "code": "<span class=\"hl\">___</span> Bu satır Python yorum",
+          "ans": "#",
+          "opts": [
+            "#",
+            "//",
+            "/*",
+            "--",
+            "**"
+          ],
+          "exp": "# karakteri ile başlayan satır atlanır"
+        },
+        {
+          "code": "int(<span class=\"hl\">___</span>(\"3.14\"))  →  3",
+          "ans": "float",
+          "opts": [
+            "float",
+            "int",
+            "str",
+            "bool",
+            "round"
+          ],
+          "exp": "Önce float'a çevir (3.14), sonra int'e (3)"
+        }
+      ],
+      "code": {
+        "task": "Değişkende isim, yaş ve doğum yılı sakla. f-string ile \"Merhaba [isim]! [yaş] yaşındasın ve [yil] yılında doğdun.\" yaz. Bonus: 2050'de kaç yaşında olacağını hesapla.",
+        "starter": "# Değişkenlerle çalış (normalde input() kullanılır)\nisim = \"Kendi adın\"\nyas = 20\nyil = 2005\n\n# Mesajı yazdır\nprint(f\"Merhaba {isim}!\")\nprint(f\"{yas} yaşındasın ve {yil} yılında doğdun.\")\n\n# Bonus: 2050'de kaç yaşında?\n",
+        "hint": "2050'deki yaş: gelecek_yas = 2050 - yil  (2050 - doğum yılı)",
+        "checkFn": "(code)=>{\n      const hasFStr=code.includes('f\"') || code.includes(\"f'\");\n      const hasPrint=(code.match(/print/g)||[]).length>=2;\n      const hasName=code.includes('isim') || code.includes('name');\n      const hasBonus=code.includes('2050');\n      let p=(hasFStr?3:0)+(hasPrint?3:0)+(hasName?2:0)+(hasBonus?2:0);\n      return {pts:p,max:10,ok:p>=5,msg:p>=8?'Süper! 🚀':p>=5?'İyi iş!':'f-string ve en az 2 print() kullan.'};\n    }"
+      }
+    }
+  ]
+}

@@ -1,0 +1,1545 @@
+<!DOCTYPE html>
+<html lang="tr" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<meta name="description" content="Axyon.Dev PyLab — Türkçe Python öğrenme platformu. Neden ve nasıl öğren.">
+<title>Axyon.Dev PyLab</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🐍</text></svg>">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/python/python.min.js"></script>
+<script>
+window.skulptLoaded=false;
+function onSkulptLoad(){window.skulptLoaded=true;}
+</script>
+<script src="https://cdn.jsdelivr.net/npm/skulpt@1.2.0/dist/skulpt.min.js" onload="onSkulptLoad()" onerror="loadSkulptFallback()"></script>
+<script src="https://cdn.jsdelivr.net/npm/skulpt@1.2.0/dist/skulpt-stdlib.js" onerror="console.warn('stdlib fallback')"></script>
+<script>
+function loadSkulptFallback(){
+  var s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/skulpt/1.2.0/skulpt.min.js';s.onload=function(){window.skulptLoaded=true;};document.head.appendChild(s);
+  var s2=document.createElement('script');s2.src='https://cdnjs.cloudflare.com/ajax/libs/skulpt/1.2.0/skulpt-stdlib.js';document.head.appendChild(s2);
+}
+</script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+button{font-family:"Outfit",sans-serif}
+
+/* ── DARK THEME ── */
+:root,[data-theme="dark"]{
+  --bg:#0f1320;--s1:#171e2e;--s2:#1e2740;--s3:#263050;
+  --border:#2c3655;--border2:#3a4870;
+  --text:#eaedff;--muted:#8090c0;--muted2:#adb5d8;
+  --amber:#f0a500;--amber2:#ffd166;--green:#3dd68c;--red:#f25f5c;
+  --blue:#7eb8f7;--purple:#c4aaee;--cyan:#89ddff;--orange:#f78c6c;
+  --phase0:#7eb8f7;--phase1:#c4aaee;--phase2:#3dd68c;--phase3:#f0a500;--phase4:#f78c6c;
+  --shadow:0 8px 32px rgba(0,0,0,.5);--shadow-sm:0 2px 12px rgba(0,0,0,.35);
+  --code-bg:#0a0d16;--code-text:#3dd68c;
+  --box-tip-bg:rgba(126,184,247,.07);--box-warn-bg:rgba(242,95,92,.07);
+  --box-why-bg:rgba(196,170,238,.07);--box-alt-bg:rgba(240,165,0,.07);--box-deep-bg:rgba(61,214,140,.06);
+  --cmp-bg:var(--s2);--cmp-head:var(--s1);--sidebar-overlay:rgba(0,0,0,.65);
+  --r:10px;--rsm:7px;--rlg:14px;
+}
+/* ── LIGHT THEME ── */
+[data-theme="light"]{
+  --bg:#eceef8;--s1:#ffffff;--s2:#e4e8f6;--s3:#d8ddf0;
+  --border:#bcc4e0;--border2:#9aa4cc;
+  --text:#0c0c28;--muted:#2828a0;--muted2:#181880;
+  --amber:#b06800;--amber2:#8a5000;--green:#136a38;--red:#b02828;
+  --blue:#1a58a8;--purple:#5030a0;--cyan:#106070;--orange:#a04020;
+  --phase0:#1a58a8;--phase1:#5030a0;--phase2:#136a38;--phase3:#b06800;--phase4:#a04020;
+  --shadow:0 8px 32px rgba(0,0,0,.12);--shadow-sm:0 2px 12px rgba(0,0,0,.07);
+  --code-bg:#141428;--code-text:#3dd68c;
+  --box-tip-bg:rgba(26,88,168,.08);--box-warn-bg:rgba(176,40,40,.08);
+  --box-why-bg:rgba(80,48,160,.08);--box-alt-bg:rgba(176,104,0,.08);--box-deep-bg:rgba(19,106,56,.07);
+  --cmp-bg:#f2f4ff;--cmp-head:#e8eaf8;--sidebar-overlay:rgba(0,0,0,.38);
+}
+html,body{height:100%;overflow:hidden;font-size:16px}
+body{background:var(--bg);color:var(--text);font-family:"Outfit",sans-serif;display:flex;flex-direction:column;transition:background .25s,color .25s}
+
+/* ── SK LOADING ── */
+#sk-loading{position:fixed;inset:0;background:var(--bg);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;font-family:"JetBrains Mono",monospace;font-size:13px;color:var(--muted2);transition:opacity .45s;pointer-events:none}
+#sk-loading.done{opacity:0}
+.sk-logo{font-family:"JetBrains Mono",monospace;font-size:1.5rem;font-weight:700;color:var(--amber);animation:skPulse 1.2s ease-in-out infinite}
+.sk-logo span{color:var(--text)}
+.sk-spin{width:28px;height:28px;border:2.5px solid var(--border2);border-top-color:var(--green);border-radius:50%;animation:spin .75s linear infinite}
+@keyframes skPulse{0%,100%{opacity:.6}50%{opacity:1}}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ── HEADER ── */
+#header{height:56px;background:var(--s1);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 16px;gap:12px;flex-shrink:0;z-index:200;box-shadow:var(--shadow-sm)}
+.logo{display:flex;align-items:baseline;gap:0;cursor:pointer;text-decoration:none;flex-shrink:0}
+.logo-brand{font-family:"JetBrains Mono",monospace;font-size:10px;font-weight:400;color:var(--muted2);letter-spacing:.04em}
+.logo-slash{font-family:"JetBrains Mono",monospace;font-size:14px;color:var(--border2);margin:0 3px}
+.logo-product{font-family:"JetBrains Mono",monospace;font-size:1.1rem;font-weight:700;color:var(--amber);letter-spacing:-.03em}
+.xp-wrap{flex:1;max-width:260px;display:flex;align-items:center;gap:8px;min-width:0}
+.level-badge{background:var(--s3);border:1px solid var(--border2);border-radius:6px;padding:3px 9px;font-family:"JetBrains Mono",monospace;font-size:10px;font-weight:700;color:var(--amber);white-space:nowrap;flex-shrink:0}
+.xp-bar-outer{flex:1;height:4px;background:var(--s3);border-radius:2px;overflow:hidden;min-width:40px}
+.xp-bar-inner{height:100%;background:linear-gradient(90deg,var(--amber),var(--amber2));border-radius:2px;transition:width .7s cubic-bezier(.4,0,.2,1)}
+.xp-label{font-size:10px;color:var(--muted2);font-family:"JetBrains Mono",monospace;white-space:nowrap}
+.header-right{margin-left:auto;display:flex;align-items:center;gap:6px}
+.streak-badge{display:flex;align-items:center;gap:4px;background:var(--s2);border:1px solid var(--border);border-radius:20px;padding:4px 10px 4px 8px;font-size:12px;font-weight:600;color:var(--text);cursor:default}
+.streak-fire{font-size:14px;line-height:1}
+.streak-num{font-family:"JetBrains Mono",monospace;font-weight:700;color:var(--orange)}
+.header-score{display:flex;align-items:center;gap:5px;background:var(--s2);border:1px solid var(--border);border-radius:20px;padding:4px 12px 4px 8px;font-size:12px}
+.score-star{color:var(--amber);font-size:13px}
+.score-num{font-family:"JetBrains Mono",monospace;font-weight:700;color:var(--amber2)}
+.icon-btn{width:34px;height:34px;border-radius:50%;border:1px solid var(--border2);background:var(--s2);cursor:pointer;font-size:15px;display:flex;align-items:center;justify-content:center;transition:all .18s;flex-shrink:0;color:var(--muted2)}
+.icon-btn:hover{border-color:var(--amber);color:var(--amber);transform:scale(1.08)}
+.hamburger{width:34px;height:34px;border-radius:var(--rsm);border:1px solid var(--border2);background:var(--s2);cursor:pointer;display:none;flex-direction:column;align-items:center;justify-content:center;gap:5px;flex-shrink:0}
+.hamburger span{width:17px;height:2px;background:var(--text);border-radius:1px;transition:all .22s;display:block}
+.hamburger.open span:nth-child(1){transform:rotate(45deg) translate(5px,5px)}
+.hamburger.open span:nth-child(2){opacity:0}
+.hamburger.open span:nth-child(3){transform:rotate(-45deg) translate(5px,-5px)}
+
+/* ── LAYOUT ── */
+#app{display:flex;flex:1;overflow:hidden;position:relative}
+
+/* ── SIDEBAR ── */
+#sidebar{width:238px;flex-shrink:0;background:var(--s1);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden;z-index:100;transition:transform .28s cubic-bezier(.4,0,.2,1)}
+.sidebar-top{padding:10px 10px 6px;border-bottom:1px solid var(--border);flex-shrink:0}
+.sb-search-wrap{position:relative}
+.sb-search-icon{position:absolute;left:9px;top:50%;transform:translateY(-50%);font-size:12px;color:var(--muted);pointer-events:none}
+.sb-search{width:100%;background:var(--s2);border:1px solid var(--border);border-radius:var(--rsm);padding:7px 10px 7px 30px;font-family:"Outfit",sans-serif;font-size:13px;color:var(--text);outline:none;transition:border-color .15s}
+.sb-search::placeholder{color:var(--muted)}
+.sb-search:focus{border-color:var(--border2)}
+.sb-dashboard-btn{display:flex;align-items:center;gap:8px;width:100%;padding:9px 12px;margin-top:8px;background:rgba(240,165,0,.08);border:1px solid rgba(240,165,0,.22);border-radius:var(--rsm);font-family:"Outfit",sans-serif;font-size:13px;font-weight:600;color:var(--amber);cursor:pointer;transition:all .15s;text-align:left}
+.sb-dashboard-btn:hover{background:rgba(240,165,0,.14);border-color:var(--amber)}
+/* ── DASHBOARD OVERLAY ── */
+#dashboard-overlay{position:fixed;inset:0;z-index:5000;background:var(--sidebar-overlay);backdrop-filter:blur(4px);display:none;align-items:flex-start;justify-content:center;padding:20px 16px;overflow-y:auto}
+#dashboard-overlay.show{display:flex}
+.dashboard-panel{background:var(--s1);border:1px solid var(--border2);border-radius:var(--rlg);width:100%;max-width:680px;padding:24px;box-shadow:var(--shadow);margin:auto}
+.dp-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
+.dp-title{font-size:1.2rem;font-weight:700;color:var(--text)}
+.dp-close{width:32px;height:32px;border-radius:50%;border:1px solid var(--border2);background:var(--s2);cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;color:var(--muted2)}
+.dp-close:hover{color:var(--text);border-color:var(--text)}
+.dp-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:20px}
+.dp-stat{background:var(--s2);border:1px solid var(--border);border-radius:var(--r);padding:12px;text-align:center}
+.dp-stat-num{font-size:1.5rem;font-weight:700;font-family:"JetBrains Mono",monospace;color:var(--amber)}
+.dp-stat-lbl{font-size:10px;color:var(--muted2);text-transform:uppercase;letter-spacing:.06em;margin-top:2px}
+.dp-section-title{font-size:10px;text-transform:uppercase;letter-spacing:.12em;color:var(--muted2);font-weight:700;margin-bottom:10px}
+.dp-lesson-grid{display:flex;flex-direction:column;gap:6px}
+.dp-lesson-row{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--s2);border:1px solid var(--border);border-radius:var(--rsm)}
+.dp-lesson-icon{font-size:14px;width:20px;text-align:center;flex-shrink:0}
+.dp-lesson-name{font-size:13px;font-weight:500;color:var(--text);flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dp-lesson-bar{width:80px;height:6px;background:var(--s3);border-radius:3px;overflow:hidden;flex-shrink:0}
+.dp-lesson-fill{height:100%;border-radius:3px;transition:width .4s}
+.dp-lesson-pct{font-size:11px;font-family:"JetBrains Mono",monospace;font-weight:700;width:36px;text-align:right;flex-shrink:0}
+.dp-verdict{font-size:10px;font-weight:700;padding:2px 7px;border-radius:10px;flex-shrink:0;text-transform:uppercase;letter-spacing:.04em}
+.dp-v-super{background:rgba(61,214,140,.15);color:var(--green)}
+.dp-v-good{background:rgba(126,184,247,.15);color:var(--blue)}
+.dp-v-ok{background:rgba(240,165,0,.15);color:var(--amber)}
+.dp-v-weak{background:rgba(242,95,92,.15);color:var(--red)}
+.dp-v-none{background:var(--s3);color:var(--muted2)}
+#topic-list{flex:1;overflow-y:auto;padding:6px}
+#topic-list::-webkit-scrollbar{width:3px}
+#topic-list::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
+.module-header{display:flex;align-items:center;gap:6px;padding:11px 8px 5px;font-size:10px;text-transform:uppercase;letter-spacing:.13em;font-weight:700;color:var(--muted2);margin-top:4px}
+.module-header:first-child{margin-top:0}
+.mh-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.mh-line{flex:1;height:1px;background:var(--border)}
+.mh-count{font-size:10px;color:var(--muted2)}
+.topic-item{display:flex;align-items:center;gap:9px;padding:9px 10px;border-radius:var(--rsm);cursor:pointer;transition:all .14s;margin-bottom:2px;border:1px solid transparent}
+.topic-item:hover{background:var(--s2)}
+.topic-item.active{background:var(--s2);border-color:var(--border2)}
+.topic-item.locked{opacity:.35;cursor:not-allowed;pointer-events:none}
+.topic-icon{font-size:16px;flex-shrink:0;width:24px;text-align:center}
+.topic-info{flex:1;min-width:0}
+.topic-name{font-size:14px;font-weight:500;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+[data-theme="light"] .topic-name{color:#0c0c28;font-weight:600}
+[data-theme="light"] .topic-item.locked .topic-name{color:#3a3a80}
+.topic-sub{font-size:11px;color:var(--muted2);margin-top:2px;display:flex;align-items:center;gap:5px}
+[data-theme="light"] .topic-sub{color:#4040a0}
+.phase-pips{display:flex;gap:3px}
+.pip{width:6px;height:6px;border-radius:50%;background:var(--s3)}
+#sidebar-overlay{display:none;position:fixed;inset:0;background:var(--sidebar-overlay);z-index:90;backdrop-filter:blur(3px)}
+
+/* ── MAIN ── */
+#main{flex:1;display:flex;flex-direction:column;overflow:hidden;background:var(--bg);min-width:0}
+#lesson-head{padding:16px 22px 0;flex-shrink:0}
+.lesson-breadcrumb{font-size:10px;text-transform:uppercase;letter-spacing:.12em;color:var(--muted2);font-weight:600;margin-bottom:5px;display:flex;align-items:center;gap:6px}
+.bc-sep{color:var(--border2)}
+#lesson-title{font-size:1.5rem;font-weight:700;color:var(--text);line-height:1.2;margin-bottom:3px}
+#lesson-desc{font-size:13px;color:var(--muted2);margin-bottom:10px}
+.score-strip{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-bottom:10px}
+.score-cell{background:var(--s1);border:1px solid var(--border);border-radius:var(--rsm);padding:7px 8px;text-align:center}
+.sc-label{font-size:9px;color:var(--muted2);margin-bottom:2px;text-transform:uppercase;letter-spacing:.05em;font-weight:600}
+.sc-val{font-size:1.05rem;font-weight:700;font-family:"JetBrains Mono",monospace}
+
+/* ── PHASE TABS ── */
+#phase-tabs{display:flex;border-bottom:1px solid var(--border);padding:0 22px;flex-shrink:0;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+#phase-tabs::-webkit-scrollbar{display:none}
+.ptab{display:flex;align-items:center;gap:5px;padding:11px 16px;font-size:12px;font-weight:600;cursor:pointer;border:none;background:transparent;color:var(--muted);border-bottom:2px solid transparent;transition:all .15s;font-family:"Outfit",sans-serif;margin-bottom:-1px;white-space:nowrap;flex-shrink:0;letter-spacing:.01em}
+.ptab:hover{color:var(--text)}
+.ptab[data-phase="0"].active{color:var(--phase0);border-bottom-color:var(--phase0)}
+.ptab[data-phase="1"].active{color:var(--phase1);border-bottom-color:var(--phase1)}
+.ptab[data-phase="2"].active{color:var(--phase2);border-bottom-color:var(--phase2)}
+.ptab[data-phase="3"].active{color:var(--phase3);border-bottom-color:var(--phase3)}
+.ptab[data-phase="4"].active{color:var(--phase4);border-bottom-color:var(--phase4)}
+.ptab-score{font-size:9px;background:var(--s2);border-radius:10px;padding:1px 5px;font-family:"JetBrains Mono",monospace}
+.ptab.done .ptab-score{background:rgba(61,214,140,.15);color:var(--green)}
+
+/* ── CONTENT ── */
+#content-area{flex:1;overflow-y:auto;padding:20px 22px 60px;-webkit-overflow-scrolling:touch}
+#content-area::-webkit-scrollbar{width:4px}
+#content-area::-webkit-scrollbar-thumb{background:var(--s3);border-radius:2px}
+.phase-panel{display:none}
+.phase-panel.active{display:block;animation:fadeUp .22s ease}
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+/* ── LESSON TEXT ── */
+.lesson-text p{color:var(--text);line-height:1.9;margin-bottom:.9rem;font-size:15px}
+.lesson-text strong{font-weight:700;color:var(--text)}
+.lesson-text em{color:var(--amber);font-style:normal;font-weight:500}
+[data-theme="light"] .lesson-text em{color:var(--amber)}
+.section-h{display:flex;align-items:center;gap:10px;margin:1.7rem 0 .8rem}
+.section-h .bar{width:3px;height:1.1em;border-radius:2px;flex-shrink:0}
+.section-h h3{font-size:1.05rem;font-weight:700;color:var(--text);line-height:1}
+.code-block{background:var(--s2);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;margin:.9rem 0;transition:border-color .2s}
+.code-block.runnable{border-color:rgba(61,214,140,.2)}
+[data-theme="light"] .code-block.runnable{border-color:rgba(26,138,80,.25)}
+.cb-header{display:flex;align-items:center;gap:7px;padding:8px 13px;background:var(--s1);border-bottom:1px solid var(--border)}
+.cb-dots{display:flex;gap:4px}
+.cb-dot{width:8px;height:8px;border-radius:50%}
+.cb-label{font-size:10px;color:var(--muted);font-family:"JetBrains Mono",monospace;flex:1}
+.cb-run-tag{font-size:9px;color:var(--green);opacity:.7}
+.cb-body{padding:14px 16px;font-family:"JetBrains Mono",monospace;font-size:13px;line-height:2.1;overflow-x:auto;-webkit-overflow-scrolling:touch}
+.kw{color:#c792ea}.st{color:#c3e88d}.nm{color:var(--amber)}.cm{color:var(--muted2);font-style:italic}
+.fn{color:#82aaff}.op{color:#f07178}.bi{color:#89ddff}.out{color:var(--blue)}
+[data-theme="light"] .kw{color:#7d2eb0}[data-theme="light"] .st{color:#1a6a20}[data-theme="light"] .nm{color:#905000}[data-theme="light"] .fn{color:#1040a0}[data-theme="light"] .cm{color:#606090}[data-theme="light"] .op{color:#a02030}[data-theme="light"] .bi{color:#106060}[data-theme="light"] .cb-body{color:#1a1a35}
+.cb-run-wrap{padding:8px 13px;background:rgba(61,214,140,.04);border-top:1px solid rgba(61,214,140,.1);display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.cb-run-btn{display:flex;align-items:center;gap:5px;padding:6px 14px;background:var(--green);color:#080b12;border:none;border-radius:var(--rsm);font-family:"Outfit",sans-serif;font-size:12px;font-weight:700;cursor:pointer;transition:opacity .15s;min-height:34px;-webkit-tap-highlight-color:transparent}
+.cb-run-btn:hover{opacity:.85}
+.cb-reset-btn{padding:6px 10px;background:transparent;border:1px solid var(--border2);color:var(--muted2);border-radius:var(--rsm);font-size:12px;cursor:pointer;font-family:"Outfit",sans-serif;transition:all .15s;min-height:34px}
+.cb-reset-btn:hover{color:var(--text);border-color:var(--text)}
+.cb-inline-out{display:none;background:var(--code-bg);border-top:1px solid var(--border);padding:10px 14px;font-family:"JetBrains Mono",monospace;font-size:12.5px;color:var(--code-text);white-space:pre-wrap;line-height:1.75;max-height:170px;overflow-y:auto}
+.cb-inline-out.vis{display:block;animation:fadeUp .15s ease}
+.cb-out-label{font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);display:block;margin-bottom:4px}
+.cb-err{color:var(--red)!important}
+.box{display:flex;gap:10px;border-radius:0 var(--rsm) var(--rsm) 0;padding:13px 15px;margin:.9rem 0;font-size:14px;line-height:1.8;border:1px solid;border-left:3px solid}
+.box-icon{flex-shrink:0;font-size:16px;margin-top:1px}
+.box.tip{background:var(--box-tip-bg);border-color:rgba(126,184,247,.2);border-left-color:var(--blue)}
+.box.warn{background:var(--box-warn-bg);border-color:rgba(242,95,92,.2);border-left-color:var(--red)}
+.box.why{background:var(--box-why-bg);border-color:rgba(179,157,219,.2);border-left-color:var(--purple)}
+.box.alt{background:var(--box-alt-bg);border-color:rgba(240,165,0,.2);border-left-color:var(--amber)}
+.box.deep{background:var(--box-deep-bg);border-color:rgba(61,214,140,.15);border-left-color:var(--green)}
+.cmp-table{width:100%;border-collapse:collapse;margin:.9rem 0;font-size:13px}
+.cmp-table th{background:var(--cmp-head);border:1px solid var(--border);padding:9px 13px;text-align:left;color:var(--muted2);font-size:10px;text-transform:uppercase;letter-spacing:.07em;font-weight:600}
+.cmp-table td{background:var(--cmp-bg);border:1px solid var(--border);padding:9px 13px;color:var(--text);font-family:"JetBrains Mono",monospace;font-size:12px;line-height:1.6;vertical-align:top}
+.cmp-table tr:hover td{background:var(--s3)}
+.cmp-table .ok{color:var(--green)}.cmp-table .bad{color:var(--red)}.cmp-table .mid{color:var(--amber)}
+.lesson-nav{display:flex;gap:8px;margin-top:28px;padding-top:16px;border-top:1px solid var(--border)}
+.nav-btn{display:flex;align-items:center;gap:7px;padding:10px 20px;border-radius:var(--rsm);border:1px solid var(--border2);background:var(--s2);color:var(--text);cursor:pointer;font-family:"Outfit",sans-serif;font-size:14px;font-weight:500;transition:all .15s;min-height:44px;-webkit-tap-highlight-color:transparent}
+.nav-btn:hover{border-color:var(--amber);color:var(--amber)}
+.nav-btn.go{background:var(--amber);color:#080b12;border-color:var(--amber);font-weight:700;margin-left:auto}
+.nav-btn.go:hover{opacity:.86}
+code{font-family:"JetBrains Mono",monospace;background:var(--s2);border:1px solid var(--border);border-radius:4px;padding:1px 6px;font-size:12.5px;color:#c3e88d}
+[data-theme="light"] code{color:#1a6a20;background:var(--s3)}
+
+/* ── QUIZ ── */
+.quiz-progress{display:flex;gap:3px;margin-bottom:16px}
+.qp-dot{flex:1;height:3px;background:var(--s3);border-radius:2px;transition:background .3s}
+.qp-dot.ok{background:var(--green)}.qp-dot.fail{background:var(--red)}.qp-dot.cur{background:var(--purple)}
+.quiz-card{background:var(--s1);border:1px solid var(--border);border-radius:var(--r);padding:18px;margin-bottom:10px;transition:border-color .2s}
+.quiz-card.answered-ok{border-color:rgba(61,214,140,.35);background:rgba(61,214,140,.02)}
+.quiz-card.answered-fail{border-color:rgba(242,95,92,.35);background:rgba(242,95,92,.02)}
+[data-theme="light"] .quiz-card.answered-ok{background:rgba(26,138,80,.04)}
+[data-theme="light"] .quiz-card.answered-fail{background:rgba(192,57,58,.04)}
+.q-num{font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--muted2);font-weight:600;margin-bottom:8px;font-family:"JetBrains Mono",monospace}
+.q-text{font-size:15px;font-weight:600;color:var(--text);margin-bottom:13px;line-height:1.5}
+.options{display:flex;flex-direction:column;gap:7px}
+.opt{display:flex;align-items:center;gap:10px;padding:11px 14px;background:var(--s2);border:2px solid var(--border);border-radius:var(--rsm);cursor:pointer;font-size:13.5px;transition:all .14s;font-family:"JetBrains Mono",monospace;min-height:44px}
+.opt:hover:not(.locked):not(.selected){border-color:var(--border2);background:var(--s3)}
+.opt.selected{border-color:var(--purple);background:rgba(196,170,238,.18);color:var(--purple);box-shadow:0 0 0 3px rgba(196,170,238,.18)}
+[data-theme="light"] .opt.selected{background:rgba(80,48,160,.1);box-shadow:0 0 0 3px rgba(80,48,160,.12)}
+.opt.correct{border-color:var(--green);background:rgba(61,214,140,.12);color:var(--green)}
+.opt.wrong{border-color:var(--red);background:rgba(242,95,92,.12);color:var(--red)}
+.opt.locked{cursor:default}
+.opt-key{width:22px;height:22px;border-radius:5px;background:var(--s3);display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;flex-shrink:0;color:var(--muted2)}.opt.selected .opt-key{background:var(--purple);color:#fff}[data-theme="light"] .opt.selected .opt-key{color:#fff}
+.q-feedback{font-size:13px;font-weight:500;padding:7px 0 0;display:none;line-height:1.6}
+.q-feedback.show{display:block}
+.q-feedback.ok{color:var(--green)}.q-feedback.fail{color:var(--red)}
+.result-card{background:var(--s1);border:1px solid var(--border);border-radius:var(--rlg);padding:26px;text-align:center;display:none;animation:fadeUp .3s ease;margin-top:10px}
+.result-card.show{display:block}
+.result-big{font-size:3rem;font-weight:700;font-family:"JetBrains Mono",monospace;line-height:1;margin:6px 0}
+.stars{font-size:1.4rem;letter-spacing:4px;margin:5px 0}
+.result-msg{font-size:15px;color:var(--muted2);margin:8px 0 16px}
+.submit-row{margin-top:16px}
+
+/* ── DRAG/SELECT ── */
+.hl{display:inline-block;min-width:72px;text-align:center;background:rgba(240,165,0,.1);border:2px dashed var(--amber);border-radius:6px;padding:1px 8px;color:var(--amber);font-weight:700;vertical-align:middle}
+[data-theme="light"] .hl{background:rgba(192,120,0,.08);border-color:var(--amber)}
+.drag-progress{display:flex;gap:3px;margin-bottom:14px}
+.drag-dot{flex:1;height:4px;border-radius:2px;background:var(--s3);transition:background .3s}
+.drag-dot.ok{background:var(--green)}.drag-dot.fail{background:var(--red)}.drag-dot.cur{background:var(--phase2)}
+.drag-card{background:var(--s1);border:1px solid var(--border);border-radius:var(--rlg);padding:20px;transition:border-color .25s}
+.drag-card.ok-card{border-color:rgba(61,214,140,.45)}
+.drag-card.fail-card{border-color:rgba(242,95,92,.45)}
+.drag-q-num{font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--muted2);font-weight:600;margin-bottom:10px;font-family:"JetBrains Mono",monospace}
+.drag-code-wrap{background:var(--s2);border:1px solid var(--border);border-radius:var(--rsm);padding:13px 16px;font-family:"JetBrains Mono",monospace;font-size:14px;line-height:2.4;margin-bottom:14px;overflow-x:auto}
+[data-theme="light"] .drag-code-wrap{color:#1a1a35}
+.drag-label{font-size:11px;color:var(--muted2);margin-bottom:8px;font-weight:600;text-transform:uppercase;letter-spacing:.06em}
+.drag-chips{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px}
+.chip{padding:8px 16px;border-radius:20px;border:1px solid var(--border2);background:var(--s2);color:var(--text);font-family:"JetBrains Mono",monospace;font-size:13px;cursor:pointer;transition:all .18s;-webkit-tap-highlight-color:transparent;min-height:38px;display:inline-flex;align-items:center}
+.chip:hover:not(.used){background:var(--s3);border-color:var(--phase2);color:var(--phase2)}
+.chip.chip-ok{background:rgba(61,214,140,.1);border-color:var(--green);color:var(--green);cursor:default}
+.chip.chip-fail{background:rgba(242,95,92,.1);border-color:var(--red);color:var(--red);cursor:default}
+.chip.chip-selected{background:rgba(196,170,238,.18);border-color:var(--purple);color:var(--purple);box-shadow:0 0 0 2px rgba(196,170,238,.2)}
+[data-theme="light"] .chip.chip-selected{background:rgba(80,48,160,.1);border-color:var(--purple);color:var(--purple)}
+.chip.answer-chip{border-color:var(--green);color:var(--green);background:rgba(61,214,140,.06)}
+.chip.used{opacity:.2;cursor:not-allowed;pointer-events:none}
+.drag-feedback{font-size:13px;font-weight:600;padding:7px 0 0;display:none;line-height:1.6;min-height:24px}
+.drag-feedback.show{display:block}
+.drag-feedback.ok{color:var(--green)}.drag-feedback.fail{color:var(--red)}
+.drag-result{background:var(--s1);border:1px solid var(--border);border-radius:var(--rlg);padding:26px;text-align:center;display:none;animation:fadeUp .3s ease;margin-top:10px}
+.drag-result.show{display:block}
+
+/* ── FILL-IN ── */
+.fill-block{background:var(--s1);border:1px solid var(--border);border-radius:var(--r);padding:17px;margin-bottom:10px}
+.fill-code{font-family:"JetBrains Mono",monospace;font-size:14px;line-height:3}
+.blank{display:inline-block;min-width:72px;background:var(--s2);border:none;border-bottom:2px solid var(--amber);color:var(--amber2);font-family:"JetBrains Mono",monospace;font-size:14px;padding:1px 6px;outline:none;border-radius:3px 3px 0 0;transition:border-color .2s}
+.blank:focus{border-color:var(--amber2)}
+.blank.ok{border-color:var(--green);color:var(--green)}.blank.fail{border-color:var(--red);color:var(--red)}
+.fill-check-btn{margin-top:10px;padding:7px 15px;background:var(--s2);border:1px solid var(--border2);color:var(--muted2);border-radius:var(--rsm);font-family:"Outfit",sans-serif;font-size:12px;cursor:pointer;transition:all .15s;min-height:36px}
+.fill-check-btn:hover{color:var(--text);border-color:var(--text)}
+.q-feedback2{font-size:13px;font-weight:500;padding:7px 0 0;display:none;line-height:1.6}
+.q-feedback2.show{display:block}
+.q-feedback2.ok{color:var(--green)}.q-feedback2.fail{color:var(--red)}
+
+/* ── CODE EDITOR ── */
+.task-card{background:rgba(240,165,0,.05);border:1px solid rgba(240,165,0,.16);border-radius:var(--rsm);padding:13px 15px;margin-bottom:14px}
+[data-theme="light"] .task-card{background:rgba(192,120,0,.05);border-color:rgba(192,120,0,.22)}
+.task-card strong{display:block;font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:var(--amber);margin-bottom:6px}
+.task-card p{font-size:14px;color:var(--text);line-height:1.7}
+.editor-wrap{border:1px solid var(--border);border-radius:var(--rsm);overflow:hidden;margin-bottom:10px}
+.editor-topbar{background:var(--s1);border-bottom:1px solid var(--border);padding:8px 13px;display:flex;align-items:center;gap:7px}
+/* ── SUCCESS / FAIL EFFECTS ── */
+@keyframes successPulse{0%{box-shadow:0 0 0 0 rgba(61,214,140,.5)}70%{box-shadow:0 0 0 14px rgba(61,214,140,0)}100%{box-shadow:0 0 0 0 rgba(61,214,140,0)}}
+@keyframes failShake{0%,100%{transform:translateX(0)}20%{transform:translateX(-8px)}40%{transform:translateX(8px)}60%{transform:translateX(-5px)}80%{transform:translateX(5px)}}
+@keyframes successFlash{0%{background:rgba(61,214,140,.12)}100%{background:transparent}}
+@keyframes failFlash{0%{background:rgba(242,95,92,.12)}100%{background:transparent}}
+.effect-success{animation:successPulse .6s ease-out,successFlash .5s ease-out}
+.effect-fail{animation:failShake .4s ease-out,failFlash .5s ease-out}
+/* ── BACK TO TOP ── */
+#back-to-top{position:fixed;bottom:22px;right:22px;z-index:900;width:40px;height:40px;border-radius:50%;border:1px solid var(--border2);background:var(--s1);color:var(--muted2);font-size:16px;cursor:pointer;display:none;align-items:center;justify-content:center;box-shadow:var(--shadow-sm);transition:all .18s}
+#back-to-top.visible{display:flex}
+#back-to-top:hover{border-color:var(--amber);color:var(--amber);transform:translateY(-2px)}
+/* ── CODEMIRROR ── */
+.CodeMirror{font-family:"JetBrains Mono",monospace!important;font-size:13.5px!important;line-height:1.8!important;height:auto!important;min-height:180px;background:var(--s2)!important;color:var(--text)!important;padding-left:0!important}
+.CodeMirror-scroll{min-height:180px;overflow-x:auto!important}
+.CodeMirror-sizer{margin-left:0!important}
+.CodeMirror-gutters{background:var(--s1)!important;border-right:1px solid var(--border)!important;position:absolute!important;left:0!important;top:0!important}
+.CodeMirror-linenumber{color:var(--muted2)!important;padding:0 10px 0 8px!important;font-size:12px!important}
+.CodeMirror-cursor{border-color:var(--amber)!important;border-left-width:2px!important}
+.CodeMirror-selected{background:rgba(240,165,0,.1)!important}
+.cm-keyword{color:#c792ea!important}.cm-string{color:#c3e88d!important}.cm-number{color:var(--amber)!important}.cm-comment{color:var(--muted2)!important;font-style:italic}
+.cm-def{color:#82aaff!important}.cm-builtin{color:#89ddff!important}.cm-operator{color:#f07178!important}
+[data-theme="light"] .cm-keyword{color:#7d2eb0!important}[data-theme="light"] .cm-string{color:#1a6a20!important}[data-theme="light"] .cm-def{color:#1040a0!important}[data-theme="light"] .cm-builtin{color:#106060!important}[data-theme="light"] .cm-operator{color:#a02030!important}
+[data-theme="light"] .CodeMirror{color:#1a1a35!important;background:var(--s2)!important}
+.run-bar{display:flex;gap:8px;align-items:center;margin-bottom:9px;flex-wrap:wrap}
+.btn-run{display:flex;align-items:center;gap:6px;padding:10px 18px;background:var(--green);color:#080b12;border:none;border-radius:var(--rsm);font-family:"Outfit",sans-serif;font-size:14px;font-weight:700;cursor:pointer;transition:opacity .15s;min-height:44px;-webkit-tap-highlight-color:transparent}
+.btn-run:hover{opacity:.84}
+.btn-check{display:flex;align-items:center;gap:6px;padding:10px 18px;background:var(--s2);color:var(--muted2);border:1px solid var(--border2);border-radius:var(--rsm);font-family:"Outfit",sans-serif;font-size:14px;font-weight:600;cursor:pointer;transition:all .15s;min-height:44px}
+.btn-check:hover{color:var(--text);border-color:var(--text)}
+.btn-hint{margin-left:auto;padding:10px 14px;background:transparent;color:var(--muted);border:1px solid var(--border);border-radius:var(--rsm);font-family:"Outfit",sans-serif;font-size:12px;cursor:pointer;transition:all .15s;min-height:44px}
+.btn-hint:hover{color:var(--amber);border-color:var(--amber)}
+.kb-hint{font-size:10px;color:var(--muted);margin-left:2px}
+.output-box{background:var(--code-bg);border:1px solid var(--border);border-radius:var(--rsm);padding:11px 14px;font-family:"JetBrains Mono",monospace;font-size:13px;min-height:70px;color:var(--code-text);white-space:pre-wrap;line-height:1.75;margin-bottom:9px}
+.out-label{display:block;font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:5px}
+.out-error{color:var(--red)!important}
+.hint-box{background:rgba(240,165,0,.05);border:1px solid rgba(240,165,0,.16);border-radius:var(--rsm);padding:10px 14px;font-size:13px;color:var(--amber2);margin-bottom:9px;display:none;line-height:1.6}
+.hint-box.show{display:block}
+.task-verdict{padding:8px 12px;border-radius:var(--rsm);font-size:13px;font-weight:600;display:none;align-items:center;gap:7px;margin-bottom:9px}
+.task-verdict.show{display:flex}
+.task-verdict.ok{background:rgba(61,214,140,.07);border:1px solid rgba(61,214,140,.22);color:var(--green)}
+.task-verdict.fail{background:rgba(242,95,92,.07);border:1px solid rgba(242,95,92,.22);color:var(--red)}
+.next-btn{display:inline-flex;align-items:center;gap:7px;margin-top:1.2rem;padding:10px 22px;background:var(--amber);color:#080b12;border:none;border-radius:var(--rsm);font-family:"Outfit",sans-serif;font-size:14px;font-weight:700;cursor:pointer;transition:opacity .15s;min-height:44px;-webkit-tap-highlight-color:transparent}
+.next-btn:hover{opacity:.86}
+.btn-row{display:flex;flex-wrap:wrap;gap:8px}
+
+/* ── WELCOME ── */
+#welcome{flex:1;overflow-y:auto;padding:0 0 60px;-webkit-overflow-scrolling:touch}
+.welcome-banner{background:var(--s1);border-bottom:1px solid var(--border);padding:28px 28px 22px;text-align:center;margin-bottom:24px}
+.welcome-banner-tag{font-family:"JetBrains Mono",monospace;font-size:11px;color:var(--amber);font-weight:700;letter-spacing:.14em;text-transform:uppercase;margin-bottom:10px}
+.welcome-banner h1{font-size:2rem;font-weight:700;color:var(--text);margin-bottom:10px;line-height:1.15}
+.welcome-banner h1 em{color:var(--amber);font-style:normal}
+.welcome-banner p{color:var(--muted2);max-width:480px;margin:0 auto;line-height:1.8;font-size:14px}
+.welcome-body{padding:0 22px}
+.onboarding-banner{display:flex;align-items:center;gap:14px;background:var(--s1);border:1px solid var(--border);border-left:3px solid var(--amber);border-radius:var(--r);padding:14px 16px;margin:0 auto 22px;max-width:720px}
+.onb-icon{font-size:1.6rem;flex-shrink:0}
+.onb-text{flex:1;font-size:13.5px;line-height:1.6;color:var(--text)}
+.onb-text strong{color:var(--amber)}
+.onb-start{padding:9px 18px;background:var(--amber);color:#0a0d16;border:none;border-radius:var(--rsm);font-family:"Outfit",sans-serif;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;transition:opacity .15s;flex-shrink:0}
+.onb-start:hover{opacity:.86}
+.welcome-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;max-width:540px;margin:0 auto 22px}
+.stat-card{background:var(--s1);border:1px solid var(--border);border-radius:var(--r);padding:14px 10px;text-align:center}
+.stat-num{font-size:1.7rem;font-weight:700;font-family:"JetBrains Mono",monospace;color:var(--amber)}
+.stat-lbl{font-size:10px;color:var(--muted2);margin-top:3px;text-transform:uppercase;letter-spacing:.06em}
+.sec-label{font-size:10px;text-transform:uppercase;letter-spacing:.12em;color:var(--muted2);font-weight:600;margin-bottom:10px;max-width:720px;margin-left:auto;margin-right:auto;display:block}
+.module-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px;max-width:720px;margin:0 auto}
+.module-card{background:var(--s1);border:1px solid var(--border);border-radius:var(--rlg);padding:16px 18px;cursor:pointer;transition:all .22s;position:relative;overflow:hidden;-webkit-tap-highlight-color:transparent}
+.module-card:hover{border-color:var(--border2);transform:translateY(-2px);box-shadow:var(--shadow)}
+.mc-accent{position:absolute;top:0;left:0;right:0;height:2.5px}
+.mc-icon{font-size:1.5rem;margin-bottom:8px}
+.mc-title{font-size:14px;font-weight:700;color:var(--text);margin-bottom:3px}
+.mc-desc{font-size:11.5px;color:var(--muted2);line-height:1.5;margin-bottom:10px}
+.mc-progress{height:3px;background:var(--s3);border-radius:2px;overflow:hidden;margin-bottom:5px}
+.mc-fill{height:100%;border-radius:2px;transition:width .5s ease}
+.mc-label{font-size:10px;color:var(--muted2);display:flex;justify-content:space-between}
+.mc-soon{display:inline-flex;align-items:center;gap:4px;background:var(--s3);border-radius:20px;padding:2px 8px;font-size:10px;color:var(--muted2);margin-top:4px}
+.start-hint{text-align:center;margin-top:20px;font-size:13px;color:var(--muted);display:flex;align-items:center;justify-content:center;gap:8px}
+.arrow-anim{animation:arrowPulse 1.6s ease-in-out infinite}
+@keyframes arrowPulse{0%,100%{transform:translateX(0)}50%{transform:translateX(-6px)}}
+
+/* ── LEVEL-UP MODAL ── */
+#levelup-modal{position:fixed;inset:0;z-index:8000;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.8);backdrop-filter:blur(6px);opacity:0;pointer-events:none;transition:opacity .35s}
+#levelup-modal.show{opacity:1;pointer-events:auto}
+.lu-card{background:var(--s1);border:1px solid var(--border2);border-radius:var(--rlg);padding:36px 40px;text-align:center;min-width:280px;transform:scale(.88);transition:transform .35s cubic-bezier(.34,1.56,.64,1);box-shadow:0 24px 64px rgba(0,0,0,.6)}
+#levelup-modal.show .lu-card{transform:scale(1)}
+.lu-badge{font-family:"JetBrains Mono",monospace;font-size:3.5rem;font-weight:700;color:var(--amber);line-height:1;margin-bottom:6px}
+.lu-title{font-size:1.2rem;font-weight:700;color:var(--text);margin-bottom:6px}
+.lu-sub{font-size:13px;color:var(--muted2);margin-bottom:20px}
+.lu-close{padding:10px 24px;background:var(--amber);color:#080b12;border:none;border-radius:var(--rsm);font-family:"Outfit",sans-serif;font-size:14px;font-weight:700;cursor:pointer;transition:opacity .15s}
+.lu-close:hover{opacity:.86}
+@keyframes confettiFall{0%{transform:translateY(0) rotate(0deg);opacity:1}100%{transform:translateY(105vh) rotate(720deg);opacity:0}}
+
+/* ── TOASTS ── */
+#toast-container{position:fixed;bottom:20px;right:20px;z-index:7000;display:flex;flex-direction:column;gap:8px;pointer-events:none}
+.toast{display:flex;align-items:center;gap:10px;background:var(--s1);border:1px solid var(--border2);border-radius:var(--r);padding:11px 16px;font-size:13.5px;color:var(--text);box-shadow:var(--shadow);animation:toastIn .3s ease forwards;pointer-events:auto;min-width:220px;max-width:300px}
+.toast.out{animation:toastOut .3s ease forwards}
+.toast-icon{font-size:18px;flex-shrink:0}
+.toast-title{font-weight:700;margin-bottom:2px;font-size:13px}
+.toast-sub{font-size:11.5px;color:var(--muted2)}
+@keyframes toastIn{from{opacity:0;transform:translateX(40px)}to{opacity:1;transform:translateX(0)}}
+@keyframes toastOut{from{opacity:1;transform:translateX(0)}to{opacity:0;transform:translateX(40px)}}
+
+/* ── MOBILE ── */
+@media(max-width:768px){
+  html,body{overflow:hidden}
+  #header{padding:0 10px;gap:6px}
+  .logo-brand,.logo-slash{display:none}
+  .logo-product{font-size:1rem}
+  .xp-wrap{display:none}
+  .streak-badge{display:none}
+  .header-score{display:none}
+  .hamburger{display:flex}
+  #sidebar{position:fixed;left:0;top:56px;bottom:0;transform:translateX(-100%);box-shadow:var(--shadow);width:min(270px,84vw);border-right:none;border-top:1px solid var(--border)}
+  #sidebar.open{transform:translateX(0)}
+  #sidebar-overlay.show{display:block}
+  #lesson-head{padding:8px 12px 0}
+  #lesson-title{font-size:1.1rem}
+  #lesson-desc{font-size:12px;margin-bottom:6px}
+  .lesson-breadcrumb{font-size:9px;margin-bottom:3px}
+  .score-strip{display:none}
+  #phase-tabs{padding:0 8px}
+  .ptab{padding:9px 8px;font-size:10px;gap:3px}
+  .ptab-score{display:none}
+  #content-area{padding:12px 12px 80px}
+  .lesson-text p{font-size:14px}
+  .box{font-size:13px}
+  .cmp-table td,.cmp-table th{padding:7px 9px;font-size:11px}
+  .cb-body{font-size:12px}
+  .fill-code{font-size:12px;line-height:2.6}
+  .blank{font-size:12px;min-width:55px}
+  .q-text{font-size:14px}
+  .opt{font-size:12.5px;padding:10px 12px}
+  #welcome{padding:0 0 60px}
+  .welcome-banner{padding:20px 16px 16px}
+  .welcome-banner h1{font-size:1.5rem}
+  .welcome-body{padding:0 14px}
+  .welcome-stats{grid-template-columns:repeat(3,1fr)}
+  .module-cards{grid-template-columns:1fr}
+  .run-bar{gap:6px}
+  .btn-run,.btn-check{padding:9px 14px;font-size:13px}
+  .btn-hint{display:none}
+  .kb-hint{display:none}
+  .drag-code-wrap{font-size:12.5px;padding:10px 12px}
+  .chip{font-size:12px;padding:7px 12px}
+  .hl{min-width:54px;font-size:12.5px}
+  #toast-container{bottom:12px;right:12px;left:12px}
+  .toast{max-width:100%}
+  .onboarding-banner{flex-direction:column;text-align:center}
+  .dp-stats{grid-template-columns:repeat(2,1fr)}
+}
+@media(max-width:380px){
+  .score-strip{grid-template-columns:repeat(2,1fr)}
+  .ptab span:not(.ptab-score){display:none}
+}
+</style>
+</head>
+<body>
+<div id="sk-loading">
+  <div class="sk-logo">axyon.dev<span>/PyLab</span></div>
+  <div class="sk-spin"></div>
+  <span>Python motoru hazırlanıyor...</span>
+</div>
+<div id="levelup-modal" role="dialog" aria-modal="true" aria-label="Seviye atlandı">
+  <div class="lu-card">
+    <div class="lu-badge" id="lu-badge">LVL 2</div>
+    <div class="lu-title">Seviye Atladın! 🎉</div>
+    <div class="lu-sub" id="lu-sub">Python yolculuğunda ilerliyorsun.</div>
+    <button class="lu-close" onclick="closeLevelUp()">Harika! →</button>
+  </div>
+</div>
+<div id="toast-container" aria-live="polite"></div>
+<header id="header">
+  <div class="logo" onclick="goHome()" role="button" tabindex="0" aria-label="Ana sayfa">
+    <span class="logo-brand">axyon.dev</span>
+    <span class="logo-slash">/</span>
+    <span class="logo-product">PyLab</span>
+  </div>
+  <div class="xp-wrap" aria-label="Deneyim puanı">
+    <div class="level-badge" id="level-badge">LVL 1</div>
+    <div class="xp-bar-outer" role="progressbar" aria-valuemin="0" aria-valuemax="100">
+      <div class="xp-bar-inner" id="xp-bar"></div>
+    </div>
+    <div class="xp-label" id="xp-label">0/100 XP</div>
+  </div>
+  <div class="header-right">
+    <div class="streak-badge" title="Günlük seri" aria-label="Seri">
+      <span class="streak-fire">🔥</span>
+      <span class="streak-num" id="streak-num">0</span>
+    </div>
+    <div class="header-score" aria-label="Toplam puan">
+      <span class="score-star">★</span>
+      <span class="score-num" id="total-score">0</span>
+      <span style="color:var(--muted);font-size:10px">puan</span>
+    </div>
+    <button class="icon-btn" id="sound-btn" onclick="toggleSound()" title="Ses" aria-label="Ses aç/kapat">🔊</button>
+    <button class="icon-btn" id="theme-btn" onclick="toggleTheme()" title="Tema" aria-label="Tema değiştir">🌙</button>
+    <button class="hamburger" id="hamburger" onclick="toggleSidebar()" aria-label="Menü" aria-expanded="false">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</header>
+<div id="app">
+  <div id="sidebar-overlay" onclick="closeSidebar()"></div>
+  <nav id="sidebar" aria-label="Müfredat">
+    <div class="sidebar-top">
+      <div class="sb-search-wrap">
+        <span class="sb-search-icon">🔍</span>
+        <input class="sb-search" id="sb-search" type="search" placeholder="Konu ara..." oninput="buildSidebar(this.value)" aria-label="Konu ara">
+      </div>
+      <button class="sb-dashboard-btn" onclick="openDashboard()">📊 Genel Durum</button>
+    </div>
+    <div id="topic-list"></div>
+  </nav>
+  <!-- DASHBOARD OVERLAY -->
+  <div id="dashboard-overlay" onclick="closeDashboardOutside(event)">
+    <div class="dashboard-panel" id="dashboard-panel">
+      <div class="dp-head">
+        <div class="dp-title">📊 Genel Durum</div>
+        <button class="dp-close" onclick="closeDashboard()">✕</button>
+      </div>
+      <div id="dp-content"></div>
+    </div>
+  </div>
+  <button id="back-to-top" onclick="scrollToTop()" title="Başa dön">↑</button>
+  <main id="main">
+    <div id="lesson-head" style="display:none">
+      <div class="lesson-breadcrumb">
+        <span id="module-tag"></span>
+        <span class="bc-sep">›</span>
+        <span id="lesson-topic-name" style="color:var(--text)"></span>
+      </div>
+      <div id="lesson-title"></div>
+      <div id="lesson-desc"></div>
+      <div class="score-strip" id="score-strip" aria-label="Bölüm puanları">
+        <div class="score-cell"><div class="sc-label">Ders</div><div class="sc-val" id="sc0" style="color:var(--phase0)">—</div></div>
+        <div class="score-cell"><div class="sc-label">Test</div><div class="sc-val" id="sc1" style="color:var(--phase1)">—</div></div>
+        <div class="score-cell"><div class="sc-label">Seç</div><div class="sc-val" id="sc2" style="color:var(--phase2)">—</div></div>
+        <div class="score-cell"><div class="sc-label">Boşluk</div><div class="sc-val" id="sc3" style="color:var(--phase3)">—</div></div>
+        <div class="score-cell"><div class="sc-label">Kod</div><div class="sc-val" id="sc4" style="color:var(--phase4)">—</div></div>
+      </div>
+    </div>
+    <div id="phase-tabs" style="display:none" role="tablist">
+      <button class="ptab active" data-phase="0" onclick="switchPhase(0)" role="tab">📖 Ders <span class="ptab-score" id="pts0">—</span></button>
+      <button class="ptab" data-phase="1" onclick="switchPhase(1)" role="tab">🧠 Test <span class="ptab-score" id="pts1">—</span></button>
+      <button class="ptab" data-phase="2" onclick="switchPhase(2)" role="tab">🎯 Seç <span class="ptab-score" id="pts2">—</span></button>
+      <button class="ptab" data-phase="3" onclick="switchPhase(3)" role="tab">✏️ Boşluk <span class="ptab-score" id="pts3">—</span></button>
+      <button class="ptab" data-phase="4" onclick="switchPhase(4)" role="tab">💻 Kodla <span class="ptab-score" id="pts4">—</span></button>
+    </div>
+    <div id="content-area">
+      <div id="welcome"></div>
+      <div id="lesson-panels" style="display:none">
+        <div class="phase-panel active" id="panel-0" role="tabpanel"></div>
+        <div class="phase-panel" id="panel-1" role="tabpanel"></div>
+        <div class="phase-panel" id="panel-2" role="tabpanel"></div>
+        <div class="phase-panel" id="panel-3" role="tabpanel"></div>
+        <div class="phase-panel" id="panel-4" role="tabpanel"></div>
+      </div>
+    </div>
+  </main>
+</div>
+<script>
+
+/* ═══════════════════════════════════════════════════════════
+   AXYON LEARN ENGINE  v2.0
+   Motor — İçerik buraya yazılmaz.
+   Kurs içeriği course.json + modules/*.json ile yüklenir.
+═══════════════════════════════════════════════════════════ */
+
+/* ═══ COURSE DATA ═══ */
+let MODULES = [];
+let LESSONS = [];
+let COURSE_META = {};
+
+/* ═══ CODE CHECK ENGINE ═══ */
+// code.checkFn (string) varsa Function() ile çalıştır
+// code.check (descriptor object) varsa pattern engine kullan
+function runCodeCheck(code, descriptor) {
+  // checkFn: saklı JS fonksiyon stringi
+  if (descriptor.checkFn) {
+    try {
+      const fn = new Function('code', 'return (' + descriptor.checkFn + ')(code)');
+      return fn(code);
+    } catch(e) {
+      return {pts:0, max:10, ok:false, msg:'Check hatası: ' + e.message};
+    }
+  }
+  // check: pattern descriptor objesi
+  if (descriptor.patterns) {
+    let pts = 0;
+    for (const pat of descriptor.patterns) {
+      try {
+        const re = pat.regex
+          ? new RegExp(pat.match, pat.flags || 'g')
+          : new RegExp(pat.match.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g');
+        const matches = code.match(re) || [];
+        const cnt = matches.length;
+        if (pat.minCount ? cnt >= pat.minCount : cnt > 0) pts += pat.pts;
+      } catch(e) {}
+    }
+    const ok = pts >= (descriptor.passPts || Math.ceil(descriptor.maxPts * 0.6));
+    const msg = pts >= (descriptor.maxPts * 0.9) ? (descriptor.passMsg || 'Mükemmel!') :
+                ok ? (descriptor.okMsg || 'Güzel iş!') : (descriptor.failMsg || 'Tekrar dene.');
+    return {pts, max: descriptor.maxPts || 10, ok, msg};
+  }
+  return {pts:5, max:10, ok:true, msg:'Kontrol edildi.'};
+}
+
+/* ═══ COURSE LOADER ═══ */
+async function loadCourse() {
+  // Base URL: same directory as engine
+  const BASE = window.location.href.replace(/\?.*$/, '').replace(/[^/]*$/, '');
+  
+  try {
+    showLoader('Kurs yükleniyor...');
+    
+    // 1. Load course.json
+    const courseRes = await fetch(BASE + 'course.json');
+    if (!courseRes.ok) throw new Error('course.json yüklenemedi');
+    const course = await courseRes.json();
+    COURSE_META = course.meta;
+    
+    // 2. Apply meta to UI
+    applyCourseMeta(COURSE_META);
+    
+    // 3. Load modules in parallel (skip comingSoon)
+    const toLoad = course.modules.filter(m => !m.comingSoon && m.file);
+    const comingSoon = course.modules.filter(m => m.comingSoon);
+    
+    const results = await Promise.allSettled(
+      toLoad.map(m => fetch(BASE + m.file).then(r => {
+        if (!r.ok) throw new Error(m.file + ' yüklenemedi');
+        return r.json();
+      }))
+    );
+    
+    // 4. Build MODULES and LESSONS
+    MODULES = [];
+    LESSONS = [];
+    
+    results.forEach((result, i) => {
+      const modMeta = toLoad[i];
+      if (result.status === 'fulfilled') {
+        const mod = result.value;
+        MODULES.push({
+          id: mod.id,
+          label: mod.label,
+          icon: mod.icon,
+          color: mod.color
+        });
+        mod.lessons.forEach(lesson => {
+          // Patch code.check if checkFn exists
+          if (lesson.code && lesson.code.checkFn) {
+            const desc = lesson.code;
+            lesson.code.check = (code) => runCodeCheck(code, desc);
+          }
+          LESSONS.push({...lesson, moduleId: mod.id});
+        });
+      } else {
+        console.warn('Modül yüklenemedi:', modMeta.file, result.reason);
+        // Add placeholder module
+        MODULES.push({
+          id: modMeta.id,
+          label: modMeta.id,
+          icon: '⚠️',
+          color: '#888',
+          error: true
+        });
+      }
+    });
+    
+    // 5. Coming soon modules
+    comingSoon.forEach(m => {
+      MODULES.push({...m, comingSoon: true});
+    });
+    
+    // 6. Hide codeRunner tab if not needed
+    if (COURSE_META.codeRunner === 'none') {
+      const codeTab = document.querySelector('.ptab[data-phase="4"]');
+      if (codeTab) codeTab.style.display = 'none';
+    }
+    
+    hideLoader();
+    init();
+    
+  } catch(err) {
+    hideLoader();
+    showCourseError(err.message);
+  }
+}
+
+function applyCourseMeta(meta) {
+  // Title & brand
+  document.title = (meta.brand ? meta.brand + ' ' : '') + meta.title;
+  const logoProduct = document.querySelector('.logo-product');
+  if (logoProduct) logoProduct.textContent = meta.title;
+  const logoBrand = document.querySelector('.logo-brand');
+  if (logoBrand) logoBrand.textContent = meta.brand || '';
+  
+  // Theme color — update CSS vars
+  if (meta.themeColor) {
+    document.documentElement.style.setProperty('--amber', meta.themeColor);
+    // Recalculate amber2 (lighter)
+    document.documentElement.style.setProperty('--amber2', meta.themeColor + 'cc');
+  }
+  
+  // Course icon in sk-loading logo
+  const skLogo = document.querySelector('.sk-logo');
+  if (skLogo && meta.icon) {
+    skLogo.innerHTML = meta.icon + ' ' + meta.title + '<span>/' + (meta.brand || '') + '</span>';
+  }
+}
+
+function showLoader(msg) {
+  const ov = document.getElementById('sk-loading');
+  if (ov) {
+    ov.style.display = 'flex';
+    ov.classList.remove('done');
+    const span = ov.querySelector('span');
+    if (span) span.textContent = msg;
+  }
+}
+
+function hideLoader() {
+  const ov = document.getElementById('sk-loading');
+  if (ov) { ov.classList.add('done'); setTimeout(() => ov.style.display='none', 500); }
+}
+
+function showCourseError(msg) {
+  document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100vh;flex-direction:column;gap:16px;font-family:sans-serif;color:#f25f5c;background:#0f1320">'
+    + '<div style="font-size:2rem">⚠️</div>'
+    + '<div style="font-size:1.1rem;font-weight:700">Kurs yüklenemedi</div>'
+    + '<div style="font-size:14px;color:#888;text-align:center;max-width:400px">' + msg + '</div>'
+    + '<div style="font-size:12px;color:#555;text-align:center">course.json ve modules/ klasörünün doğru konumda olduğundan emin ol.<br>Yerel dosyada çalışıyorsan bir web sunucusu kullan: <code>python -m http.server 8000</code></div>'
+    + '</div>';
+}
+
+
+
+/* ═══ DASHBOARD ═══ */
+function openDashboard(){
+  const done=LESSONS.filter(l=>topicScore(l.id)>=50).length;
+  const avg=Math.round(LESSONS.reduce((s,l)=>s+topicScore(l.id),0)/LESSONS.length);
+  const totalDone=Object.values(S.progress).reduce((n,p)=>n+p.done.filter(Boolean).length,0);
+  function verdict(sc){
+    if(sc===0)return'<span class="dp-verdict dp-v-none">Başlanmadı</span>';
+    if(sc>=90)return'<span class="dp-verdict dp-v-super">Süper</span>';
+    if(sc>=70)return'<span class="dp-verdict dp-v-good">İyi</span>';
+    if(sc>=50)return'<span class="dp-verdict dp-v-ok">Vasat</span>';
+    return'<span class="dp-verdict dp-v-weak">Zayıf</span>';
+  }
+  function barColor(sc){
+    if(sc>=90)return'var(--green)';
+    if(sc>=70)return'var(--blue)';
+    if(sc>=50)return'var(--amber)';
+    if(sc>0)return'var(--red)';
+    return'var(--s3)';
+  }
+  let rows='';
+  const grouped={};LESSONS.forEach(l=>{if(!grouped[l.moduleId])grouped[l.moduleId]=[];grouped[l.moduleId].push(l);});
+  MODULES.filter(m=>!m.comingSoon).forEach(mod=>{
+    const ls=grouped[mod.id]||[];if(!ls.length)return;
+    rows+=`<div style="margin-bottom:16px"><div class="dp-section-title" style="color:${mod.color}">${mod.icon} ${mod.label}</div><div class="dp-lesson-grid">`;
+    ls.forEach(l=>{
+      const sc=topicScore(l.id);
+      const p=getP(l.id);
+      const phases=['Ders','Test','Seç','Boşluk','Kod'].map((ph,i)=>`<span style="font-size:10px;padding:1px 5px;border-radius:4px;background:${p.done[i]?'rgba(61,214,140,.15)':'var(--s3)'};color:${p.done[i]?'var(--green)':'var(--muted2)'}">${ph}</span>`).join('');
+      rows+=`<div class="dp-lesson-row">
+        <div class="dp-lesson-icon">${l.icon}</div>
+        <div style="flex:1;min-width:0">
+          <div class="dp-lesson-name">${l.title}</div>
+          <div style="display:flex;gap:4px;margin-top:4px;flex-wrap:wrap">${phases}</div>
+        </div>
+        <div class="dp-lesson-bar"><div class="dp-lesson-fill" style="width:${sc}%;background:${barColor(sc)}"></div></div>
+        <div class="dp-lesson-pct" style="color:${barColor(sc)}">${sc}%</div>
+        ${verdict(sc)}
+      </div>`;
+    });
+    rows+='</div></div>';
+  });
+  document.getElementById('dp-content').innerHTML=`
+    <div class="dp-stats">
+      <div class="dp-stat"><div class="dp-stat-num">${done}/${LESSONS.length}</div><div class="dp-stat-lbl">Tamamlanan</div></div>
+      <div class="dp-stat"><div class="dp-stat-num">${S.totalXP}</div><div class="dp-stat-lbl">Toplam XP</div></div>
+      <div class="dp-stat"><div class="dp-stat-num">${avg}%</div><div class="dp-stat-lbl">Ortalama</div></div>
+      <div class="dp-stat"><div class="dp-stat-num">🔥${S.streak||0}</div><div class="dp-stat-lbl">Seri</div></div>
+    </div>
+    ${rows}`;
+  document.getElementById('dashboard-overlay').classList.add('show');
+  closeSidebar();
+}
+function closeDashboard(){document.getElementById('dashboard-overlay').classList.remove('show');}
+function closeDashboardOutside(e){if(e.target===document.getElementById('dashboard-overlay'))closeDashboard();}
+
+/* ═══ BACK TO TOP ═══ */
+function scrollToTop(){document.getElementById('content-area').scrollTo({top:0,behavior:'smooth'});}
+(function(){
+  const ca=document.getElementById('content-area');
+  const btn=document.getElementById('back-to-top');
+  if(ca&&btn)ca.addEventListener('scroll',()=>btn.classList.toggle('visible',ca.scrollTop>300));
+})();
+
+/* ═══ EFFECTS ═══ */
+function effectSuccess(el){if(!el)return;el.classList.remove('effect-success','effect-fail');void el.offsetWidth;el.classList.add('effect-success');setTimeout(()=>el.classList.remove('effect-success'),700);}
+function effectFail(el){if(!el)return;el.classList.remove('effect-success','effect-fail');void el.offsetWidth;el.classList.add('effect-fail');setTimeout(()=>el.classList.remove('effect-fail'),500);}
+function applyTheme(t){
+  document.documentElement.setAttribute('data-theme',t);
+  document.getElementById('theme-btn').textContent=t==='dark'?'🌙':'☀️';
+  if(cm){const el=document.querySelector('.CodeMirror');if(el)el.style.background='var(--s2)';}
+  try{localStorage.setItem('axyon-pylab-theme',t);}catch(e){}
+}
+function toggleTheme(){const c=document.documentElement.getAttribute('data-theme')||'dark';applyTheme(c==='dark'?'light':'dark');}
+(function(){try{const t=localStorage.getItem('axyon-pylab-theme');if(t)applyTheme(t);}catch(e){}}());
+
+/* ═══ AUDIO ═══ */
+const SFX={
+  ctx:null,
+  init(){if(this.ctx)return;try{this.ctx=new(window.AudioContext||window.webkitAudioContext)();}catch(e){}},
+  tone(freq,dur,type,vol){
+    if(!this.ctx||S.soundOff)return;
+    type=type||'sine';vol=vol||0.18;
+    try{
+      if(this.ctx.state==='suspended')this.ctx.resume();
+      const o=this.ctx.createOscillator(),g=this.ctx.createGain();
+      o.connect(g);g.connect(this.ctx.destination);
+      o.type=type;o.frequency.value=freq;
+      g.gain.setValueAtTime(vol,this.ctx.currentTime);
+      g.gain.exponentialRampToValueAtTime(0.001,this.ctx.currentTime+dur);
+      o.start();o.stop(this.ctx.currentTime+dur);
+    }catch(e){}
+  },
+  correct(){this.init();this.tone(523,.1);setTimeout(()=>this.tone(659,.15),90);setTimeout(()=>this.tone(784,.2),190);},
+  wrong(){this.init();this.tone(180,.25,'sawtooth',.12);},
+  levelup(){this.init();[523,659,784,1047].forEach((f,i)=>setTimeout(()=>this.tone(f,.3,'triangle',.2),i*120));},
+  click(){this.init();this.tone(400,.06,'sine',.07);}
+};
+function toggleSound(){
+  SFX.init();S.soundOff=!S.soundOff;
+  document.getElementById('sound-btn').textContent=S.soundOff?'🔇':'🔊';
+  saveState();if(!S.soundOff)SFX.click();
+}
+
+/* ═══ MOBILE ═══ */
+function toggleSidebar(){
+  const sb=document.getElementById('sidebar'),ov=document.getElementById('sidebar-overlay'),hb=document.getElementById('hamburger');
+  const open=sb.classList.toggle('open');
+  ov.classList.toggle('show',open);hb.classList.toggle('open',open);hb.setAttribute('aria-expanded',open);
+}
+function closeSidebar(){
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('sidebar-overlay').classList.remove('show');
+  const hb=document.getElementById('hamburger');hb.classList.remove('open');hb.setAttribute('aria-expanded','false');
+}
+function goHome(){
+  closeSidebar();
+  document.getElementById('welcome').style.display='';
+  document.getElementById('lesson-panels').style.display='none';
+  document.getElementById('lesson-head').style.display='none';
+  document.getElementById('phase-tabs').style.display='none';
+  renderWelcome();
+}
+
+/* ═══ SKULPT ═══ */
+var skReady=false;
+function waitForSkulpt(cb,attempts){
+  attempts=attempts||0;
+  if(typeof Sk!=='undefined'){
+    skReady=true;
+    const ov=document.getElementById('sk-loading');ov.classList.add('done');
+    setTimeout(()=>ov.style.display='none',500);
+    if(cb)cb();
+  } else if(attempts<60){
+    setTimeout(()=>waitForSkulpt(cb,attempts+1),200);
+  } else {
+    const ov=document.getElementById('sk-loading');
+    ov.style.pointerEvents='auto';
+    ov.innerHTML=`<span style="font-size:2rem">⚠️</span><span style="color:var(--red);font-weight:600">Python motoru yüklenemedi</span><span style="font-size:12px;color:var(--muted2);text-align:center;max-width:260px">İnternet bağlantını kontrol et</span><button onclick="location.reload()" style="padding:10px 22px;background:var(--amber);color:#080b12;border:none;border-radius:8px;cursor:pointer;font-family:'Outfit',sans-serif;font-size:14px;font-weight:700">Yenile</button>`;
+  }
+}
+function skRun(code,outputEl,btnEl){
+  if(typeof Sk==='undefined'){outputEl.textContent='Python yüklenmedi.';return;}
+  Sk.configure({
+    output:t=>{outputEl.textContent+=t;},
+    read:x=>{if(Sk.builtinFiles&&Sk.builtinFiles.files[x])return Sk.builtinFiles.files[x];throw new Error("File not found: '"+x+"'");},
+    __future__:Sk.python3
+  });
+  try{Sk.importMainWithBody('<stdin>',false,code,true);}
+  catch(e){outputEl.textContent+='\n'+String(e);outputEl.classList.add('cb-err');}
+  if(btnEl)btnEl.textContent='▶ Çalıştır';
+}
+
+/* ═══ HTML HELPERS ═══ */
+const D={
+  dots:'<div class="cb-dots"><div class="cb-dot" style="background:#ff5f57"></div><div class="cb-dot" style="background:#ffbd2e"></div><div class="cb-dot" style="background:#28c840"></div></div>',
+  block(file,body,py=null){
+    const r=py!==null;
+    return'<div class="code-block'+(r?' runnable':'')+'"><div class="cb-header">'+this.dots+'<span class="cb-label">'+file+'</span>'+(r?'<span class="cb-run-tag">▶ çalıştırılabilir</span>':'')+'</div><div class="cb-body">'+body+'</div>'+(r?'<textarea class="cb-src" style="display:none">'+py+'</textarea>':'')+'</div>';
+  },
+  tip:(i,t)=>'<div class="box tip"><span class="box-icon">'+i+'</span><span>'+t+'</span></div>',
+  warn:(i,t)=>'<div class="box warn"><span class="box-icon">'+i+'</span><span>'+t+'</span></div>',
+  why:(i,t)=>'<div class="box why"><span class="box-icon">'+i+'</span><span>'+t+'</span></div>',
+  alt:(i,t)=>'<div class="box alt"><span class="box-icon">'+i+'</span><span>'+t+'</span></div>',
+  deep:(i,t)=>'<div class="box deep"><span class="box-icon">'+i+'</span><span>'+t+'</span></div>',
+};
+function sh(h,color){color=color||'var(--blue)';return'<div class="section-h"><div class="bar" style="background:'+color+'"></div><h3>'+h+'</h3></div>';}
+
+/* ═══ STATE ═══ */
+const STORAGE_KEY='axyon-pylab-v1';
+let S={currentId:null,currentPhase:0,progress:{},totalXP:0,streak:0,lastVisit:'',soundOff:false,achievements:{}};
+let cm=null;
+
+function getP(id){if(!S.progress[id])S.progress[id]={scores:[null,null,null,null,null],done:[false,false,false,false,false]};return S.progress[id];}
+function topicScore(id){const p=getP(id);const v=p.scores.filter(s=>s!==null);return v.length?Math.round(v.reduce((a,b)=>a+b,0)/4):0;}
+function saveState(){
+  try{localStorage.setItem(STORAGE_KEY,JSON.stringify(S));}
+  catch(e){if(e.name==='QuotaExceededError')showToast('⚠️','Depolama Dolu','Tarayıcı depolama alanı dolu.','var(--red)');}
+}
+function loadState(){
+  try{const r=localStorage.getItem(STORAGE_KEY);if(r)Object.assign(S,JSON.parse(r));}catch(e){}
+  document.getElementById('sound-btn').textContent=S.soundOff?'🔇':'🔊';
+  updateLocks();
+}
+function updateLocks(){
+  LESSONS[0].locked=false;
+  for(let i=1;i<LESSONS.length;i++){
+    const prev=LESSONS[i-1];
+    if(topicScore(prev.id)>=40||getP(prev.id).done.some(Boolean))LESSONS[i].locked=false;
+  }
+}
+
+/* ═══ GAMIFICATION ═══ */
+const ACHIEVEMENTS={
+  first_lesson:{icon:'🥇',title:'İlk Adım',desc:'İlk dersini tamamladın!'},
+  perfect_quiz:{icon:'🧠',title:'Quiz Ustası',desc:'Bir quizden %100 aldın!'},
+  first_code:{icon:'💻',title:'Kodcu',desc:'İlk kod görevini tamamladın!'},
+  five_done:{icon:'🔥',title:'Ateşli',desc:'5 bölüm tamamladın!'},
+  perfect_topic:{icon:'🌟',title:'Mükemmel',desc:'Bir konudan %100 aldın!'},
+  night_owl:{icon:'🦉',title:'Gece Kuşu',desc:'Gece geç saatte çalıştın!'},
+};
+function checkStreak(){
+  const today=new Date().toDateString();
+  const yesterday=new Date(Date.now()-86400000).toDateString();
+  if(S.lastVisit===today)return;
+  S.streak=S.lastVisit===yesterday?Math.min((S.streak||0)+1,999):1;
+  S.lastVisit=today;
+  const h=new Date().getHours();
+  if(h>=23||h<4)giveAchievement('night_owl');
+  saveState();
+}
+function giveAchievement(id){
+  if(S.achievements[id])return;
+  S.achievements[id]=true;
+  const a=ACHIEVEMENTS[id];
+  if(a)showToast(a.icon,a.title,a.desc,'var(--amber)');
+}
+function checkAchievements(){
+  const total=Object.values(S.progress).reduce((n,p)=>n+p.done.filter(Boolean).length,0);
+  if(total>=1)giveAchievement('first_lesson');
+  if(total>=5)giveAchievement('five_done');
+  Object.values(S.progress).forEach(p=>{
+    if(p.scores[1]===100)giveAchievement('perfect_quiz');
+    if(p.done[4])giveAchievement('first_code');
+  });
+  if(LESSONS.some(l=>topicScore(l.id)===100))giveAchievement('perfect_topic');
+}
+function showConfetti(){
+  const cols=['#f0a500','#3dd68c','#7eb8f7','#b39ddb','#f25f5c','#f78c6c','#89ddff'];
+  for(let i=0;i<70;i++){
+    const el=document.createElement('div');
+    const sz=Math.random()*8+5;
+    el.style.cssText=`position:fixed;width:${sz}px;height:${sz}px;border-radius:${Math.random()>.5?'50%':'2px'};background:${cols[i%cols.length]};left:${Math.random()*100}%;top:-12px;z-index:9999;pointer-events:none;animation:confettiFall ${1.5+Math.random()*2.5}s ease-in ${Math.random()*.7}s forwards;transform:rotate(${Math.random()*360}deg)`;
+    document.body.appendChild(el);
+    el.addEventListener('animationend',()=>el.remove());
+  }
+}
+function showLevelUp(lvl){
+  SFX.levelup();showConfetti();
+  document.getElementById('lu-badge').textContent='LVL '+lvl;
+  document.getElementById('lu-sub').textContent=lvl<=3?'Python yolculuğuna güçlü başladın!':lvl<=6?'Gerçekten derinleşiyorsun!':'Bir Python uzmanına dönüşüyorsun!';
+  document.getElementById('levelup-modal').classList.add('show');
+}
+function closeLevelUp(){document.getElementById('levelup-modal').classList.remove('show');}
+function showToast(icon,title,sub,color){
+  const c=document.getElementById('toast-container');
+  const t=document.createElement('div');t.className='toast';
+  t.innerHTML=`<span class="toast-icon">${icon}</span><div><div class="toast-title" style="color:${color||'var(--amber)'}">${title}</div><div class="toast-sub">${sub}</div></div>`;
+  c.appendChild(t);
+  setTimeout(()=>{t.classList.add('out');setTimeout(()=>t.remove(),300);},3500);
+}
+
+/* ═══ SIDEBAR ═══ */
+function buildSidebar(query){
+  query=(query||'').toLowerCase().trim();
+  let html='';
+  const grouped={};
+  LESSONS.forEach(l=>{if(!grouped[l.moduleId])grouped[l.moduleId]=[];grouped[l.moduleId].push(l);});
+  MODULES.forEach((mod,mi)=>{
+    const ls=grouped[mod.id]||[];
+    if(mod.comingSoon){
+      html+=`<div class="module-header"><div class="mh-dot" style="background:${mod.color}"></div><span style="color:${mod.color}">${mod.icon} ${mod.label}</span><div class="mh-line"></div><span class="mh-count" style="color:var(--border2)">soon</span></div>`;
+      return;
+    }
+    if(!ls.length)return;
+    const done=ls.filter(l=>topicScore(l.id)>=50).length;
+    html+=`<div class="module-header"><div class="mh-dot" style="background:${mod.color}"></div><span style="color:${mod.color}">${mod.icon} ${mod.label}</span><div class="mh-line"></div><span class="mh-count">${done}/${ls.length}</span></div>`;
+    let any=false;
+    ls.forEach(l=>{
+      if(query&&!l.title.toLowerCase().includes(query))return;
+      any=true;
+      const p=getP(l.id);const sc=topicScore(l.id);
+      const pips=p.done.slice(0,4).map((d,i)=>`<span class="pip" style="${d?'background:var(--phase'+i+')':''}"></span>`).join('');
+      html+=`<div class="topic-item ${l.locked?'locked':''} ${S.currentId===l.id?'active':''}" onclick="loadLesson('${l.id}')" role="button" aria-label="${l.title}">
+        <div class="topic-icon">${l.icon}</div>
+        <div class="topic-info">
+          <div class="topic-name">${l.title}</div>
+          <div class="topic-sub"><div class="phase-pips">${pips}</div>${sc>0?`<span>${sc}%</span>`:''}</div>
+        </div>
+      </div>`;
+    });
+    if(query&&!any)html+=`<div style="padding:4px 9px 8px;font-size:11px;color:var(--muted)">Sonuç yok</div>`;
+  });
+  document.getElementById('topic-list').innerHTML=html;
+}
+
+/* ═══ HEADER ═══ */
+function refreshHeader(){
+  const oldLvl=Math.floor(S.totalXP/100)+1;
+  const lvl=Math.floor(S.totalXP/100)+1;
+  const rem=S.totalXP%100;
+  document.getElementById('level-badge').textContent='LVL '+lvl;
+  document.getElementById('xp-bar').style.width=rem+'%';
+  document.getElementById('xp-bar-outer'&&'xp-bar').style.width=rem+'%';
+  document.getElementById('xp-label').textContent=rem+'/100 XP';
+  document.getElementById('streak-num').textContent=S.streak||0;
+  const total=Object.values(S.progress).reduce((s,p)=>s+(p.scores.filter(x=>x!==null).reduce((a,b)=>a+b,0)/4||0),0);
+  document.getElementById('total-score').textContent=Math.round(total);
+}
+function refreshHeaderXP(oldXP){
+  const oldLvl=Math.floor(oldXP/100)+1;
+  const newLvl=Math.floor(S.totalXP/100)+1;
+  refreshHeader();
+  if(newLvl>oldLvl)showLevelUp(newLvl);
+}
+
+/* ═══ WELCOME ═══ */
+function renderWelcome(){
+  const el=document.getElementById('welcome');
+  const done=LESSONS.filter(l=>topicScore(l.id)>=50).length;
+  const avg=Math.round(LESSONS.reduce((s,l)=>s+topicScore(l.id),0)/LESSONS.length);
+  const isNew=done===0&&S.totalXP===0;
+
+  let cards='';
+  const grouped={};LESSONS.forEach(l=>{if(!grouped[l.moduleId])grouped[l.moduleId]=[];grouped[l.moduleId].push(l);});
+  MODULES.forEach((mod,mi)=>{
+    if(mod.comingSoon){
+      cards+=`<div class="module-card" style="cursor:not-allowed;opacity:.5">
+        <div class="mc-accent" style="background:${mod.color}"></div>
+        <div class="mc-icon">${mod.icon}</div>
+        <div class="mc-title">${mod.label}</div>
+        <div class="mc-desc">Yakında geliyor</div>
+        <div class="mc-soon">🔒 Coming Soon</div>
+      </div>`;
+      return;
+    }
+    const ls=grouped[mod.id]||[];if(!ls.length)return;
+    const d=ls.filter(l=>topicScore(l.id)>=50).length,pct=Math.round(d/ls.length*100);
+    const first=ls.find(l=>!l.locked);
+    cards+=`<div class="module-card" onclick="${first?`loadLesson('${first.id}')`:''}">
+      <div class="mc-accent" style="background:linear-gradient(90deg,${mod.color},transparent)"></div>
+      <div class="mc-icon">${mod.icon}</div>
+      <div class="mc-title">M${mi} · ${mod.label}</div>
+      <div class="mc-desc">${ls.length} konu · ${d} tamamlandı</div>
+      <div class="mc-progress"><div class="mc-fill" style="width:${pct}%;background:${mod.color}"></div></div>
+      <div class="mc-label"><span>${d}/${ls.length}</span><span style="color:${mod.color}">${pct}%</span></div>
+    </div>`;
+  });
+
+  const onboarding=isNew?`<div class="onboarding-banner">
+    <div class="onb-icon">👋</div>
+    <div class="onb-text"><strong>Hoş geldin!</strong> Her konu 5 aşamadan oluşuyor: Ders → Test → Seç → Boşluk → Kodla. Menüden bir konu seç veya hemen başla.</div>
+    <button class="onb-start" onclick="loadLesson('print')">🚀 Hemen Başla</button>
+  </div>`:'';
+
+  el.innerHTML=`
+    <div class="welcome-banner">
+      <div class="welcome-banner-tag">axyon.dev / PyLab</div>
+      <h1>Derinlemesine <em>Python</em> Öğren 🐍</h1>
+      <p>Her konuda sadece ne değil, <strong>neden</strong> ve <strong>nasıl</strong> öğreniyorsun. Alternatifleri, tuzakları ve gerçek kullanımları göreceksin.</p>
+    </div>
+    <div class="welcome-body">
+    ${onboarding}
+    <div class="welcome-stats">
+      <div class="stat-card"><div class="stat-num">${done}/${LESSONS.length}</div><div class="stat-lbl">Tamamlanan</div></div>
+      <div class="stat-card"><div class="stat-num">${S.totalXP}</div><div class="stat-lbl">Toplam XP</div></div>
+      <div class="stat-card"><div class="stat-num">${avg}%</div><div class="stat-lbl">Ortalama</div></div>
+    </div>
+    <span class="sec-label">Modüller</span>
+    <div class="module-cards">${cards}</div>
+    <div class="start-hint"><span class="arrow-anim">←</span> Menüden konu seç</div>
+    </div>
+  `;
+}
+
+/* ═══ LESSON ENGINE ═══ */
+function loadLesson(id){
+  const L=LESSONS.find(l=>l.id===id);if(!L||L.locked)return;
+  S.currentId=id;closeSidebar();
+  document.getElementById('welcome').style.display='none';
+  document.getElementById('lesson-panels').style.display='block';
+  document.getElementById('lesson-head').style.display='block';
+  document.getElementById('phase-tabs').style.display='flex';
+  const mod=MODULES.find(m=>m.id===L.moduleId);
+  document.getElementById('module-tag').textContent=`${mod?.icon||''} ${mod?.label||''}`;
+  document.getElementById('lesson-topic-name').textContent=L.title;
+  document.getElementById('lesson-title').textContent=L.title;
+  document.getElementById('lesson-desc').textContent=L.desc;
+  refreshStrip(L);
+  document.getElementById('panel-0').innerHTML=L.lesson;
+  initRunners(document.getElementById('panel-0'));
+  renderQuiz(L);renderDrag(L);renderFills(L);renderCode(L);
+  switchPhase(0);buildSidebar();saveState();
+  // auto-mark lesson read
+  if(getP(L.id).scores[0]===null)setScore(L.id,0,100);
+}
+function refreshStrip(L){
+  const p=getP(L.id);
+  [0,1,2,3,4].forEach(i=>{
+    const sc=document.getElementById('sc'+i);if(sc)sc.textContent=p.scores[i]!==null?p.scores[i]+'%':'—';
+    const pt=document.getElementById('pts'+i);if(pt)pt.textContent=p.scores[i]!==null?p.scores[i]:'—';
+    document.querySelectorAll('.ptab')[i].classList.toggle('done',p.done[i]);
+  });
+}
+function switchPhase(n){
+  S.currentPhase=n;
+  document.querySelectorAll('.phase-panel').forEach((p,i)=>p.classList.toggle('active',i===n));
+  document.querySelectorAll('.ptab').forEach((t,i)=>{t.classList.toggle('active',i===n);t.setAttribute('aria-selected',i===n);});
+  const ca=document.getElementById('content-area');
+  if(ca)ca.scrollTo({top:0,behavior:'instant'});
+  if(n===1){qA={};qS=false;}
+  if(n===2){
+    dqCur=0;dqScore=0;dqLocked=false;
+    const curL=LESSONS.find(l=>l.id===S.currentId);
+    if(curL&&curL.drag&&curL.drag.length)renderDrag(curL);
+  }
+  if(n===3){fD={};}
+}
+
+/* ═══ INLINE RUNNERS ═══ */
+function initRunners(container){
+  container.querySelectorAll('.code-block.runnable').forEach(block=>{
+    if(block.querySelector('.cb-run-wrap'))return;
+    const src=block.querySelector('.cb-src');if(!src)return;
+    const code=src.textContent;
+    const wrap=document.createElement('div');wrap.className='cb-run-wrap';
+    const btn=document.createElement('button');btn.className='cb-run-btn';btn.innerHTML='▶ Çalıştır';
+    const rst=document.createElement('button');rst.className='cb-reset-btn';rst.textContent='↺';
+    wrap.appendChild(btn);wrap.appendChild(rst);block.appendChild(wrap);
+    const out=document.createElement('div');out.className='cb-inline-out';
+    out.innerHTML='<span class="cb-out-label">Çıktı</span><span class="cb-content"></span>';
+    block.appendChild(out);
+    btn.addEventListener('click',()=>runInline(code,out,btn));
+    rst.addEventListener('click',()=>{out.classList.remove('vis');out.querySelector('.cb-content').textContent='';});
+  });
+}
+function runInline(code,outDiv,btn){
+  if(typeof Sk==='undefined'){
+    const ct=outDiv.querySelector('.cb-content');ct.textContent='⏳ Python yükleniyor...';outDiv.classList.add('vis');
+    waitForSkulpt(()=>runInline(code,outDiv,btn));return;
+  }
+  const ct=outDiv.querySelector('.cb-content');ct.textContent='';ct.className='cb-content';
+  btn.textContent='⏳';
+  Sk.configure({output:t=>{ct.textContent+=t;},read:x=>{if(Sk.builtinFiles?.files[x])return Sk.builtinFiles.files[x];throw"File not found: '"+x+"'";},__future__:Sk.python3});
+  try{Sk.importMainWithBody('<stdin>',false,code,true);}
+  catch(e){ct.textContent=String(e);ct.className='cb-content cb-err';}
+  outDiv.classList.add('vis');btn.textContent='▶ Çalıştır';
+}
+
+/* ═══ QUIZ ═══ */
+let qA={},qS=false;
+function renderQuiz(L){
+  const p=document.getElementById('panel-1');
+  let h=`<div class="quiz-progress">${L.quiz.map((_,i)=>`<div class="qp-dot" id="qpd${i}"></div>`).join('')}</div>`;
+  L.quiz.forEach((q,qi)=>{
+    h+=`<div class="quiz-card" id="qcard${qi}">
+      <div class="q-num">Soru ${qi+1} / ${L.quiz.length}</div>
+      <div class="q-text">${q.q}</div>
+      <div class="options">${q.opts.map((o,oi)=>`<div class="opt" id="opt${qi}_${oi}" onclick="pickOpt(${qi},${oi})" role="radio" aria-checked="false" tabindex="0"><span class="opt-key">${'ABCD'[oi]}</span>${o}</div>`).join('')}</div>
+      <div class="q-feedback" id="qfb${qi}"></div>
+    </div>`;
+  });
+  h+=`<div class="result-card" id="quiz-result">
+    <div style="font-size:12px;color:var(--muted2)">Test Puanı</div>
+    <div class="result-big" id="quiz-res-score" style="color:var(--phase1)"></div>
+    <div class="stars" id="quiz-res-stars"></div>
+    <div class="result-msg" id="quiz-res-msg"></div>
+    <button class="next-btn" onclick="switchPhase(2)">Seç ve Yerleştir →</button>
+  </div>
+  <div class="submit-row" id="quiz-submit-row">
+    <button class="next-btn" style="background:var(--purple);color:#080b12" onclick="submitQuiz()">Testi Tamamla →</button>
+  </div>`;
+  p.innerHTML=h;
+}
+function pickOpt(qi,oi){
+  if(qS)return;
+  SFX.click();
+  // Önceki seçimi geri al
+  if(qA[qi]!==undefined){
+    const prev=document.getElementById(`opt${qi}_${qA[qi]}`);
+    if(prev){prev.classList.remove('selected');prev.querySelector('.opt-key').style.background='';}
+    document.getElementById(`qpd${qi}`)?.classList.remove('cur');
+  }
+  // Aynı şeye tekrar tıklayınca seçimi iptal et
+  if(qA[qi]===oi){delete qA[qi];return;}
+  qA[qi]=oi;
+  const el=document.getElementById(`opt${qi}_${oi}`);
+  el.classList.add('selected');
+  document.getElementById(`qpd${qi}`).classList.add('cur');
+}
+function submitQuiz(){
+  const L=LESSONS.find(l=>l.id===S.currentId);qS=true;let correct=0;
+  L.quiz.forEach((q,qi)=>{
+    const ch=qA[qi];
+    q.opts.forEach((_,oi)=>{
+      const el=document.getElementById(`opt${qi}_${oi}`);el.classList.add('locked');
+      if(oi===q.ans)el.classList.add('correct');
+      else if(oi===ch&&ch!==q.ans)el.classList.add('wrong');
+    });
+    const ok=ch===q.ans;if(ok){correct++;SFX.correct();}else SFX.wrong();
+    document.getElementById(`qcard${qi}`).classList.add(ok?'answered-ok':'answered-fail');
+    const qcard=document.getElementById('qcard'+qi);
+    if(qcard){ok?effectSuccess(qcard):effectFail(qcard);}
+    const dot=document.getElementById(`qpd${qi}`);dot.classList.remove('cur');dot.classList.add(ok?'ok':'fail');
+    const fb=document.getElementById(`qfb${qi}`);fb.className='q-feedback '+(ok?'ok':'fail')+' show';
+    fb.textContent=(ok?'✓ Doğru! ':'✗ Yanlış. ')+q.exp;
+  });
+  const pct=Math.round(correct/L.quiz.length*100);
+  document.getElementById('quiz-res-score').textContent=pct+'%';
+  document.getElementById('quiz-res-stars').textContent=pct>=80?'★★★':pct>=50?'★★☆':'★☆☆';
+  document.getElementById('quiz-res-msg').textContent=pct>=80?'Mükemmel! 🎉':pct>=50?'İyi gidiyorsun.':'Dersi tekrar oku, derine in.';
+  document.getElementById('quiz-result').classList.add('show');
+  document.getElementById('quiz-submit-row').style.display='none';
+  setScore(L.id,1,pct);
+}
+
+/* ═══ DRAG ═══ */
+var dqCur=0,dqScore=0,dqTotal=0,dqLocked=false,dqShuffled=[];
+// Global capture listener — works on all browsers, bypasses any blocking
+function _dragGlobalHandler(e){
+  if(dqLocked)return;
+  var el=e.target;
+  for(var i=0;i<5;i++){
+    if(!el||el===document.body)break;
+    if(el.tagName==='BUTTON'&&el.classList.contains('chip')&&/^dc_\d+$/.test(el.id)){
+      var oi=parseInt(el.id.replace('dc_',''),10);
+      dragPick(oi);
+      return;
+    }
+    el=el.parentElement;
+  }
+}
+document.addEventListener('click',_dragGlobalHandler,true);
+
+function renderDrag(L){
+  var p=document.getElementById('panel-2');
+  if(!L.drag||!L.drag.length){
+    p.innerHTML='<p style="padding:20px;color:var(--muted2)">Bu konu için Seç fazı yakında geliyor.</p>';
+    return;
+  }
+  dqCur=0;dqScore=0;dqTotal=L.drag.length;dqLocked=false;
+  p.innerHTML='<div class="drag-progress" id="dq-prog"></div>'
+    +'<div id="dq-wrap"></div>'
+    +'<div class="drag-result" id="drag-result" style="display:none">'
+    +'<div style="font-size:12px;color:var(--muted2)">Se\u00e7 Puan\u0131</div>'
+    +'<div class="result-big" style="color:var(--phase2)" id="drag-res-score"></div>'
+    +'<div class="stars" id="drag-res-stars"></div>'
+    +'<div class="result-msg" id="drag-res-msg"></div>'
+    +'<button class="next-btn" style="background:var(--phase2);color:#0a0d16" onclick="switchPhase(3)">Bo\u015fluk Doldurmaya Ge\u00e7 \u2192</button>'
+    +'</div>';
+  showDQ(L,0);
+}
+
+function showDQ(L,qi){
+  if(qi>=L.drag.length){finishDrag(L);return;}
+  dqCur=qi;dqLocked=false;
+  var q=L.drag[qi];
+  var sh=q.opts.slice().sort(function(){return Math.random()-.5;});
+  dqShuffled=sh;
+
+  // Progress bar
+  var prog=document.getElementById('dq-prog');
+  if(prog){
+    var dots='';
+    for(var i=0;i<L.drag.length;i++){
+      var cls='drag-dot'+(i<qi?' ok':i===qi?' cur':'');
+      // keep previous correct/wrong state
+      if(i<qi&&L.drag[i]._ok!==undefined)cls='drag-dot '+(L.drag[i]._ok?'ok':'fail');
+      dots+='<div class="'+cls+'" id="dqdot'+i+'"></div>';
+    }
+    prog.innerHTML=dots;
+  }
+
+  var chipsHtml='';
+  for(var oi=0;oi<sh.length;oi++){
+    var safe=sh[oi].replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    chipsHtml+='<button class="chip" id="dc_'+oi+'">'+safe+'</button>';
+  }
+
+  var wrap=document.getElementById('dq-wrap');
+  wrap.innerHTML='<div class="drag-card" id="dcard">'
+    +'<div class="drag-q-num">Soru '+(qi+1)+' / '+L.drag.length+'</div>'
+    +'<div class="drag-code-wrap">'+q.code+'</div>'
+    +'<div class="drag-label">Do\u011fru cevab\u0131 se\u00e7:</div>'
+    +'<div class="drag-chips" id="dchips">'+chipsHtml+'</div>'
+    +'<div class="drag-feedback" id="dq-fb" style="min-height:28px"></div>'
+    +'</div>';
+}
+
+function dragPick(oi){
+  if(dqLocked)return;
+  dqLocked=true;
+  var L=LESSONS.find(function(l){return l.id===S.currentId;});
+  if(!L)return;
+  var q=L.drag[dqCur];
+  var chosen=dqShuffled[oi];
+  var ok=(chosen===q.ans);
+  q._ok=ok;
+  if(ok)dqScore++;
+  SFX.click();
+
+  // Style chips
+  var chips=document.querySelectorAll('#dchips .chip');
+  for(var ci=0;ci<chips.length;ci++){
+    if(ci===oi)chips[ci].className='chip '+(ok?'chip-ok':'chip-fail');
+    else if(dqShuffled[ci]===q.ans)chips[ci].className='chip answer-chip';
+    else chips[ci].className='chip used';
+  }
+
+  // Instant feedback
+  var fb=document.getElementById('dq-fb');
+  if(fb){
+    fb.className='drag-feedback show '+(ok?'ok':'fail');
+    fb.textContent=(ok?'\u2713 Do\u011fru! ':'\u2717 Yanl\u0131\u015f \u2014 do\u011frusu: '+q.ans+'.  ')+q.exp;
+  }
+
+  // Card border
+  var card=document.getElementById('dcard');
+  if(card){card.classList.add(ok?'ok-card':'fail-card');ok?effectSuccess(card):effectFail(card);}
+
+  // Update dot
+  var dot=document.getElementById('dqdot'+dqCur);
+  if(dot)dot.className='drag-dot '+(ok?'ok':'fail');
+
+  if(ok)SFX.correct();else SFX.wrong();
+
+  // Auto-advance after 1.4s
+  setTimeout(function(){
+    var L2=LESSONS.find(function(l){return l.id===S.currentId;});
+    if(L2)showDQ(L2,dqCur+1);
+  },1400);
+}
+
+function finishDrag(L){
+  var pct=Math.round(dqScore/dqTotal*100);
+  var res=document.getElementById('drag-result');
+  document.getElementById('dq-wrap').style.opacity='.35';
+  document.getElementById('drag-res-score').textContent=pct+'%';
+  document.getElementById('drag-res-stars').textContent=pct>=80?'\u2605\u2605\u2605':pct>=60?'\u2605\u2605\u2606':'\u2605\u2606\u2606';
+  document.getElementById('drag-res-msg').textContent=pct>=80?'M\u00fckemmel! \uD83C\uDFAF':pct>=60?'\u0130yi gidiyorsun.':'Dersi tekrar oku, sonra tekrar dene.';
+  res.style.display='block';
+  res.classList.add('show');
+  setScore(L.id,2,pct);
+  if(pct>=80)SFX.correct();else SFX.wrong();
+  setTimeout(function(){res.scrollIntoView({behavior:'smooth',block:'nearest'});},120);
+}
+
+function showDragQ(){}
+function chipClick(){}
+function submitDrag(){}
+/* ═══ FILL ═══ */
+let fD={};
+function renderFills(L){
+  const p=document.getElementById('panel-3');let h='';
+  L.fills.forEach((f,fi)=>{
+    h+=`<div class="fill-block" id="fblock${fi}">
+      <div class="q-num">Boşluk ${fi+1} / ${L.fills.length}</div>
+      <div class="fill-code">${f.code}</div>
+      <div style="display:flex;gap:8px;align-items:center;margin-top:8px;flex-wrap:wrap">
+        <button class="fill-check-btn" onclick="checkFill(${fi})">✓ Kontrol</button>
+        <span style="font-size:10px;color:var(--muted2)">💡 ${f.hint}</span>
+      </div>
+      <div class="q-feedback2" id="ffb${fi}"></div>
+    </div>`;
+  });
+  h+=`<div class="result-card" id="fill-result">
+    <div style="font-size:12px;color:var(--muted2)">Boşluk Puanı</div>
+    <div class="result-big" style="color:var(--phase3)" id="fill-res-score"></div>
+    <div class="stars" id="fill-res-stars"></div>
+    <div class="result-msg" id="fill-res-msg"></div>
+    <button class="next-btn" style="background:var(--phase4);color:#080b12" onclick="switchPhase(4)">Kodlamaya Geç →</button>
+  </div>
+  <div id="fill-submit-row" style="margin-top:14px">
+    <button class="next-btn" style="background:var(--phase3);color:#080b12" onclick="submitFills()">Boşlukları Kaydet →</button>
+  </div>`;
+  p.innerHTML=h;
+}
+function checkFill(fi){
+  const L=LESSONS.find(l=>l.id===S.currentId);const f=L.fills[fi];
+  const block=document.getElementById(`fblock${fi}`);
+  let ok=true;
+  block.querySelectorAll('.blank').forEach(inp=>{
+    const ans=inp.dataset.ans.replace(/&quot;/g,'"').replace(/&#39;/g,"'");
+    const val=inp.value.trim().replace(/[""]/g,'"').replace(/['']/g,"'");
+    const match=val.toLowerCase()===ans.toLowerCase();
+    inp.classList.toggle('ok',match);inp.classList.toggle('fail',!match);
+    if(!match)ok=false;
+  });
+  fD[fi]=ok;
+  const fb=document.getElementById(`ffb${fi}`);
+  fb.className='q-feedback2 '+(ok?'ok':'fail')+' show';
+  fb.textContent=ok?'✓ Mükemmel!':'✗ Yanlış — ipucuna bak ve tekrar dene.';
+  ok?SFX.correct():SFX.wrong();
+}
+function submitFills(){
+  const L=LESSONS.find(l=>l.id===S.currentId);
+  L.fills.forEach((_,fi)=>checkFill(fi));
+  const correct=Object.values(fD).filter(Boolean).length;
+  const pct=Math.round(correct/L.fills.length*100);
+  document.getElementById('fill-res-score').textContent=pct+'%';
+  document.getElementById('fill-res-stars').textContent=pct>=80?'★★★':pct>=50?'★★☆':'★☆☆';
+  document.getElementById('fill-res-msg').textContent=pct>=80?'Hepsi doğru! 🎉':pct>=50?'Güzel gidiyorsun.':'İpuçlarına bak.';
+  document.getElementById('fill-result').classList.add('show');
+  document.getElementById('fill-submit-row').style.display='none';
+  setScore(L.id,3,pct);
+}
+
+/* ═══ CODE ═══ */
+function renderCode(L){
+  const p=document.getElementById('panel-4');
+  p.innerHTML=`<div class="task-card"><strong>🎯 Görev</strong><p>${L.code.task}</p></div>
+    <div class="editor-wrap">
+      <div class="editor-topbar">
+        <div style="display:flex;gap:4px"><div class="cb-dot" style="background:#ff5f57;width:8px;height:8px"></div><div class="cb-dot" style="background:#ffbd2e;width:8px;height:8px"></div><div class="cb-dot" style="background:#28c840;width:8px;height:8px"></div></div>
+        <span style="font-size:10px;color:var(--muted);font-family:JetBrains Mono,monospace;margin-left:4px">main.py</span>
+      </div>
+      <textarea id="code-ta">${L.code.starter}</textarea>
+    </div>
+    <div class="run-bar">
+      <button class="btn-run" onclick="runCode()">▶ Çalıştır</button>
+      <span class="kb-hint">Ctrl+Enter</span>
+      <button class="btn-check" onclick="checkCode()">✓ Görevi Kontrol Et</button>
+      <button class="btn-hint" onclick="document.getElementById('hint-box').classList.toggle('show')">💡 İpucu</button>
+    </div>
+    <div class="hint-box" id="hint-box">${L.code.hint}</div>
+    <div class="output-box"><span class="out-label">Çıktı</span><div id="code-out">▶ Çalıştır'a bas veya Ctrl+Enter.</div></div>
+    <div class="task-verdict" id="task-verdict"></div>
+    <div class="result-card" id="code-result" style="margin-top:14px">
+      <div style="font-size:12px;color:var(--muted2)">Kodlama Puanı</div>
+      <div class="result-big" style="color:var(--phase4)" id="code-res-score"></div>
+      <div class="stars" id="code-res-stars"></div>
+      <div class="result-msg" id="code-res-msg"></div>
+      <div class="btn-row" style="justify-content:center;margin-top:12px">
+        <button class="btn-check" onclick="document.getElementById('code-result').classList.remove('show')">↺ Tekrar</button>
+        <button class="next-btn" style="margin-top:0" onclick="finishLesson()">Konuyu Bitir ✓</button>
+      </div>
+    </div>`;
+  if(cm)cm.toTextArea();
+  cm=CodeMirror.fromTextArea(document.getElementById('code-ta'),{
+    mode:'python',lineNumbers:true,indentUnit:4,tabSize:4,lineWrapping:true,
+    extraKeys:{"Ctrl-Enter":runCode,"Cmd-Enter":runCode}
+  });
+  setTimeout(()=>{
+    const el=document.querySelector('.CodeMirror');
+    if(el)el.style.background='var(--s2)';
+  },50);
+}
+function runCode(){
+  if(typeof Sk==='undefined'){document.getElementById('code-out').textContent='⏳ Python yükleniyor...';waitForSkulpt(()=>runCode());return;}
+  const o=document.getElementById('code-out');o.innerHTML='';o.className='';
+  skReady=true;
+  Sk.configure({output:t=>{o.innerHTML+=t.replace(/</g,'&lt;');},read:x=>{if(!Sk.builtinFiles?.files[x])throw"File not found: '"+x+"'";return Sk.builtinFiles.files[x];},__future__:Sk.python3});
+  try{Sk.importMainWithBody('<stdin>',false,cm?cm.getValue():'',true);}
+  catch(e){o.innerHTML=`<span class="out-error">${String(e).replace(/</g,'&lt;')}</span>`;}
+}
+function checkCode(){
+  const L=LESSONS.find(l=>l.id===S.currentId);const code=cm?cm.getValue():'';
+  const r=L.code.check(code);
+  const v=document.getElementById('task-verdict');
+  v.className='task-verdict show '+(r.ok?'ok':'fail');
+  v.textContent=(r.ok?'✓ ':'✗ ')+r.msg+` (${r.pts}/${r.max})`;
+  const pct=Math.round(r.pts/r.max*100);
+  document.getElementById('code-res-score').textContent=pct+'%';
+  document.getElementById('code-res-stars').textContent=pct>=80?'★★★':pct>=50?'★★☆':'★☆☆';
+  document.getElementById('code-res-msg').textContent=r.msg;
+  document.getElementById('code-result').classList.add('show');
+  setScore(L.id,4,pct);
+  r.ok?SFX.correct():SFX.wrong();
+  const verdict=document.getElementById('task-verdict');
+  ok?effectSuccess(verdict):effectFail(verdict);
+}
+function finishLesson(){
+  const L=LESSONS.find(l=>l.id===S.currentId);
+  getP(L.id).done[4]=true;saveState();updateLocks();buildSidebar();
+  document.getElementById('code-result').classList.remove('show');
+  checkAchievements();goHome();
+}
+
+/* ═══ SCORE ═══ */
+function setScore(id,phase,score){
+  const p=getP(id);const oldXP=S.totalXP;const old=p.scores[phase];
+  if(old===null)S.totalXP+=Math.round(score/10);
+  else if(score>old)S.totalXP+=Math.round((score-old)/10);
+  p.scores[phase]=score;p.done[phase]=true;
+  saveState();
+  const L=LESSONS.find(l=>l.id===id);if(L)refreshStrip(L);
+  refreshHeaderXP(oldXP);buildSidebar();
+}
+
+
+/* ═══ BOOT ═══ */
+// Skulpt yüklenince course'u fetch et, sonra init çağır
+waitForSkulpt(function() {
+  loadCourse();
+});
+setTimeout(function() {
+  if (!document.getElementById('topic-list').innerHTML) {
+    loadCourse();
+  }
+}, 1200);
+
+</script>
+</body>
+</html>

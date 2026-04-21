@@ -143,5 +143,7 @@
     "Common Tangents": "İki eğri veya daire arasına ortak teğet çizgileri çizer.",
     "Arc Correction": "Bozuk çizilmiş yayları matematiksel olarak düzgün yaylara dönüştürür.",
     "specify": "Seçili nesnenin üzerine ölçülerini (En/Boy) teknik çizim gibi yazar.",
-    "HizalaBakalim": "Objelerin çizgi (stroke) kalınlıklarını yok sayarak, sadece vektör (path) sınırlarına göre boşluksuz yan yana hizalar. (GeometricBounds)"
+    "HizalaBakalim": "Objelerin çizgi (stroke) kalınlıklarını yok sayarak, sadece vektör (path) sınırlarına göre boşluksuz yan yana hizalar. (GeometricBounds)",
+    "mask_flags_selected_only_v3": "Buyuk bayrak gorselini ve secili yuvarlak shapeleri secip calistir; her yuvarlaga otomatik clipping mask uygular.",
+    "rotate": "Secili nesneleri girilen aci degeri kadar dondurur (pozitif veya negatif deger girilebilir)."
 }

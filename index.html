@@ -97,6 +97,110 @@
         .pc-spider  .proj-art { background: rgba(255,68,68,0.06); }
         .pc-mcqueen .proj-art { background: rgba(240,180,41,0.06); }
         .pc-stitch  .proj-art { background: rgba(77,159,255,0.06); }
+
+        /* ── EĞİTİM KARTLARI ──────────────────────────────── */
+        .edu-card {
+            position: relative;
+            width: clamp(240px, 34vw, 340px);
+            border-radius: 14px;
+            overflow: hidden;
+            text-decoration: none;
+            display: flex;
+            flex-direction: column;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            background: rgba(10, 15, 28, 0.7);
+            transition: transform 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+            cursor: pointer;
+            backdrop-filter: blur(10px);
+        }
+        .edu-card:hover { transform: translateY(-6px); }
+
+        .edu-art {
+            width: 100%;
+            height: clamp(110px, 20vw, 150px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+            background: rgba(240, 165, 0, 0.05);
+        }
+        .edu-art::before {
+            content: '';
+            position: absolute; inset: 0;
+            background: radial-gradient(ellipse at 50% 60%, rgba(240,165,0,0.22) 0%, transparent 70%);
+        }
+        .edu-art-inner {
+            position: relative;
+            z-index: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        .edu-code-block {
+            font-family: 'Courier New', monospace;
+            font-size: clamp(10px, 1.8vw, 13px);
+            line-height: 1.7;
+            color: rgba(255,255,255,0.7);
+            background: rgba(0,0,0,0.4);
+            border: 1px solid rgba(240,165,0,0.2);
+            border-radius: 8px;
+            padding: 10px 14px;
+            text-align: left;
+        }
+        .edu-code-block .hl-amber { color: #f0a500; }
+        .edu-code-block .hl-green { color: #3dd68c; }
+        .edu-code-block .hl-blue  { color: #7eb8f7; }
+
+        .edu-body {
+            padding: 14px 18px 18px;
+            display: flex; flex-direction: column; gap: 7px;
+            border-top: 1px solid rgba(255,255,255,0.06);
+            flex-grow: 1;
+        }
+        .edu-tag {
+            font-family: 'Orbitron', monospace; font-size: 9px;
+            letter-spacing: 0.2em; text-transform: uppercase;
+            color: #f0a500; opacity: 0.7;
+        }
+        .edu-title {
+            font-family: 'Orbitron', monospace;
+            font-size: clamp(14px, 2.8vw, 18px);
+            font-weight: 900; letter-spacing: 0.06em;
+            color: #fff;
+        }
+        .edu-meta {
+            display: flex; gap: 8px; flex-wrap: wrap;
+        }
+        .edu-badge {
+            font-size: 10px; font-weight: 600;
+            padding: 2px 8px; border-radius: 20px;
+            background: rgba(240,165,0,0.1);
+            border: 1px solid rgba(240,165,0,0.2);
+            color: #f0a500;
+        }
+        .edu-desc {
+            font-size: 12px; font-weight: 400;
+            color: rgba(220,230,255,0.45);
+            line-height: 1.55;
+        }
+        .edu-cta {
+            display: inline-flex; align-items: center; gap: 6px;
+            margin-top: auto; padding: 9px 18px; border-radius: 8px;
+            font-family: 'Orbitron', monospace; font-size: 9px;
+            font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase;
+            border: 1px solid rgba(255,255,255,0.12);
+            background: rgba(255,255,255,0.04);
+            transition: all 0.25s ease;
+            width: fit-content; color: #f0a500;
+        }
+        .edu-card:hover .edu-cta {
+            border-color: #f0a500;
+            background: rgba(240,165,0,0.1);
+            box-shadow: 0 0 16px rgba(240,165,0,0.25);
+        }
+        .edu-card:hover .cta-arrow { transform: translateX(4px); }
     </style>
 </head>
 
@@ -389,6 +493,46 @@
                                 <div class="proj-title">Stitch</div>
                                 <div class="proj-count">17 prompt · puzzle · sticker · boyama</div>
                                 <div class="proj-cta">Promptları Aç <span class="cta-arrow">→</span></div>
+                            </div>
+                        </a>
+
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ◈ EĞİTİM ◈ -->
+        <section class="category-container collapsed">
+            <div class="category-header">
+                <h2 class="category-title">◈ EĞİTİM ◈</h2>
+                <span class="toggle-icon">▼</span>
+            </div>
+            <div class="category-content">
+                <div class="category-content-inner">
+                    <div class="cards-row" style="flex-wrap:wrap;">
+
+                        <a href="learn/index.html" target="_blank" rel="noopener noreferrer"
+                            class="edu-card">
+                            <div class="edu-art">
+                                <div class="edu-art-inner">
+                                    <div class="edu-code-block">
+                                        <span class="hl-amber">print</span>(<span class="hl-green">"Merhaba 🐍"</span>)<br>
+                                        <span class="hl-blue">for</span> i <span class="hl-blue">in</span> <span class="hl-amber">range</span>(<span class="hl-green">5</span>):<br>
+                                        &nbsp;&nbsp;&nbsp;&nbsp;<span class="hl-amber">print</span>(i)<br>
+                                        <span class="hl-blue">def</span> <span class="hl-amber">axyon</span>(): ...
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="edu-body">
+                                <div class="edu-tag">◈ İnteraktif Kurs</div>
+                                <div class="edu-title">PyLab 🐍</div>
+                                <div class="edu-meta">
+                                    <span class="edu-badge">9 Ders</span>
+                                    <span class="edu-badge">5 Faz</span>
+                                    <span class="edu-badge">Türkçe</span>
+                                </div>
+                                <div class="edu-desc">Derinlemesine Python öğren. Her konuda neden ve nasıl. Test, seç, boşluk doldur, kodla.</div>
+                                <div class="edu-cta">Öğrenmeye Başla <span class="cta-arrow">→</span></div>
                             </div>
                         </a>
 
