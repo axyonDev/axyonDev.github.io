@@ -508,6 +508,7 @@ code{font-family:"JetBrains Mono",monospace;background:var(--s2);border:1px soli
     </div>
     <button class="icon-btn" id="sound-btn" onclick="toggleSound()" title="Ses" aria-label="Ses aç/kapat">🔊</button>
     <button class="icon-btn" id="theme-btn" onclick="toggleTheme()" title="Tema" aria-label="Tema değiştir">🌙</button>
+    <button class="icon-btn" id="admin-btn" onclick="toggleAdmin()" title="Admin Modu (Ctrl+Shift+A)" aria-label="Admin modu" style="font-size:13px;opacity:.4">🛠️</button>
     <button class="hamburger" id="hamburger" onclick="toggleSidebar()" aria-label="Menü" aria-expanded="false">
       <span></span><span></span><span></span>
     </button>
@@ -783,7 +784,7 @@ let S={currentId:null,currentPhase:0,progress:{},totalXP:0,streak:0,lastVisit:''
 let cm=null;
 
 function getP(id){if(!S.progress[id])S.progress[id]={scores:[null,null,null,null,null],done:[false,false,false,false,false]};return S.progress[id];}
-function topicScore(id){const p=getP(id);const v=p.scores.filter(s=>s!==null);return v.length?Math.round(v.reduce((a,b)=>a+b,0)/4):0;}
+function topicScore(id){const p=getP(id);const v=p.scores.filter(s=>s!==null);return v.length?Math.round(v.reduce((a,b)=>a+b,0)/v.length):0;}
 function saveState(){
   try{localStorage.setItem(STORAGE_KEY,JSON.stringify(S));}
   catch(e){if(e.name==='QuotaExceededError')showToast('⚠️','Depolama Dolu','Tarayıcı depolama alanı dolu.','var(--red)');}
@@ -793,13 +794,25 @@ function loadState(){
   document.getElementById('sound-btn').textContent=S.soundOff?'🔇':'🔊';
   updateLocks();
 }
+var _adminMode=false;
 function updateLocks(){
   LESSONS[0].locked=false;
   for(let i=1;i<LESSONS.length;i++){
+    if(_adminMode){LESSONS[i].locked=false;continue;}
     const prev=LESSONS[i-1];
-    if(topicScore(prev.id)>=40||getP(prev.id).done.some(Boolean))LESSONS[i].locked=false;
+    if(topicScore(prev.id)>=40||getP(prev.id).done[1])LESSONS[i].locked=false;
   }
 }
+function toggleAdmin(){
+  _adminMode=!_adminMode;
+  updateLocks();buildSidebar();
+  const btn=document.getElementById('admin-btn');
+  if(btn)btn.style.opacity=_adminMode?'1':'0.4';
+  showToast(_adminMode?'🛠️':'🔒','Admin Modu',_adminMode?'Tüm konular açıldı — yayınlamaya etki etmez':'Normal mod',_adminMode?'var(--amber)':'var(--muted2)');
+}
+document.addEventListener('keydown',function(e){
+  if(e.ctrlKey&&e.shiftKey&&e.key==='A'){e.preventDefault();toggleAdmin();}
+});
 
 /* ═══ GAMIFICATION ═══ */
 const ACHIEVEMENTS={
@@ -902,10 +915,9 @@ function refreshHeader(){
   const rem=S.totalXP%100;
   document.getElementById('level-badge').textContent='LVL '+lvl;
   document.getElementById('xp-bar').style.width=rem+'%';
-  document.getElementById('xp-bar-outer'&&'xp-bar').style.width=rem+'%';
   document.getElementById('xp-label').textContent=rem+'/100 XP';
   document.getElementById('streak-num').textContent=S.streak||0;
-  const total=Object.values(S.progress).reduce((s,p)=>s+(p.scores.filter(x=>x!==null).reduce((a,b)=>a+b,0)/4||0),0);
+  const total=Object.values(S.progress).reduce((s,p)=>{const v=p.scores.filter(x=>x!==null);return s+(v.length?v.reduce((a,b)=>a+b,0)/v.length:0);},0);
   document.getElementById('total-score').textContent=Math.round(total);
 }
 function refreshHeaderXP(oldXP){
@@ -1246,9 +1258,6 @@ function finishDrag(L){
   setTimeout(function(){res.scrollIntoView({behavior:'smooth',block:'nearest'});},120);
 }
 
-function showDragQ(){}
-function chipClick(){}
-function submitDrag(){}
 /* ═══ FILL ═══ */
 let fD={};
 function renderFills(L){
@@ -1282,7 +1291,7 @@ function checkFill(fi){
   let ok=true;
   block.querySelectorAll('.blank').forEach(inp=>{
     const ans=inp.dataset.ans.replace(/&quot;/g,'"').replace(/&#39;/g,"'");
-    const val=inp.value.trim().replace(/[""]/g,'"').replace(/['']/g,"'");
+    const val=inp.value.trim().replace(/[\u201c\u201d]/g,'"').replace(/[\u2018\u2019]/g,"'");
     const match=val.toLowerCase()===ans.toLowerCase();
     inp.classList.toggle('ok',match);inp.classList.toggle('fail',!match);
     if(!match)ok=false;
@@ -1323,7 +1332,7 @@ function renderCode(L){
       <button class="btn-check" onclick="checkCode()">✓ Görevi Kontrol Et</button>
       <button class="btn-hint" onclick="document.getElementById('hint-box').classList.toggle('show')">💡 İpucu</button>
     </div>
-    <div class="hint-box" id="hint-box">${L.code.hint}</div>
+    <div class="hint-box" id="hint-box">${L.code.hint||''}</div>
     <div class="output-box"><span class="out-label">Çıktı</span><div id="code-out">▶ Çalıştır'a bas veya Ctrl+Enter.</div></div>
     <div class="task-verdict" id="task-verdict"></div>
     <div class="result-card" id="code-result" style="margin-top:14px">
@@ -1368,7 +1377,7 @@ function checkCode(){
   setScore(L.id,4,pct);
   r.ok?SFX.correct():SFX.wrong();
   const verdict=document.getElementById('task-verdict');
-  ok?effectSuccess(verdict):effectFail(verdict);
+  r.ok?effectSuccess(verdict):effectFail(verdict);
 }
 function finishLesson(){
   const L=LESSONS.find(l=>l.id===S.currentId);
