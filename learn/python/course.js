@@ -19,6 +19,7 @@ window.AXYON_COURSE = {
     { id:"m5", file:"modules/m5.js", varName:"AXYON_M5" },
     { id:"m6", file:"modules/m6.js", varName:"AXYON_M6" },
     { id:"m7", file:"modules/m7.js", varName:"AXYON_M7" },
-    { id:"m8", label:"İleri Python", icon:"🚀", color:"#7c3aed", file:"modules/m8.js", varName:"AXYON_M8" }
+    { id:"m8", label:"İleri Python", icon:"🚀", color:"#7c3aed", file:"modules/m8.js", varName:"AXYON_M8" },
+    { id:"m9", label:"Gerçek Dünya", icon:"🌍", color:"#dc2626", file:"modules/m9.js", varName:"AXYON_M9" }
   ]
 };
