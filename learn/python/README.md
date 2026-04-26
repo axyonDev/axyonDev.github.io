@@ -1,7 +1,7 @@
 # Axyon Learn Engine
 
 Modüler, tak-çalıştır öğrenme platformu.  
-Motor tamamen ayrı — içerik JSON dosyalarında.
+Motor tamamen ayrı — içerik JS dosyalarında (window global değişkenler).
 
 ---
 
@@ -10,14 +10,19 @@ Motor tamamen ayrı — içerik JSON dosyalarında.
 ```
 axyon-learn/
 ├── index.html          ← Motor (dokunma)
-├── course.json         ← Kurs başlığı + modül listesi
+├── course.js           ← Kurs başlığı + modül listesi (window.AXYON_COURSE)
 ├── modules/
-│   ├── m0.json         ← Başlangıç modülü
-│   ├── m1.json         ← Temel Yapılar
-│   ├── m2.json         ← Karakter Dizileri
+│   ├── m0.js           ← Başlangıç modülü (window.AXYON_M0)
+│   ├── m1.js           ← Temel Yapılar   (window.AXYON_M1)
+│   ├── m2.js           ← Karakter Dizileri (window.AXYON_M2)
 │   └── ...             ← Yeni modüller buraya
+├── ogretmen.html       ← Öğretmen ilerleme paneli
+├── mufredat.html       ← Müfredat genel bakış
 └── README.md
 ```
+
+> ⚠️ Modüller JSON **değil**, JS dosyalarıdır.  
+> Her modül `window.AXYON_MX = { ... }` şeklinde global bir değişken tanımlar.
 
 ---
 
@@ -40,11 +45,11 @@ git push -u origin main
 
 ## Yeni Modül Ekleme
 
-### 1. Modül JSON dosyası oluştur
+### 1. Modül JS dosyası oluştur
 
-`modules/m3.json`:
-```json
-{
+`modules/m3.js`:
+```js
+window.AXYON_M3 = {
   "id": "m3",
   "label": "Koleksiyonlar",
   "icon": "🗂️",
@@ -57,28 +62,9 @@ git push -u origin main
       "title": "Listeler",
       "desc": "Liste oluşturma, erişim, metodlar",
       "lesson": "<div class=\"lesson-text\"><p>Ders içeriği buraya...</p></div>",
-      "quiz": [
-        {
-          "q": "Liste nasıl oluşturulur?",
-          "opts": ["list()", "[]", "Her ikisi de", "{}"],
-          "ans": 2,
-          "exp": "list() ve [] her ikisi de liste oluşturur."
-        }
-      ],
-      "drag": [
-        {
-          "code": "<span class=\"hl\">___</span>([1,2,3])",
-          "ans": "len",
-          "opts": ["len", "list", "range", "type", "sum"],
-          "exp": "len() listenin eleman sayısını döndürür"
-        }
-      ],
-      "fills": [
-        {
-          "code": "liste = <input class=\"blank\" data-ans=\"[]\" placeholder=\"?\" style=\"width:30px\">",
-          "hint": "Boş liste oluşturmak için"
-        }
-      ],
+      "quiz": [ ... ],
+      "drag": [ ... ],
+      "fills": [ ... ],
       "code": {
         "task": "3 elemanlı bir liste oluştur ve her elemanı yazdır.",
         "starter": "# Listeyi oluştur\n",
@@ -87,18 +73,19 @@ git push -u origin main
       }
     }
   ]
-}
+};
 ```
 
-### 2. course.json'a ekle
+### 2. course.js'e ekle
 
-```json
-"modules": [
-  { "id": "m0", "file": "modules/m0.json" },
-  { "id": "m1", "file": "modules/m1.json" },
-  { "id": "m2", "file": "modules/m2.json" },
-  { "id": "m3", "file": "modules/m3.json" }
-]
+```js
+{ id:"m3", file:"modules/m3.js", varName:"AXYON_M3" }
+```
+
+### 3. index.html ve ogretmen.html'e script tag ekle
+
+```html
+<script src="modules/m3.js"></script>
 ```
 
 **Bitti.** Sidebar otomatik güncellenir.
@@ -113,30 +100,30 @@ git push -u origin main
 cp -r axyon-learn axyon-tarih
 ```
 
-### 2. `course.json` güncelle
+### 2. `course.js` güncelle
 
-```json
-{
-  "meta": {
-    "storageKey": "axyon-tarih-v1",
-    "themeKey": "axyon-tarih-theme",
-    "title": "TarihLab",
-    "brand": "axyon.dev",
-    "icon": "🏛️",
-    "tagline": "Derinlemesine Tarih Öğren",
-    "description": "Tarihi anla, ezberle değil.",
-    "themeColor": "#7eb8f7",
-    "codeRunner": "none"
+```js
+window.AXYON_COURSE = {
+  meta: {
+    storageKey: "axyon-tarih-v1",
+    themeKey: "axyon-tarih-theme",
+    title: "TarihLab",
+    brand: "axyon.dev",
+    icon: "🏛️",
+    tagline: "Derinlemesine Tarih Öğren",
+    description: "Tarihi anla, ezberle değil.",
+    themeColor: "#7eb8f7",
+    codeRunner: "none"
   },
-  "modules": [
-    { "id": "m0", "file": "modules/m0.json" }
+  modules: [
+    { id:"m0", file:"modules/m0.js", varName:"AXYON_M0" }
   ]
-}
+};
 ```
 
 ### 3. Modülleri yaz
 
-`modules/m0.json` içinde tarih dersleri.  
+`modules/m0.js` içinde tarih dersleri.  
 `codeRunner: "none"` → Kodla sekmesi otomatik gizlenir.
 
 ---

@@ -972,11 +972,9 @@ function resetProgressConfirm(){
   buildSidebar();
   // Welcome ekranına dön
   document.getElementById('welcome').style.display='';
-  document.getElementById('lesson-area').style.display='none';
-  document.getElementById('quiz-area').style.display='none';
-  document.getElementById('fill-area').style.display='none';
-  document.getElementById('drag-area').style.display='none';
-  document.getElementById('code-area').style.display='none';
+  document.getElementById('lesson-panels').style.display='none';
+  document.getElementById('lesson-head').style.display='none';
+  document.getElementById('phase-tabs').style.display='none';
   renderWelcome();
   alert('İlerleme sıfırlandı!');
 }
@@ -1069,7 +1067,6 @@ const D={
 function sh(h,color){color=color||'var(--blue)';return'<div class="section-h"><div class="bar" style="background:'+color+'"></div><h3>'+h+'</h3></div>';}
 
 /* ═══ STATE ═══ */
-const STORAGE_KEY='axyon-pylab-v1';
 let S={currentId:null,currentPhase:0,progress:{},totalXP:0,streak:0,lastVisit:'',soundOff:false,achievements:{}};
 let cm=null;
 
@@ -1208,15 +1205,13 @@ function sbToggle(modId){
 
 /* ═══ HEADER ═══ */
 function refreshHeader(){
-  const oldLvl=Math.floor(S.totalXP/100)+1;
   const lvl=Math.floor(S.totalXP/100)+1;
   const rem=S.totalXP%100;
   document.getElementById('level-badge').textContent='LVL '+lvl;
   document.getElementById('xp-bar').style.width=rem+'%';
-  // xp-bar-outer satırı kaldırıldı (bug: 'xp-bar-outer'&&'xp-bar' her zaman 'xp-bar' döner)
   document.getElementById('xp-label').textContent=rem+'/100 XP';
   document.getElementById('streak-num').textContent=S.streak||0;
-  const total=Object.values(S.progress).reduce((s,p)=>s+(p.scores.filter(x=>x!==null).reduce((a,b)=>a+b,0)/4||0),0);
+  const total=LESSONS.reduce((s,l)=>s+topicScore(l.id),0);
   document.getElementById('total-score').textContent=Math.round(total);
 }
 function refreshHeaderXP(oldXP){
@@ -1634,9 +1629,6 @@ function finishDrag(L){
   setTimeout(function(){res.scrollIntoView({behavior:'smooth',block:'nearest'});},120);
 }
 
-function showDragQ(){}
-function chipClick(){}
-function submitDrag(){}
 /* ═══ FILL ═══ */
 let fD={};
 function renderFills(L){
@@ -1648,7 +1640,7 @@ function renderFills(L){
   if(bankSize > 5) h+=`<div style="font-size:10px;color:var(--muted);padding:0 0 8px;text-align:right">${bankSize} boşluktan 5 tanesi seçildi 🔀</div>`;
   fills.forEach((f,fi)=>{
     h+=`<div class="fill-block" id="fblock${fi}">
-      <div class="q-num">Boşluk ${fi+1} / ${L.fills.length}</div>
+      <div class="q-num">Boşluk ${fi+1} / ${fills.length}</div>
       <div class="fill-code">${f.code}</div>
       <div style="display:flex;gap:8px;align-items:center;margin-top:8px;flex-wrap:wrap">
         <button class="fill-check-btn" onclick="checkFill(${fi})">✓ Kontrol</button>
@@ -1836,7 +1828,7 @@ function _startCourse() {
         MODULES.push({id:mod.id, label:mod.id, icon:'⚠️', color:'#888', error:true});
         return;
       }
-      MODULES.push({id:data.id, label:data.label, icon:data.icon, color:data.color});
+      MODULES.push({id:data.id, label:mod.label||data.label, icon:mod.icon||data.icon, color:mod.color||data.color});
       (data.lessons || []).forEach(function(lesson) {
         if (lesson.code && lesson.code.checkFn) {
           (function(desc){
