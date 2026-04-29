@@ -26,6 +26,7 @@ const GENERATE_LESSON_PAGES = false; // true yapınca her ders için HTML üreti
 function loadModules() {
   // course.js'ten modül listesini dinamik oku — hardcoded m0-m9 yerine
   let moduleIds = ['m0','m1','m2','m3','m4','m5','m6','m7','m8','m9']; // fallback
+  let courseMods = null;
   const courseFile = path.join(__dirname, 'course.js');
   if (fs.existsSync(courseFile)) {
     try {
@@ -36,21 +37,24 @@ function loadModules() {
       const course = courseSandbox.AXYON_COURSE;
       if (course?.modules) {
         const ids = course.modules.filter(m => !m.comingSoon && m.id).map(m => m.id);
-        if (ids.length) { moduleIds = ids; console.log(`📦 course.js: ${ids.join(', ')}`); }
+        if (ids.length) { moduleIds = ids; courseMods = course.modules; console.log(`📦 course.js: ${ids.join(', ')}`); }
       }
     } catch(e) { console.warn('⚠️  course.js okunamadı:', e.message); }
   }
 
   const modules = [];
   for (const id of moduleIds) {
-    const file = path.join(__dirname, 'modules', `${id}.js`);
+    // course.modules listesinden dosya adı ve varName'i al (varsa)
+    const modMeta = (courseMods || []).find(m => m.id === id);
+    const relFile = modMeta?.file || `modules/${id}.js`;
+    const varName  = modMeta?.varName || `AXYON_${id.toUpperCase()}`;
+    const file = path.join(__dirname, relFile);
     if (!fs.existsSync(file)) { console.warn(`⚠️  Bulunamadı: ${file}`); continue; }
     try {
       const sandbox = {};
-      sandbox.window = sandbox; // window.AXYON_MX = {...} için şart
+      sandbox.window = sandbox;
       vm.createContext(sandbox);
       vm.runInContext(fs.readFileSync(file, 'utf8'), sandbox);
-      const varName = `AXYON_${id.toUpperCase()}`;
       const data = sandbox[varName];
       if (!data) { console.warn(`⚠️  ${varName} tanımlı değil`); continue; }
       modules.push(data);

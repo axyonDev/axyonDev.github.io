@@ -1141,12 +1141,15 @@ var DIFF_LESSON_OVERRIDE = {
   // M0: hepsi başlangıç
   'print':'beginner','input':'beginner','numbers':'beginner','first_project':'beginner',
   // M1: temel başlangıç, ileri operatörler orta
-  'datatypes':'beginner','variables':'beginner',
-  'operators_deep':'intermediate','number_systems':'intermediate',
+  'datatypes':'beginner','variables':'beginner','m1_functions':'beginner',
+  'truthy_falsy':'beginner','type_conversion':'beginner',
+  'operators':'intermediate','number_systems':'intermediate',
   // M2: temel string başlangıç, regex ileri
-  'string_basics':'beginner','string_methods':'beginner','fstring_advanced':'intermediate',
+  'strings':'beginner','string_methods1':'beginner','string_methods2':'beginner',
+  'string_slicing':'beginner','raw_multiline_strings':'beginner',
+  'fstring_advanced':'intermediate','unicode_encoding':'intermediate',
   'regex_basics':'intermediate','regex_advanced':'advanced',
-  // M3: temel if/for başlangıç
+  // M3: temel kontrol başlangıç
   'm3_conditions':'beginner','m1_conditions':'beginner',
   'm3_forloop':'beginner','m1_forloop':'beginner',
   'm3_whileloop':'beginner','m1_whileloop':'beginner',
@@ -1155,24 +1158,29 @@ var DIFF_LESSON_OVERRIDE = {
   'zip_map':'intermediate',
   // M4: temel veri yapıları orta, ileri koleksiyonlar advanced
   'lists_basics':'intermediate','lists_methods':'intermediate',
-  'dicts_basics':'intermediate','sets_basics':'intermediate',
-  'tuples_basics':'intermediate','lists_advanced':'advanced',
+  'dicts_basics':'intermediate','sets':'intermediate','tuples':'intermediate',
+  'lists_advanced':'advanced','dicts_advanced':'advanced',
+  'iterators':'advanced','generators':'advanced',
   // M5: temel fonksiyon intermediate, closure/decorator/generator advanced
-  'functions_basics':'intermediate','args_kwargs':'intermediate',
-  'scope_legb':'intermediate','lambda_functions':'intermediate',
+  'args_kwargs':'intermediate','scope_legb':'intermediate',
+  'lambda_functions':'intermediate','type_hints':'intermediate',
+  'error_handling1':'intermediate','error_handling2':'intermediate',
   'recursion':'advanced','closure':'advanced',
-  'decorators':'advanced','decorators1':'advanced','decorators2':'advanced',
-  'generators':'advanced',
+  'decorators1':'advanced','decorators2':'advanced',
   // M6: import/modüller intermediate, dosya işlemleri intermediate
   'import_system':'intermediate','standard_library':'intermediate',
   'file_read_write':'intermediate','file_formats_json':'intermediate',
-  'file_formats_csv':'intermediate',
+  'file_formats_csv':'intermediate','os_sys':'intermediate',
+  'pathlib_module':'intermediate','packages':'intermediate',
+  'virtual_env':'intermediate','context_manager':'intermediate',
   // M7: OOP temel intermediate, metaclass/descriptor advanced
-  'class_basics':'intermediate','inheritance1':'intermediate',
+  'class_basics':'intermediate','inheritance1':'intermediate','inheritance2':'intermediate',
   'encapsulation':'intermediate','polymorphism':'intermediate',
-  'magic_methods1':'intermediate',
-  'metaclass':'advanced','descriptor':'advanced','design_patterns':'advanced',
-  // M8/M9: hepsi advanced (module default ile aynı, override gerekmez)
+  'magic_methods1':'intermediate','magic_methods2':'intermediate',
+  'dataclass':'intermediate','class_static_methods':'intermediate',
+  'design_patterns1':'advanced','design_patterns2':'advanced',
+  'solid_principles':'advanced',
+  // M8/M9: hepsi advanced (module default ile aynı)
 };
 function getDifficulty(lesson){
   return DIFF_LESSON_OVERRIDE[lesson.id] || DIFF_MODULE_DEFAULT[lesson.moduleId] || 'beginner';
@@ -1293,7 +1301,7 @@ function _runWithPyodide(code, outEl, btnEl, isInline){
   };
 
   if(btnEl) btnEl.textContent = '⏳';
-  setOut(_pyodideReady ? '⏳ Çalışıyor...' : '⏳ Pyodide yükleniyor (~10sn ilk kez)...', false);
+  setOut('⏳ Çalışıyor...', false);
 
   _getPyodide(function(py){
     if(!py){ setOut('❌ Pyodide yüklenemedi — internet bağlantını kontrol et', true); return; }
@@ -1400,7 +1408,7 @@ function _injectSkulptBanner(L){
     '<span class="skulpt-banner-icon">⚡</span>' +
     '<div class="skulpt-banner-body">' +
       '<div class="skulpt-banner-title">Tarayıcı simülasyon modu</div>' +
-      '<div class="skulpt-banner-text">Bu ders <strong>asyncio · requests · numpy · pandas · flask</strong> gibi kütüphaneler içeriyor. Tarayıcı tabanlı Python (Skulpt) bunları tam desteklemez — kodlar gösterim amaçlıdır. Gerçekten çalıştırmak için bilgisayarına Python kur ve VS Code kullan.</div>' +
+      '<div class="skulpt-banner-text">Bu ders tarayıcıda <strong>sınırlı çalışır</strong>. Dosya sistemi, gerçek ağ istekleri, paket yönetimi ve bazı sistem modülleri tarayıcı ortamında desteklenmez. Kodu görmek ve anlamak için idealdir — gerçek ortamda çalıştırmak için bilgisayarına Python kur ve VS Code kullan.</div>' +
     '</div>' +
     '<button class="skulpt-banner-close" onclick="this.closest(\'.skulpt-banner\').remove()" aria-label="Kapat">✕</button>';
   panel.insertBefore(banner, panel.firstChild);
