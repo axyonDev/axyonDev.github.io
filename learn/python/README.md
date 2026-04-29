@@ -128,7 +128,7 @@ window.AXYON_COURSE = {
 
 ---
 
-## Yerel Test (fetch için sunucu şart)
+## Yerel Test
 
 ```bash
 # Python
@@ -141,9 +141,52 @@ npx serve .
 # http://localhost:8000
 ```
 
-> ⚠️ `index.html`'i doğrudan çift tıklayarak açmak çalışmaz.  
-> fetch() CORS kısıtlaması nedeniyle `file://` protokolünde engellenir.  
-> Sunucu üzerinden açman gerekir.
+> **Not:** Modüller artık statik `<script>` tag'leriyle yükleniyor (fetch yok).  
+> Çoğu modern tarayıcıda doğrudan `index.html` açılabilir.  
+> Yine de yerel sunucu önerilir — CDN, localStorage ve bazı tarayıcı güvenlik politikaları `file://` altında beklenmedik davranabilir.  
+> En garantisi: `python -m http.server 8000`
+
+---
+
+## Firebase Cloud Sync Kurulumu (Opsiyonel)
+
+İlerlemenin cihazlar arası senkronize olmasını istiyorsan:
+
+```
+1. console.firebase.google.com → Yeni proje oluştur
+2. Authentication → Sign-in method → Anonymous → Etkinleştir
+3. Firestore Database → Oluştur → Test modu seç
+4. Proje Ayarları → Uygulamalarım → Web uygulaması ekle → Config bilgilerini kopyala
+5. index.html içindeki FIREBASE_CONFIG değişkenini doldur:
+```
+
+```js
+var FIREBASE_CONFIG = {
+  apiKey:            "AIzaSy...",
+  authDomain:        "proje-id.firebaseapp.com",
+  projectId:         "proje-id",
+  storageBucket:     "proje-id.appspot.com",
+  messagingSenderId: "123456789",
+  appId:             "1:123456789:web:abc123"
+};
+```
+
+> Config doldurulmadan sistem localStorage ile çalışmaya devam eder.  
+> Ücretsiz Firebase Spark planı PyLab için fazlasıyla yeterli.
+
+**Güvenlik kuralları (production'a çıkmadan önce):**
+
+```
+// Firestore rules
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /users/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+  }
+}
+```
 
 ---
 

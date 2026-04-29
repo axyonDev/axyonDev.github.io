@@ -28,13 +28,36 @@ h1{font-size:1.4rem;font-weight:700;color:#f0a500;margin-bottom:6px}
 </head>
 <body>
 <h1>🐍 PyLab — Tam Müfredat</h1>
-<div class="sub">axyon.dev · Derinlemesine Python · 108 Ders</div>
+<div class="sub" id="mufredat-sub">axyon.dev · Derinlemesine Python · <span id="total-count">108</span> Ders</div>
 <div class="stats">
-  <div class="stat"><strong>9</strong> tamamlandı</div>
-  <div class="stat"><strong>108</strong> toplam ders</div>
+  <div class="stat"><strong id="done-count">—</strong> tamamlandı</div>
+  <div class="stat"><strong id="total-count2">108</strong> toplam ders</div>
   <div class="stat"><strong>10</strong> modül</div>
-  <div class="stat"><strong style="color:#3dd68c">8%</strong> ilerleme</div>
+  <div class="stat"><strong id="pct-count" style="color:#3dd68c">—%</strong> ilerleme</div>
 </div>
+<script>
+(function(){
+  try{
+    // Birden fazla key dene (ogretmen.html ile aynı mantık)
+    var keys=['axyon-python-v1','axyon-learn-v1','axyon-pylab-v1'];
+    var raw=null;
+    for(var i=0;i<keys.length;i++){raw=localStorage.getItem(keys[i]);if(raw)break;}
+    if(!raw) return;
+    var S = JSON.parse(raw);
+    var allLessons = document.querySelectorAll('.lesson');
+    var total = allLessons.length;
+    document.getElementById('total-count').textContent = total;
+    document.getElementById('total-count2').textContent = total;
+    var done = Object.values(S.progress||{}).filter(function(p){
+      var v = p.scores.filter(function(s){return s!==null;});
+      var avg = v.length ? v.reduce(function(a,b){return a+b;},0)/5 : 0;
+      return avg >= 50;
+    }).length;
+    document.getElementById('done-count').textContent = done;
+    document.getElementById('pct-count').textContent = total>0?Math.round(done/total*100)+'%':'0%';
+  }catch(e){}
+})();
+</script>
 
 <div class="mod"><div class="mod-head"><span>🚀</span><span class="mod-label">M0 · Başlangıç</span><span class="mod-count">4 ders</span></div>
 <div class="lesson done"><span class="ln">01</span><span class="li">🖨️</span><div><div class="ltitle">print() Fonksiyonu</div><div class="lsub">sep, end, f-string, hizalama</div></div><span class="badge b-done">✓</span></div>

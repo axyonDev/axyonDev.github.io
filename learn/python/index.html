@@ -3,7 +3,20 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="description" content="Axyon.Dev PyLab — Türkçe Python öğrenme platformu. Neden ve nasıl öğren.">
+<meta name="description" content="PyLab — Türkçe Python öğrenme platformu. 108 ders, sıfırdan ileri seviyeye. Neden ve nasıl odaklı, tarayıcıda çalışır, kurulum gerektirmez.">
+<meta name="keywords" content="python öğren, türkçe python, python kursu, python dersleri, python başlangıç, axyon, pylab">
+<meta name="author" content="Axyon.Dev">
+<meta name="robots" content="index, follow">
+<meta property="og:type" content="website">
+<meta property="og:title" content="PyLab — Derinlemesine Türkçe Python">
+<meta property="og:description" content="108 ders · Sıfırdan ileri Python · Neden ve alternatif odaklı · Tarayıcıda çalışır">
+<meta property="og:image" content="https://axyon.dev/pylab-og.png">
+<meta property="og:url" content="https://axyon.dev/pylab">
+<meta property="og:locale" content="tr_TR">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="PyLab — Türkçe Python">
+<meta name="twitter:description" content="108 ders, sıfırdan ileri Python, tarayıcıda çalışır">
+<link rel="canonical" href="https://axyon.dev/pylab">
 <title>Axyon.Dev PyLab</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🐍</text></svg>">
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
@@ -466,7 +479,8 @@ code{font-family:"JetBrains Mono",monospace;background:var(--s2);border:1px soli
   .btn-hint{display:none}
   .kb-hint{display:none}
   .drag-code-wrap{font-size:12.5px;padding:10px 12px}
-  .chip{font-size:12px;padding:7px 12px}
+  .chip{font-size:14px;padding:11px 18px;min-height:44px} /* DeepSeek: parmakla basmayı kolaylaştır */
+  .drag-chips{gap:10px}
   .hl{min-width:54px;font-size:12.5px}
   #toast-container{bottom:12px;right:12px;left:12px}
   .toast{max-width:100%}
@@ -543,6 +557,107 @@ body.admin-mode .topic-admin-id{display:block}
 .bypass-btn-skip:hover{opacity:.88}
 .bypass-warn{font-size:11px;color:var(--muted);margin-top:10px;opacity:.7}
 
+/* ── SKULPT LIMIT BANNER ── */
+.skulpt-banner{display:flex;align-items:flex-start;gap:12px;background:rgba(240,165,0,.08);border:1px solid rgba(240,165,0,.25);border-radius:10px;padding:12px 16px;margin-bottom:18px}
+.skulpt-banner-icon{font-size:18px;flex-shrink:0;margin-top:1px}
+.skulpt-banner-body{flex:1;min-width:0}
+.skulpt-banner-title{font-size:13px;font-weight:600;color:var(--amber);margin-bottom:4px}
+.skulpt-banner-text{font-size:12px;color:var(--muted2);line-height:1.55}
+.skulpt-banner-close{background:none;border:none;color:var(--muted);cursor:pointer;font-size:16px;padding:0;flex-shrink:0;line-height:1}
+.skulpt-banner-close:hover{color:var(--amber)}
+
+/* ── EXPORT/IMPORT BUTTONS ── */
+.sp-action-btn{width:100%;padding:10px 14px;border-radius:8px;border:1px solid var(--border2);background:transparent;color:var(--text);cursor:pointer;font-size:13px;font-weight:500;font-family:"Outfit",sans-serif;text-align:left;display:flex;align-items:center;gap:10px;transition:border-color .15s,background .15s}
+.sp-action-btn:hover{border-color:var(--amber);background:rgba(240,165,0,.07)}
+.sp-action-btn .sp-btn-icon{font-size:15px}
+.sp-action-btn .sp-btn-text{flex:1}
+.sp-action-btn .sp-btn-sub{font-size:11px;color:var(--muted);display:block;margin-top:1px}
+
+/* ── ONBOARDING TOUR MODAL ── */
+#tour-modal{position:fixed;inset:0;background:rgba(0,0,0,.72);z-index:9990;display:none;align-items:center;justify-content:center;padding:16px}
+#tour-modal.show{display:flex}
+.tour-box{background:var(--s1);border:1px solid var(--border2);border-radius:16px;width:100%;max-width:440px;overflow:hidden;box-shadow:0 24px 64px rgba(0,0,0,.6)}
+.tour-progress{display:flex;gap:4px;padding:16px 20px 0}
+.tour-pip{flex:1;height:3px;border-radius:2px;background:var(--border);transition:background .3s}
+.tour-pip.done{background:var(--amber)}
+.tour-step{padding:24px 24px 20px;display:none}
+.tour-step.active{display:block}
+.tour-step-icon{font-size:2.2rem;margin-bottom:12px;display:block}
+.tour-step-title{font-size:1.15rem;font-weight:700;color:var(--text);margin-bottom:8px}
+.tour-step-body{font-size:13px;color:var(--muted2);line-height:1.65;margin-bottom:20px}
+.tour-step-body strong{color:var(--text)}
+.tour-phases{display:flex;gap:6px;flex-wrap:wrap;margin:12px 0}
+.tour-phase-pill{padding:5px 10px;border-radius:20px;font-size:11px;font-weight:600;border:1px solid var(--border2)}
+.tour-nav{display:flex;align-items:center;gap:8px;padding:0 24px 20px}
+.tour-skip{background:none;border:none;color:var(--muted);cursor:pointer;font-size:12px;font-family:"Outfit",sans-serif;padding:0;flex:1}
+.tour-skip:hover{color:var(--text)}
+.tour-btn{padding:10px 22px;border-radius:8px;border:none;background:linear-gradient(135deg,var(--amber),#e08800);color:#080b12;cursor:pointer;font-size:13px;font-weight:700;font-family:"Outfit",sans-serif;transition:opacity .15s}
+.tour-btn:hover{opacity:.88}
+.tour-track-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin:12px 0 4px}
+.tour-track-card{border:1.5px solid var(--border2);border-radius:10px;padding:12px 10px;cursor:pointer;text-align:center;transition:border-color .18s,background .18s}
+.tour-track-card:hover{border-color:var(--amber);background:rgba(240,165,0,.06)}
+.tour-track-card.selected{border-color:var(--amber);background:rgba(240,165,0,.1)}
+.tour-track-icon{font-size:1.5rem;display:block;margin-bottom:6px}
+.tour-track-name{font-size:12px;font-weight:600;color:var(--text)}
+.tour-track-sub{font-size:10px;color:var(--muted);margin-top:3px}
+
+/* ── DIFFICULTY BADGE (sidebar) ── */
+.diff-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;display:inline-block;margin-left:4px;vertical-align:middle}
+.diff-beginner{background:#3dd68c}
+.diff-intermediate{background:#f0a500}
+.diff-advanced{background:#f25f5c}
+
+/* ── TRACK FILTER (welcome) ── */
+.track-bar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
+.track-pill{padding:6px 14px;border-radius:20px;font-size:12px;font-weight:600;border:1px solid var(--border2);background:var(--s2);color:var(--muted2);cursor:pointer;transition:all .18s}
+.track-pill:hover{border-color:var(--amber);color:var(--amber)}
+.track-pill.active{border-color:var(--amber);background:rgba(240,165,0,.12);color:var(--amber)}
+.track-pill.all{border-color:var(--border2)}
+.module-card.track-dim{opacity:.35;filter:grayscale(.6)}
+
+/* ── DEVAM ET KARTI ── */
+.continue-card{display:flex;align-items:center;gap:12px;background:var(--s2);border:1px solid var(--amber);border-radius:12px;padding:14px 18px;margin-bottom:14px;cursor:pointer;transition:background .18s,border-color .18s}
+.continue-card:hover{background:rgba(240,165,0,.08)}
+.continue-left{flex:1;min-width:0}
+.continue-label{font-size:10px;font-weight:600;color:var(--amber);letter-spacing:.06em;text-transform:uppercase;margin-bottom:4px}
+.continue-title{font-size:14px;font-weight:600;color:var(--text);margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.continue-meta{font-size:11px;color:var(--muted2)}
+.continue-arrow{font-size:20px;color:var(--amber);flex-shrink:0}
+
+/* ── SİDEBAR TRACK VURGUSU ── */
+.topic-item.track-highlight .topic-name::after{content:'★';font-size:8px;color:var(--amber);margin-left:4px;vertical-align:middle}
+
+/* ── MOBILE CODE HINT ── */
+.mobile-code-hint{background:var(--s2);border:1px solid var(--border2);border-radius:12px;padding:20px;text-align:center}
+.mobile-code-hint-icon{font-size:2rem;margin-bottom:10px}
+.mobile-code-hint-title{font-size:14px;font-weight:600;color:var(--text);margin-bottom:6px}
+.mobile-code-hint-sub{font-size:12px;color:var(--muted2);line-height:1.55;margin-bottom:16px}
+.mobile-copy-btn{padding:9px 20px;border-radius:8px;border:1px solid var(--border2);background:var(--s3);color:var(--text);cursor:pointer;font-size:12px;font-weight:600;font-family:"Outfit",sans-serif;transition:border-color .15s}
+.mobile-copy-btn:hover{border-color:var(--amber);color:var(--amber)}
+.mobile-code-block{background:var(--code-bg);border-radius:8px;padding:12px;margin:12px 0;text-align:left;font-family:"JetBrains Mono",monospace;font-size:11px;color:var(--code-text);overflow-x:auto;white-space:pre}
+
+/* ── MOBILE INDENT TOOLBAR ── */
+.mobile-toolbar{display:none;gap:4px;padding:6px 8px;background:var(--s2);border:1px solid var(--border);border-bottom:none;border-radius:8px 8px 0 0;flex-wrap:wrap}
+@media(max-width:768px){.mobile-toolbar{display:flex}}
+.mtb-btn{padding:5px 11px;border-radius:6px;border:1px solid var(--border2);background:var(--s3);color:var(--text);cursor:pointer;font-size:12px;font-family:"JetBrains Mono",monospace;font-weight:600;transition:border-color .15s,background .15s;line-height:1}
+.mtb-btn:hover{border-color:var(--amber);background:rgba(240,165,0,.1);color:var(--amber)}
+.mtb-btn:active{transform:scale(.95)}
+
+/* ── PYODIDE RUNNER ── */
+.pyodide-badge{display:inline-flex;align-items:center;gap:5px;background:rgba(126,184,247,.1);border:1px solid rgba(126,184,247,.3);border-radius:6px;padding:3px 8px;font-size:10px;font-weight:600;color:var(--blue);margin-left:8px;vertical-align:middle}
+.pyodide-loading{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted2);padding:8px 0}
+.py-spin{width:14px;height:14px;border:2px solid var(--border2);border-top-color:var(--blue);border-radius:50%;animation:spin .75s linear infinite;flex-shrink:0}
+
+/* ── CLOUD SYNC ── */
+.cloud-status{display:flex;align-items:center;gap:6px;font-size:11px;padding:6px 10px;border-radius:6px;background:var(--s2);border:1px solid var(--border);margin:4px 10px 8px}
+.cloud-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.cloud-dot.ok{background:#3dd68c}
+.cloud-dot.err{background:#f25f5c}
+.cloud-dot.off{background:#8090c0}
+.cloud-dot.sync{background:#f0a500;animation:skPulse 1s ease-in-out infinite}
+.cloud-id-box{font-family:"JetBrains Mono",monospace;font-size:9px;color:var(--muted);background:var(--s3);border-radius:4px;padding:2px 6px;cursor:pointer;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cloud-id-box:hover{color:var(--amber)}
+
 </style>
 </head>
 <body>
@@ -572,6 +687,95 @@ body.admin-mode .topic-admin-id{display:block}
   </div>
 </div>
 <div id="toast-container" aria-live="polite"></div>
+
+<!-- ── ONBOARDING TOUR MODAL ── -->
+<div id="tour-modal" role="dialog" aria-modal="true" aria-label="PyLab'a Hoş Geldin">
+  <div class="tour-box">
+    <div class="tour-progress">
+      <div class="tour-pip done" id="tpip0"></div>
+      <div class="tour-pip" id="tpip1"></div>
+      <div class="tour-pip" id="tpip2"></div>
+      <div class="tour-pip" id="tpip3"></div>
+    </div>
+
+    <!-- Adım 1: Karşılama -->
+    <div class="tour-step active" id="tstep0">
+      <span class="tour-step-icon">🐍</span>
+      <div class="tour-step-title">PyLab'a Hoş Geldin!</div>
+      <div class="tour-step-body">
+        Bu platform sana Python'ı sadece <strong>ne</strong> olduğunu değil, <strong>neden</strong> böyle çalıştığını ve <strong>alternatiflerinin</strong> ne olduğunu öğretir.<br><br>
+        Sorularını sormadan önce cevaplar zaten ders içinde hazır — sarı <strong>Neden?</strong> ve turuncu <strong>Alternatif</strong> kutularına dikkat et.
+      </div>
+      <div class="tour-nav">
+        <button class="tour-skip" onclick="closeTour()">Geç →</button>
+        <button class="tour-btn" onclick="tourStep(1)">İleri →</button>
+      </div>
+    </div>
+
+    <!-- Adım 2: 5 Aşama -->
+    <div class="tour-step" id="tstep1">
+      <span class="tour-step-icon">🎯</span>
+      <div class="tour-step-title">Her ders 5 aşamadan oluşuyor</div>
+      <div class="tour-step-body">Sadece okumak değil — her konuyu <strong>5 farklı şekilde</strong> pekiştiriyorsun:</div>
+      <div class="tour-phases">
+        <div class="tour-phase-pill" style="color:var(--phase0);border-color:var(--phase0)">📖 Ders</div>
+        <div class="tour-phase-pill" style="color:var(--phase1);border-color:var(--phase1)">❓ Test</div>
+        <div class="tour-phase-pill" style="color:var(--phase2);border-color:var(--phase2)">🔀 Seç</div>
+        <div class="tour-phase-pill" style="color:var(--phase3);border-color:var(--phase3)">✏️ Boşluk</div>
+        <div class="tour-phase-pill" style="color:var(--phase4);border-color:var(--phase4)">💻 Kodla</div>
+      </div>
+      <div class="tour-step-body" style="margin-top:4px">XP kazan, seviye atla, seriyi kırma — motivasyon süreci boyunca yanında.</div>
+      <div class="tour-nav">
+        <button class="tour-skip" onclick="tourStep(0)">← Geri</button>
+        <button class="tour-btn" onclick="tourStep(2)">İleri →</button>
+      </div>
+    </div>
+
+    <!-- Adım 3: Zorluk seviyeleri -->
+    <div class="tour-step" id="tstep2">
+      <span class="tour-step-icon">🎚️</span>
+      <div class="tour-step-title">Zorluk seviyelerine dikkat et</div>
+      <div class="tour-step-body">
+        Menüdeki her dersin yanında renkli bir nokta var — nerede olduğunu anlarsın:<br><br>
+        <span style="display:inline-flex;align-items:center;gap:6px;margin-bottom:6px"><span class="diff-dot diff-beginner"></span> <strong style="color:#3dd68c">Başlangıç</strong> — rahatça anlarsın</span><br>
+        <span style="display:inline-flex;align-items:center;gap:6px;margin-bottom:6px"><span class="diff-dot diff-intermediate"></span> <strong style="color:#f0a500">Orta</strong> — dikkat gerekir</span><br>
+        <span style="display:inline-flex;align-items:center;gap:6px"><span class="diff-dot diff-advanced"></span> <strong style="color:#f25f5c">İleri</strong> — temel bilgi şart</span>
+      </div>
+      <div class="tour-nav">
+        <button class="tour-skip" onclick="tourStep(1)">← Geri</button>
+        <button class="tour-btn" onclick="tourStep(3)">İleri →</button>
+      </div>
+    </div>
+
+    <!-- Adım 4: Yol seç -->
+    <div class="tour-step" id="tstep3">
+      <span class="tour-step-icon">🗺️</span>
+      <div class="tour-step-title">Hangi yoldan gitmek istiyorsun?</div>
+      <div class="tour-step-body">Bir rota seç — ilgili modüller öne çıkar. İstediğin zaman değiştirebilirsin.</div>
+      <div class="tour-track-grid">
+        <div class="tour-track-card selected" id="ttc-all" onclick="selectTourTrack('all',this)">
+          <span class="tour-track-icon">🐍</span>
+          <div class="tour-track-name">Baştan Sona</div>
+          <div class="tour-track-sub">Tüm müfredat</div>
+        </div>
+        <div class="tour-track-card" id="ttc-web" onclick="selectTourTrack('web',this)">
+          <span class="tour-track-icon">🌐</span>
+          <div class="tour-track-name">Web Yolu</div>
+          <div class="tour-track-sub">Flask · API · Deploy</div>
+        </div>
+        <div class="tour-track-card" id="ttc-data" onclick="selectTourTrack('data',this)">
+          <span class="tour-track-icon">📊</span>
+          <div class="tour-track-name">Veri Yolu</div>
+          <div class="tour-track-sub">Pandas · NumPy · SQL</div>
+        </div>
+      </div>
+      <div class="tour-nav">
+        <button class="tour-skip" onclick="tourStep(2)">← Geri</button>
+        <button class="tour-btn" onclick="finishTour()">Başla 🚀</button>
+      </div>
+    </div>
+  </div>
+</div>
 <header id="header">
   <!-- Hamburger: sidebar toggle, mobilde solda görünür -->
   <button class="hamburger" id="hamburger" onclick="toggleSidebar()" aria-label="Menü" aria-expanded="false">
@@ -649,6 +853,48 @@ body.admin-mode .topic-admin-id{display:block}
     <span style="font-size:18px;margin-left:4px;color:var(--muted)">›</span>
   </div>
   <div class="sp-divider"></div>
+  <div style="padding:8px 14px 4px;font-size:10px;color:var(--muted);letter-spacing:.06em;text-transform:uppercase">Bulut Senkronizasyon</div>
+  <div id="cloud-status-bar" class="cloud-status">
+    <div class="cloud-dot off"></div>
+    <span class="cloud-status-text" style="flex:1;color:var(--muted2)">Yapılandırılmamış · FIREBASE_CONFIG doldur</span>
+    <span class="cloud-id-box" onclick="copyCloudId()" title="Cloud ID'yi kopyala">ID: —</span>
+  </div>
+  <div style="padding:0 10px 8px;display:flex;flex-direction:column;gap:6px">
+    <button class="sp-action-btn" onclick="cloudPush()">
+      <span class="sp-btn-icon">☁️</span>
+      <span class="sp-btn-text">
+        Buluta Kaydet
+        <span class="sp-btn-sub">Firebase Firestore'a gönder</span>
+      </span>
+    </button>
+    <button class="sp-action-btn" onclick="cloudPull()">
+      <span class="sp-btn-icon">🔄</span>
+      <span class="sp-btn-text">
+        Buluttan Yükle
+        <span class="sp-btn-sub">Başka cihazdan devam et</span>
+      </span>
+    </button>
+  </div>
+  <div class="sp-divider"></div>
+  <div style="padding:8px 14px 4px;font-size:10px;color:var(--muted);letter-spacing:.06em;text-transform:uppercase">İlerleme Yedekleme</div>
+  <div style="padding:4px 10px 8px;display:flex;flex-direction:column;gap:6px">
+    <button class="sp-action-btn" onclick="exportProgress()">
+      <span class="sp-btn-icon">⬇️</span>
+      <span class="sp-btn-text">
+        İlerlemeyi Kaydet
+        <span class="sp-btn-sub">JSON dosyası indir · Cihaz değiştirince kullan</span>
+      </span>
+    </button>
+    <button class="sp-action-btn" onclick="document.getElementById('import-file-input').click()">
+      <span class="sp-btn-icon">⬆️</span>
+      <span class="sp-btn-text">
+        İlerlemeyi Yükle
+        <span class="sp-btn-sub">Daha önce kaydedilen dosyayı seç</span>
+      </span>
+    </button>
+    <input type="file" id="import-file-input" accept=".json" style="display:none" onchange="importProgress(this)">
+  </div>
+  <div class="sp-divider"></div>
   <div class="sp-row" style="cursor:pointer" onclick="resetProgressConfirm()">
     <span class="sp-icon">🗑️</span>
     <div style="flex:1">
@@ -723,21 +969,21 @@ body.admin-mode .topic-admin-id{display:block}
         <div class="score-cell"><div class="sc-label">Kod</div><div class="sc-val" id="sc4" style="color:var(--phase4)">—</div></div>
       </div>
     </div>
-    <div id="phase-tabs" style="display:none" role="tablist">
-      <button class="ptab active" data-phase="0" onclick="switchPhase(0)" role="tab">📖 Ders <span class="ptab-score" id="pts0">—</span></button>
-      <button class="ptab" data-phase="1" onclick="switchPhase(1)" role="tab">🧠 Test <span class="ptab-score" id="pts1">—</span></button>
-      <button class="ptab" data-phase="2" onclick="switchPhase(2)" role="tab">🎯 Seç <span class="ptab-score" id="pts2">—</span></button>
-      <button class="ptab" data-phase="3" onclick="switchPhase(3)" role="tab">✏️ Boşluk <span class="ptab-score" id="pts3">—</span></button>
-      <button class="ptab" data-phase="4" onclick="switchPhase(4)" role="tab">💻 Kodla <span class="ptab-score" id="pts4">—</span></button>
+    <div id="phase-tabs" style="display:none" role="tablist" aria-label="Ders aşamaları">
+      <button class="ptab active" data-phase="0" onclick="switchPhase(0)" role="tab" aria-selected="true" aria-controls="panel-0">📖 Ders <span class="ptab-score" id="pts0">—</span></button>
+      <button class="ptab" data-phase="1" onclick="switchPhase(1)" role="tab" aria-selected="false" aria-controls="panel-1">🧠 Test <span class="ptab-score" id="pts1">—</span></button>
+      <button class="ptab" data-phase="2" onclick="switchPhase(2)" role="tab" aria-selected="false" aria-controls="panel-2">🎯 Seç <span class="ptab-score" id="pts2">—</span></button>
+      <button class="ptab" data-phase="3" onclick="switchPhase(3)" role="tab" aria-selected="false" aria-controls="panel-3">✏️ Boşluk <span class="ptab-score" id="pts3">—</span></button>
+      <button class="ptab" data-phase="4" onclick="switchPhase(4)" role="tab" aria-selected="false" aria-controls="panel-4">💻 Kodla <span class="ptab-score" id="pts4">—</span></button>
     </div>
     <div id="content-area">
       <div id="welcome"></div>
       <div id="lesson-panels" style="display:none">
-        <div class="phase-panel active" id="panel-0" role="tabpanel"></div>
-        <div class="phase-panel" id="panel-1" role="tabpanel"></div>
-        <div class="phase-panel" id="panel-2" role="tabpanel"></div>
-        <div class="phase-panel" id="panel-3" role="tabpanel"></div>
-        <div class="phase-panel" id="panel-4" role="tabpanel"></div>
+        <div class="phase-panel active" id="panel-0" role="tabpanel" aria-labelledby="pts0" tabindex="0"></div>
+        <div class="phase-panel" id="panel-1" role="tabpanel" aria-labelledby="pts1" tabindex="-1"></div>
+        <div class="phase-panel" id="panel-2" role="tabpanel" aria-labelledby="pts2" tabindex="-1"></div>
+        <div class="phase-panel" id="panel-3" role="tabpanel" aria-labelledby="pts3" tabindex="-1"></div>
+        <div class="phase-panel" id="panel-4" role="tabpanel" aria-labelledby="pts4" tabindex="-1"></div>
       </div>
     </div>
   </main>
@@ -884,6 +1130,441 @@ function toggleSound(){
   syncSettingsUI();
 }
 
+/* ═══ ZORLUK SEVİYESİ HARİTASI ═══ */
+// Modül bazlı varsayılan + ders bazlı override
+var DIFF_MODULE_DEFAULT = {
+  m0:'beginner', m1:'beginner', m2:'intermediate',
+  m3:'intermediate', m4:'intermediate', m5:'advanced',
+  m6:'intermediate', m7:'advanced', m8:'advanced', m9:'advanced'
+};
+var DIFF_LESSON_OVERRIDE = {
+  // M0: hepsi başlangıç
+  'print':'beginner','input':'beginner','numbers':'beginner','first_project':'beginner',
+  // M1: temel başlangıç, ileri operatörler orta
+  'datatypes':'beginner','variables':'beginner',
+  'operators_deep':'intermediate','number_systems':'intermediate',
+  // M2: temel string başlangıç, regex ileri
+  'string_basics':'beginner','string_methods':'beginner','fstring_advanced':'intermediate',
+  'regex_basics':'intermediate','regex_advanced':'advanced',
+  // M3: temel if/for başlangıç
+  'm3_conditions':'beginner','m1_conditions':'beginner',
+  'm3_forloop':'beginner','m1_forloop':'beginner',
+  'm3_whileloop':'beginner','m1_whileloop':'beginner',
+  'break_continue_pass':'beginner',
+  'list_comprehension':'intermediate','dict_set_comprehension':'intermediate',
+  'zip_map':'intermediate',
+  // M4: temel veri yapıları orta, ileri koleksiyonlar advanced
+  'lists_basics':'intermediate','lists_methods':'intermediate',
+  'dicts_basics':'intermediate','sets_basics':'intermediate',
+  'tuples_basics':'intermediate','lists_advanced':'advanced',
+  // M5: temel fonksiyon intermediate, closure/decorator/generator advanced
+  'functions_basics':'intermediate','args_kwargs':'intermediate',
+  'scope_legb':'intermediate','lambda_functions':'intermediate',
+  'recursion':'advanced','closure':'advanced',
+  'decorators':'advanced','decorators1':'advanced','decorators2':'advanced',
+  'generators':'advanced',
+  // M6: import/modüller intermediate, dosya işlemleri intermediate
+  'import_system':'intermediate','standard_library':'intermediate',
+  'file_read_write':'intermediate','file_formats_json':'intermediate',
+  'file_formats_csv':'intermediate',
+  // M7: OOP temel intermediate, metaclass/descriptor advanced
+  'class_basics':'intermediate','inheritance1':'intermediate',
+  'encapsulation':'intermediate','polymorphism':'intermediate',
+  'magic_methods1':'intermediate',
+  'metaclass':'advanced','descriptor':'advanced','design_patterns':'advanced',
+  // M8/M9: hepsi advanced (module default ile aynı, override gerekmez)
+};
+function getDifficulty(lesson){
+  return DIFF_LESSON_OVERRIDE[lesson.id] || DIFF_MODULE_DEFAULT[lesson.moduleId] || 'beginner';
+}
+var DIFF_LABEL = {beginner:'Başlangıç', intermediate:'Orta', advanced:'İleri'};
+var DIFF_DOT   = {beginner:'diff-beginner', intermediate:'diff-intermediate', advanced:'diff-advanced'};
+
+/* ═══ TRACK SİSTEMİ ═══ */
+var TRACKS = {
+  all:  {label:'Tümü', modules:['m0','m1','m2','m3','m4','m5','m6','m7','m8','m9']},
+  web:  {label:'Web Yolu 🌐',  modules:['m0','m1','m3','m5','m6','m9']},
+  data: {label:'Veri Yolu 📊', modules:['m0','m1','m2','m4','m8','m9']}
+};
+var _activeTrack = 'all';
+
+function setTrack(trackId){
+  _activeTrack = trackId;
+  try{ localStorage.setItem('axyon-track', trackId); }catch(e){}
+  renderWelcome();
+  buildSidebar();
+}
+
+/* ═══ ONBOARDING TOUR ═══ */
+var _tourTrackSelected = 'all';
+var _tourStep = 0;
+
+function checkTour(){
+  try{
+    if(!localStorage.getItem('axyon-tour-done')) showTour();
+    // Track'i de yükle
+    var saved = localStorage.getItem('axyon-track');
+    if(saved && TRACKS[saved]) _activeTrack = saved;
+  }catch(e){}
+}
+
+function showTour(){
+  document.getElementById('tour-modal').classList.add('show');
+  tourStep(0);
+}
+
+function closeTour(){
+  document.getElementById('tour-modal').classList.remove('show');
+  try{ localStorage.setItem('axyon-tour-done','1'); }catch(e){}
+}
+
+function finishTour(){
+  setTrack(_tourTrackSelected);
+  closeTour();
+  showToast('🚀','Yolculuk başlıyor!', TRACKS[_tourTrackSelected].label + ' seçildi','var(--amber)');
+}
+
+function tourStep(n){
+  _tourStep = n;
+  [0,1,2,3].forEach(function(i){
+    document.getElementById('tstep'+i).classList.toggle('active', i===n);
+    document.getElementById('tpip'+i).classList.toggle('done', i<=n);
+  });
+}
+
+function selectTourTrack(id, el){
+  _tourTrackSelected = id;
+  document.querySelectorAll('.tour-track-card').forEach(function(c){ c.classList.remove('selected'); });
+  el.classList.add('selected');
+}
+
+/* ═══ PYODIDE ENGINE (Lazy — sadece M8/M9 açıldığında yüklenir) ═══ */
+var _pyodide = null;
+var _pyodideReady = false;
+var _pyodideLoading = false;
+var _pyodideQueue = [];
+// M8 ve M9 varsayılan olarak Pyodide çalıştırır; ders bazlı override için lesson.runner = 'pyodide'
+var PYODIDE_RUNNER_MODULES = {m8:true, m9:true};
+
+function _shouldUsePyodide(L){
+  return L && (PYODIDE_RUNNER_MODULES[L.moduleId] || L.runner === 'pyodide');
+}
+
+function _getPyodide(cb){
+  if(_pyodideReady){ cb(_pyodide); return; }
+  _pyodideQueue.push(cb);
+  if(_pyodideLoading) return;
+  _pyodideLoading = true;
+  // İlk yükleme bildirimi — ~15MB indirme başlıyor
+  showToast('⚡','Pyodide yükleniyor','İlk kez ~10–15 sn sürebilir · Sonraki çalıştırmalar anında','var(--blue)');
+  var s = document.createElement('script');
+  s.src = 'https://cdn.jsdelivr.net/pyodide/v0.25.0/full/pyodide.js';
+  s.onerror = function(){
+    _pyodideLoading = false;
+    var q = _pyodideQueue.slice(); _pyodideQueue = [];
+    q.forEach(function(fn){ fn(null); }); // null = yükleme başarısız
+  };
+  s.onload = function(){
+    loadPyodide({indexURL:'https://cdn.jsdelivr.net/pyodide/v0.25.0/full/'})
+      .then(function(py){
+        _pyodide = py; _pyodideReady = true; _pyodideLoading = false;
+        var q = _pyodideQueue.slice(); _pyodideQueue = [];
+        q.forEach(function(fn){ fn(_pyodide); });
+      })
+      .catch(function(){
+        _pyodideLoading = false;
+        var q = _pyodideQueue.slice(); _pyodideQueue = [];
+        q.forEach(function(fn){ fn(null); });
+      });
+  };
+  document.head.appendChild(s);
+}
+
+function _runWithPyodide(code, outEl, btnEl, isInline){
+  var setOut = function(text, isErr){
+    if(isInline){
+      var ct = outEl ? outEl.querySelector('.cb-content') : null;
+      if(ct){ ct.textContent = text; ct.className = 'cb-content' + (isErr?' cb-err':''); }
+      if(outEl) outEl.classList.add('vis');
+    } else {
+      if(outEl){ outEl.innerHTML = isErr ? '<span class="out-error">'+text.replace(/</g,'&lt;')+'</span>' : text.replace(/</g,'&lt;'); }
+    }
+    if(btnEl) btnEl.textContent = isInline ? '▶ Çalıştır' : '▶ Çalıştır';
+  };
+
+  if(btnEl) btnEl.textContent = '⏳';
+  setOut(_pyodideReady ? '⏳ Çalışıyor...' : '⏳ Pyodide yükleniyor (~10sn ilk kez)...', false);
+
+  _getPyodide(function(py){
+    if(!py){ setOut('❌ Pyodide yüklenemedi — internet bağlantını kontrol et', true); return; }
+    // stdout/stderr yakala
+    try{
+      py.runPython('import sys, io\n_pylab_buf = io.StringIO()\nsys.stdout = _pylab_buf\nsys.stderr = _pylab_buf');
+    }catch(e){}
+
+    var restore = function(){ try{ py.runPython('sys.stdout=sys.__stdout__;sys.stderr=sys.__stderr__'); }catch(e){} };
+
+    // Paketleri yükle (numpy, pandas vb.)
+    py.loadPackagesFromImports(code).then(function(){
+      py.runPythonAsync(code)
+        .then(function(){
+          var out = '';
+          try{ out = py.runPython('_pylab_buf.getvalue()'); }catch(e){}
+          restore();
+          setOut(out || '(çıktı yok)', false);
+        })
+        .catch(function(err){
+          restore();
+          setOut(String(err), true);
+        });
+    }).catch(function(){
+      // Paket yükleme başarısız — yine de çalıştır
+      py.runPythonAsync(code)
+        .then(function(){
+          var out = '';
+          try{ out = py.runPython('_pylab_buf.getvalue()'); }catch(e){}
+          restore();
+          setOut(out || '(çıktı yok)', false);
+        })
+        .catch(function(err){
+          restore();
+          setOut(String(err), true);
+        });
+    });
+  });
+}
+
+/* ═══ MOBİL GİRİNTİ TOOLBAR ═══ */
+function _addMobileToolbar(){
+  if(window.innerWidth >= 768) return;
+  var wrap = document.querySelector('.editor-wrap');
+  if(!wrap || wrap.querySelector('.mobile-toolbar')) return;
+  var tb = document.createElement('div');
+  tb.className = 'mobile-toolbar';
+  tb.setAttribute('role','toolbar');
+  tb.setAttribute('aria-label','Python hızlı giriş tuşları');
+  var btns = [
+    ['⇥ Tab','    '],['  :  ',':'],['  "  ','"'],["  '  ","'"],
+    ['( )','()'],['[ ]','[]'],['{ }','{}'],['  #  ','# ']
+  ];
+  btns.forEach(function(b){
+    var btn = document.createElement('button');
+    btn.className = 'mtb-btn';
+    btn.textContent = b[0];
+    btn.setAttribute('aria-label', 'Ekle: ' + b[1]);
+    btn.setAttribute('type','button');
+    var val = b[1];
+    btn.addEventListener('click', function(e){
+      e.preventDefault();
+      if(cm){
+        // Parantez/köşeli parantez: imleç ortaya
+        if(val === '()' || val === '[]' || val === '{}'){ 
+          cm.replaceSelection(val); 
+          var cur = cm.getCursor();
+          cm.setCursor({line:cur.line, ch:cur.ch-1});
+        } else {
+          cm.replaceSelection(val);
+        }
+        cm.focus();
+      }
+    });
+    tb.appendChild(btn);
+  });
+  wrap.insertBefore(tb, wrap.firstChild);
+}
+
+/* ═══ SKULPT BANNER ═══ */
+// M8, M9 ve bazı M6/M7 dersleri Skulpt'ta tam çalışmayan kütüphane içeriyor.
+// Bu modüller için ders yüklenince görünür bir uyarı enjekte et.
+var SKULPT_LIMIT_MODULES = {'m8':true,'m9':true};
+var SKULPT_LIMIT_LESSONS = {
+  // M5: generator'lar Skulpt'ta sınırlı davranış gösterebilir
+  'generators':true,'generator_advanced':true,
+  // M6: dosya sistemi, ağ ve paket yönetimi tarayıcıda çalışmaz
+  'file_read_write':true,'file_formats_json':true,'file_formats_csv':true,
+  'pathlib_module':true,'os_sys':true,'virtual_env':true,'packages':true,
+  // M7: descriptor ve metaclass edge-case'leri Skulpt'ta sorunlu
+  'descriptor':true,'metaclass':true,
+};
+
+function _injectSkulptBanner(L){
+  var panel = document.getElementById('panel-0');
+  if(!panel) return;
+  // Pyodide dersleri için banner gösterme — Pyodide zaten çalıştırıyor
+  if(_shouldUsePyodide(L)) return;
+  var show = SKULPT_LIMIT_MODULES[L.moduleId] || SKULPT_LIMIT_LESSONS[L.id];
+  if(!show) return;
+  var banner = document.createElement('div');
+  banner.className = 'skulpt-banner';
+  banner.innerHTML =
+    '<span class="skulpt-banner-icon">⚡</span>' +
+    '<div class="skulpt-banner-body">' +
+      '<div class="skulpt-banner-title">Tarayıcı simülasyon modu</div>' +
+      '<div class="skulpt-banner-text">Bu ders <strong>asyncio · requests · numpy · pandas · flask</strong> gibi kütüphaneler içeriyor. Tarayıcı tabanlı Python (Skulpt) bunları tam desteklemez — kodlar gösterim amaçlıdır. Gerçekten çalıştırmak için bilgisayarına Python kur ve VS Code kullan.</div>' +
+    '</div>' +
+    '<button class="skulpt-banner-close" onclick="this.closest(\'.skulpt-banner\').remove()" aria-label="Kapat">✕</button>';
+  panel.insertBefore(banner, panel.firstChild);
+}
+
+/* ═══ İLERLEME EXPORT / IMPORT ═══ */
+function exportProgress(){
+  try{
+    var data = {
+      version: 1,
+      exportedAt: new Date().toISOString(),
+      state: JSON.parse(JSON.stringify(S))
+    };
+    var blob = new Blob([JSON.stringify(data, null, 2)], {type:'application/json'});
+    var url  = URL.createObjectURL(blob);
+    var a    = document.createElement('a');
+    var date = new Date().toISOString().slice(0,10);
+    a.href     = url;
+    a.download = 'pylab-ilerleme-' + date + '.json';
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(function(){ URL.revokeObjectURL(url); a.remove(); }, 1000);
+    showToast('⬇️','İlerleme kaydedildi','Dosyayı güvenli bir yerde sakla','var(--green)');
+    closeSettings();
+  } catch(e){
+    showToast('⚠️','Kaydetme hatası', String(e), 'var(--red)');
+  }
+}
+
+function importProgress(input){
+  var file = input.files[0];
+  if(!file){ return; }
+  var reader = new FileReader();
+  reader.onload = function(e){
+    try{
+      var parsed = JSON.parse(e.target.result);
+      // Hem eski format (doğrudan S) hem yeni format ({version,state}) destekle
+      var newState = parsed.state || parsed;
+      if(typeof newState !== 'object' || !newState.progress){
+        throw new Error('Geçersiz dosya formatı. PyLab tarafından oluşturulmuş bir dosya seç.');
+      }
+      if(!confirm('Mevcut ilerleme silinip dosyadaki ilerleme yüklenecek. Devam et?')) return;
+      Object.assign(S, newState);
+      saveState();
+      updateLocks();
+      refreshHeader();
+      buildSidebar();
+      // Aktif ders yoksa welcome'a dön
+      if(!S.currentId){
+        goHome();
+      }
+      showToast('⬆️','İlerleme yüklendi','Hoş geldin geri!','var(--green)');
+      closeSettings();
+    } catch(err){
+      showToast('⚠️','Yükleme hatası', err.message || String(err), 'var(--red)');
+    } finally{
+      input.value = ''; // Aynı dosyayı tekrar seçmeye izin ver
+    }
+  };
+  reader.readAsText(file);
+}
+
+/* ═══ FIREBASE CLOUD SYNC ═══
+ *
+ * KURULUM (5 adım):
+ *   1. console.firebase.google.com → Yeni proje oluştur
+ *   2. Proje Ayarları → Uygulamalar → Web uygulaması ekle
+ *   3. Firestore Database → Oluştur (test modu)
+ *   4. Authentication → Anonymous sign-in etkinleştir
+ *   5. Aşağıdaki FIREBASE_CONFIG değerlerini kendi projenle doldur
+ *
+ * Değerler doldurulmadan Firebase pasif kalır — uygulama localStorage ile çalışmaya devam eder.
+ */
+var FIREBASE_CONFIG = {
+  apiKey:            "BURAYA_API_KEY",
+  authDomain:        "BURAYA_PROJE_ID.firebaseapp.com",
+  projectId:         "BURAYA_PROJE_ID",
+  storageBucket:     "BURAYA_PROJE_ID.appspot.com",
+  messagingSenderId: "BURAYA_SENDER_ID",
+  appId:             "BURAYA_APP_ID"
+};
+var FIREBASE_ENABLED = (FIREBASE_CONFIG.apiKey !== "BURAYA_API_KEY");
+
+var _fbApp=null,_fbAuth=null,_fbDb=null,_fbUser=null,_fbReady=false,_fbLoading=false;
+
+function _loadFirebase(cb){
+  if(_fbReady){ cb(); return; }
+  if(_fbLoading){ setTimeout(function(){ _loadFirebase(cb); },300); return; }
+  _fbLoading=true;
+  _updateCloudStatus('sync','Firebase yükleniyor...');
+  var urls=[
+    'https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js',
+    'https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js',
+    'https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js'
+  ];
+  var loaded=0;
+  urls.forEach(function(url){
+    var s=document.createElement('script');s.src=url;
+    s.onload=function(){
+      loaded++;
+      if(loaded<urls.length)return;
+      try{
+        _fbApp=firebase.initializeApp(FIREBASE_CONFIG);
+        _fbAuth=firebase.auth();
+        _fbDb=firebase.firestore();
+        _fbAuth.onAuthStateChanged(function(user){
+          if(user){ _fbUser=user;_fbReady=true;_fbLoading=false;
+            try{localStorage.setItem('axyon-cloud-uid',user.uid);}catch(e){}
+            _updateCloudStatus('ok','Bağlı · '+user.uid.slice(0,8)+'...');
+            cb();
+          }
+        });
+        _fbAuth.signInAnonymously().catch(function(){ _fbLoading=false;_updateCloudStatus('err','Giriş başarısız'); });
+      }catch(e){ _fbLoading=false;_updateCloudStatus('err','Firebase başlatılamadı'); }
+    };
+    s.onerror=function(){ _fbLoading=false;_updateCloudStatus('err','Script yüklenemedi'); };
+    document.head.appendChild(s);
+  });
+}
+
+function _updateCloudStatus(state,msg){
+  var el=document.getElementById('cloud-status-bar');if(!el)return;
+  var dot=el.querySelector('.cloud-dot'),txt=el.querySelector('.cloud-status-text');
+  if(dot)dot.className='cloud-dot '+state;
+  if(txt)txt.textContent=msg;
+}
+
+function cloudPush(){
+  if(!FIREBASE_ENABLED){showToast('⚙️','Firebase yapılandırılmamış','Önce FIREBASE_CONFIG doldur','var(--amber)');return;}
+  _loadFirebase(function(){
+    if(!_fbUser||!_fbDb)return;
+    _updateCloudStatus('sync','Kaydediliyor...');
+    var data={state:JSON.parse(JSON.stringify(S)),updatedAt:Date.now(),platform:'PyLab'};
+    _fbDb.collection('users').doc(_fbUser.uid).set(data)
+      .then(function(){ _updateCloudStatus('ok','Kaydedildi ✓');showToast('☁️','Buluta kaydedildi','İlerleme senkronize','var(--green)'); })
+      .catch(function(e){ _updateCloudStatus('err','Kayıt hatası');showToast('⚠️','Kayıt hatası',String(e),'var(--red)'); });
+  });
+}
+
+function cloudPull(){
+  if(!FIREBASE_ENABLED){showToast('⚙️','Firebase yapılandırılmamış','Önce FIREBASE_CONFIG doldur','var(--amber)');return;}
+  _loadFirebase(function(){
+    if(!_fbUser||!_fbDb)return;
+    _updateCloudStatus('sync','Yükleniyor...');
+    _fbDb.collection('users').doc(_fbUser.uid).get()
+      .then(function(doc){
+        if(!doc.exists){_updateCloudStatus('ok','Bulutta veri yok');showToast('☁️','Bulutta veri yok','Önce bir kaydet','var(--muted2)');return;}
+        var data=doc.data();
+        if(!data.state||!data.state.progress){_updateCloudStatus('err','Geçersiz veri');return;}
+        if(!confirm('Buluttaki ilerleme yüklenecek. Mevcut yerel ilerleme silinecek. Devam?'))return;
+        Object.assign(S,data.state);saveState();updateLocks();refreshHeader();buildSidebar();
+        if(!S.currentId)goHome();
+        _updateCloudStatus('ok','Yüklendi ✓');showToast('☁️','Buluttan yüklendi','İlerleme senkronize','var(--green)');
+      })
+      .catch(function(e){ _updateCloudStatus('err','Yükleme hatası');showToast('⚠️','Yükleme hatası',String(e),'var(--red)'); });
+  });
+}
+
+function copyCloudId(){
+  try{ var uid=localStorage.getItem('axyon-cloud-uid'); }catch(e){ var uid=null; }
+  if(!uid){showToast('⚙️','Henüz bağlanılmadı','Önce buluta kaydet','var(--amber)');return;}
+  if(navigator.clipboard)navigator.clipboard.writeText(uid).then(function(){showToast('📋','Cloud ID kopyalandı','Başka cihazda kullanmak için kaydet','var(--green)');});
+}
+
 
 /* ═══ SETTINGS PANEL ═══ */
 var _settingsOpen = false;
@@ -963,6 +1644,13 @@ function resetProgressConfirm(){
   if(!confirm('Tüm ilerleme silinecek! Emin misin?\n\nXP, tamamlanan dersler ve quiz skorları sıfırlanacak.'))return;
   const key=window.AXYON_COURSE?.meta?.storageKey||'axyon-python-v1';
   localStorage.removeItem(key);
+  // Tour ve track sıfırla — yeniden başlayınca kariyer yolu tekrar sorulsun
+  try{
+    localStorage.removeItem('axyon-tour-done');
+    localStorage.removeItem('axyon-track');
+  }catch(e){}
+  _activeTrack = 'all';
+  _tourTrackSelected = 'all';
   // State sıfırla
   S.progress={};S.totalXP=0;S.streak=0;S.currentId=null;S.lastDate=null;
   window._sbOpen={};
@@ -976,7 +1664,8 @@ function resetProgressConfirm(){
   document.getElementById('lesson-head').style.display='none';
   document.getElementById('phase-tabs').style.display='none';
   renderWelcome();
-  alert('İlerleme sıfırlandı!');
+  // Tour'u kısa bir gecikmeyle göster — welcome render tamamlansın
+  setTimeout(showTour, 300);
 }
 function toggleAdmin(){
   window._adminMode = !window._adminMode;
@@ -1182,11 +1871,12 @@ function buildSidebar(query){
       const isDone = topicScore(l.id) >= 50;
       const topicStatus = isSkipped ? '↩' : isDone ? '✓' : '';
       const statusColor = isSkipped ? 'var(--amber)' : 'var(--green)';
-      html+=`<div class="topic-item ${l.locked&&!window._adminMode?'locked':''} ${S.currentId===l.id?'active':''} ${isSkipped?'skipped-lesson':''} ${isDone&&!isSkipped?'done-lesson':''}" onclick="loadLesson('${l.id}')" role="button" aria-label="${l.title}">
+      const inActivTrack = _activeTrack !== 'all' && (TRACKS[_activeTrack]?.modules||[]).includes(l.moduleId);
+      html+=`<div class="topic-item ${l.locked&&!window._adminMode?'locked':''} ${S.currentId===l.id?'active':''} ${isSkipped?'skipped-lesson':''} ${isDone&&!isSkipped?'done-lesson':''} ${inActivTrack?'track-highlight':''}" onclick="loadLesson('${l.id}')" role="button" aria-label="${l.title}">
         <div class="topic-icon" title="${l.title}">${l.icon}${topicStatus?`<span class="topic-status-dot" style="color:${statusColor}">${topicStatus}</span>`:''}
         </div>
         <div class="topic-info">
-          <div class="topic-name">${l.title}${isAdminUnlocked?' 🔴':''}</div>
+          <div class="topic-name">${l.title}<span class="diff-dot ${DIFF_DOT[getDifficulty(l)]}" title="${DIFF_LABEL[getDifficulty(l)]}"></span>${isAdminUnlocked?' 🔴':''}</div>
           <div class="topic-admin-id">${l.id}</div>
           <div class="topic-sub"><div class="phase-pips">${pips}</div>${sc>0?`<span>${sc}%</span>`:''}</div>
         </div>
@@ -1228,6 +1918,8 @@ function renderWelcome(){
   const avg=Math.round(LESSONS.reduce((s,l)=>s+topicScore(l.id),0)/LESSONS.length);
   const isNew=done===0&&S.totalXP===0;
 
+  const activeModules = TRACKS[_activeTrack]?.modules || TRACKS.all.modules;
+
   let cards='';
   const grouped={};LESSONS.forEach(l=>{if(!grouped[l.moduleId])grouped[l.moduleId]=[];grouped[l.moduleId].push(l);});
   MODULES.forEach((mod,mi)=>{
@@ -1244,7 +1936,8 @@ function renderWelcome(){
     const ls=grouped[mod.id]||[];if(!ls.length)return;
     const d=ls.filter(l=>topicScore(l.id)>=50).length,pct=Math.round(d/ls.length*100);
     const first=ls.find(l=>!l.locked);
-    cards+=`<div class="module-card" onclick="${first?`loadLesson('${first.id}')`:''}">
+    const inTrack = activeModules.includes(mod.id);
+    cards+=`<div class="module-card ${!inTrack?'track-dim':''}" onclick="${first?`loadLesson('${first.id}')`:''}">
       <div class="mc-accent" style="background:linear-gradient(90deg,${mod.color},transparent)"></div>
       <div class="mc-icon">${mod.icon}</div>
       <div class="mc-title">M${mi} · ${mod.label}</div>
@@ -1254,11 +1947,31 @@ function renderWelcome(){
     </div>`;
   });
 
+  const trackBar=`<div class="track-bar">
+    ${Object.entries(TRACKS).map(([id,t])=>`<button class="track-pill ${_activeTrack===id?'active':''}" onclick="setTrack('${id}')">${t.label}</button>`).join('')}
+  </div>`;
+
   const onboarding=isNew?`<div class="onboarding-banner">
     <div class="onb-icon">👋</div>
     <div class="onb-text"><strong>Hoş geldin!</strong> Her konu 5 aşamadan oluşuyor: Ders → Test → Seç → Boşluk → Kodla. Menüden bir konu seç veya hemen başla.</div>
     <button class="onb-start" onclick="loadLesson(LESSONS[0]?.id)">🚀 Hemen Başla</button>
   </div>`:'';
+
+  // "Devam et" kartı — son çalışılan dersi göster
+  const continueLesson = (!isNew && S.currentId) ? (function(){
+    const cl = LESSONS.find(l=>l.id===S.currentId);
+    if(!cl) return '';
+    const cm2 = MODULES.find(m=>m.id===cl.moduleId);
+    const sc = topicScore(cl.id);
+    return `<div class="continue-card" onclick="loadLesson('${cl.id}')">
+      <div class="continue-left">
+        <div class="continue-label">Kaldığın yerden devam et</div>
+        <div class="continue-title">${cl.icon} ${cl.title}</div>
+        <div class="continue-meta">${cm2?.label||''} · ${sc>0?sc+'% tamamlandı':'yeni başlandı'}</div>
+      </div>
+      <div class="continue-arrow">→</div>
+    </div>`;
+  })() : '';
 
   el.innerHTML=`
     <div class="welcome-banner">
@@ -1268,12 +1981,14 @@ function renderWelcome(){
     </div>
     <div class="welcome-body">
     ${onboarding}
+    ${continueLesson}
     <div class="welcome-stats">
       <div class="stat-card"><div class="stat-num">${done}/${LESSONS.length}</div><div class="stat-lbl">Tamamlanan</div></div>
       <div class="stat-card"><div class="stat-num">${S.totalXP}</div><div class="stat-lbl">Toplam XP</div></div>
       <div class="stat-card"><div class="stat-num">${avg}%</div><div class="stat-lbl">Ortalama</div></div>
     </div>
     <span class="sec-label">Modüller</span>
+    ${trackBar}
     <div class="module-cards">${cards}</div>
     <div class="start-hint"><span class="arrow-anim">←</span> Menüden konu seç</div>
     </div>
@@ -1361,6 +2076,8 @@ function loadLesson(id){
   document.getElementById('lesson-desc').textContent=L.desc;
   refreshStrip(L);
   document.getElementById('panel-0').innerHTML=L.lesson;
+  // Skulpt sınır banner'ı — M8/M9 ve belirli ileri dersler için
+  _injectSkulptBanner(L);
   initRunners(document.getElementById('panel-0'));
   renderQuiz(L);renderDrag(L);renderFills(L);renderCode(L);
   switchPhase(0);buildSidebar();saveState();
@@ -1377,8 +2094,14 @@ function refreshStrip(L){
 }
 function switchPhase(n){
   S.currentPhase=n;
-  document.querySelectorAll('.phase-panel').forEach((p,i)=>p.classList.toggle('active',i===n));
-  document.querySelectorAll('.ptab').forEach((t,i)=>{t.classList.toggle('active',i===n);t.setAttribute('aria-selected',i===n);});
+  document.querySelectorAll('.phase-panel').forEach((p,i)=>{
+    p.classList.toggle('active',i===n);
+    p.setAttribute('tabindex', i===n ? '0' : '-1');
+  });
+  document.querySelectorAll('.ptab').forEach((t,i)=>{
+    t.classList.toggle('active',i===n);
+    t.setAttribute('aria-selected', i===n ? 'true' : 'false');
+  });
   const ca=document.getElementById('content-area');
   if(ca)ca.scrollTo({top:0,behavior:'instant'});
   if(n===1){qA={};qS=false;}
@@ -1408,6 +2131,11 @@ function initRunners(container){
   });
 }
 function runInline(code,outDiv,btn){
+  const L=LESSONS.find(l=>l.id===S.currentId);
+  if(_shouldUsePyodide(L)){
+    _runWithPyodide(code, outDiv, btn, true);
+    return;
+  }
   if(typeof Sk==='undefined'){
     const ct=outDiv.querySelector('.cb-content');ct.textContent='⏳ Python yükleniyor...';outDiv.classList.add('vis');
     waitForSkulpt(()=>runInline(code,outDiv,btn));return;
@@ -1694,6 +2422,33 @@ function submitFills(){
 /* ═══ CODE ═══ */
 function renderCode(L){
   const p=document.getElementById('panel-4');
+  // Bazı derslerde kod aşaması olmayabilir
+  if(!L.code){
+    p.innerHTML='<div class="result-card show" style="text-align:center"><div style="font-size:2rem;margin-bottom:8px">✅</div><div style="font-size:14px;color:var(--green);font-weight:600">Bu derste kodlama görevi yok</div><div style="font-size:12px;color:var(--muted2);margin-top:6px">Diğer aşamaları tamamlayarak ilerleyebilirsin.</div><div class="btn-row" style="justify-content:center;margin-top:14px"><button class="next-btn" style="margin-top:0" onclick="finishLesson()">Konuyu Bitir ✓</button></div></div>';
+    return;
+  }
+  // Mobil: 768px altında kod editörü yerine kopyala+PC önerisi göster
+  if(window.innerWidth < 768){
+    const starter = (L.code.starter||'').trim();
+    p.innerHTML=`<div class="task-card"><strong>🎯 Görev</strong><p>${L.code.task}</p></div>
+    <div class="mobile-code-hint">
+      <div class="mobile-code-hint-icon">💻</div>
+      <div class="mobile-code-hint-title">Bu aşama bilgisayarda daha iyi çalışır</div>
+      <div class="mobile-code-hint-sub">Kod yazma aşamasını telefonda yapmak zorunda değilsin. Kodu kopyala, PC'nde çalıştır — ya da quiz ve boşluk aşamalarını tamamlayarak devam et.</div>
+      <div class="mobile-code-block">${starter.replace(/</g,'&lt;')}</div>
+      <button class="mobile-copy-btn" onclick="(function(){navigator.clipboard&&navigator.clipboard.writeText(${JSON.stringify(starter)}).then(function(){showToast('📋','Kopyalandı','Kod panoya alındı','var(--green)');})})()">📋 Kodu Kopyala</button>
+    </div>
+    <div class="result-card" id="code-result" style="margin-top:14px">
+      <div style="font-size:12px;color:var(--muted2)">Kodlama Puanı</div>
+      <div class="result-big" style="color:var(--phase4)" id="code-res-score">—</div>
+      <div class="result-msg" id="code-res-msg">PC'de tamamlayınca puanın yüklenecek.</div>
+      <div class="btn-row" style="justify-content:center;margin-top:12px">
+        <button class="next-btn" style="margin-top:0" onclick="finishLesson()">Konuyu Bitir ✓</button>
+      </div>
+    </div>`;
+    return;
+  }
+  // PC: tam editör
   p.innerHTML=`<div class="task-card"><strong>🎯 Görev</strong><p>${L.code.task}</p></div>
     <div class="editor-wrap">
       <div class="editor-topbar">
@@ -1729,11 +2484,31 @@ function renderCode(L){
   setTimeout(()=>{
     const el=document.querySelector('.CodeMirror');
     if(el)el.style.background='var(--s2)';
+    // Mobil girinti toolbar
+    _addMobileToolbar();
+    // Pyodide badge — M8/M9 için run-bar'a rozet ekle
+    if(_shouldUsePyodide(L)){
+      const rb=document.querySelector('.run-bar');
+      if(rb&&!rb.querySelector('.pyodide-badge')){
+        const badge=document.createElement('span');
+        badge.className='pyodide-badge';
+        badge.innerHTML='⚡ Pyodide';
+        badge.title='Bu ders gerçek Python motoru (Pyodide) ile çalışıyor — numpy/pandas destekli';
+        rb.appendChild(badge);
+      }
+    }
   },50);
 }
 function runCode(){
-  if(typeof Sk==='undefined'){document.getElementById('code-out').textContent='⏳ Python yükleniyor...';waitForSkulpt(()=>runCode());return;}
-  const o=document.getElementById('code-out');o.innerHTML='';o.className='';
+  const L=LESSONS.find(l=>l.id===S.currentId);
+  const o=document.getElementById('code-out');
+  const btn=document.querySelector('.btn-run');
+  if(_shouldUsePyodide(L)){
+    _runWithPyodide(cm?cm.getValue():'', o, btn, false);
+    return;
+  }
+  if(typeof Sk==='undefined'){o.textContent='⏳ Python yükleniyor...';waitForSkulpt(()=>runCode());return;}
+  o.innerHTML='';o.className='';
   skReady=true;
   Sk.configure({output:t=>{o.innerHTML+=t.replace(/</g,'&lt;');},read:x=>{if(!Sk.builtinFiles?.files[x])throw"File not found: '"+x+"'";return Sk.builtinFiles.files[x];},__future__:Sk.python3});
   try{Sk.importMainWithBody('<stdin>',false,cm?cm.getValue():'',true);}
@@ -1786,6 +2561,8 @@ function init(){
   if(window._adminMode) applyAdminMode();
   // Settings panel UI sync
   setTimeout(syncSettingsUI, 50);
+  // Onboarding tour — ilk açılışta göster
+  setTimeout(checkTour, 400);
 }
 
 
@@ -1851,7 +2628,14 @@ function _startCourse() {
                     return result;
                   })
                   .join('\n');
-                var fn = new Function('code', 'return (' + desc.checkFn + ')(code)');
+                var fnStr = desc.checkFn.trim();
+                // GÜVENLİK: checkFn sadece arrow fn veya function ifadesi olabilir
+                // document, window, fetch, eval gibi tehlikeli keyword'ler bloklansın
+                var BLOCKED = /\b(document|window|fetch|XMLHttpRequest|eval|Function|import|require|process|__proto__|constructor)\b/;
+                if(BLOCKED.test(fnStr)){
+                  return {pts:0, max:10, ok:false, msg:'Güvenlik hatası: izin verilmeyen ifade'};
+                }
+                var fn = new Function('code', 'return (' + fnStr + ')(code)');
                 return fn(cleanCode);
               } catch(e) {
                 return {pts:0, max:10, ok:false, msg:'Hata: ' + e.message};
