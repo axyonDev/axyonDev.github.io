@@ -3,19 +3,19 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="description" content="PyLab — Türkçe Python öğrenme platformu. 108 ders, sıfırdan ileri seviyeye. Neden ve nasıl odaklı, tarayıcıda çalışır, kurulum gerektirmez.">
+<meta name="description" content="PyLab — Türkçe Python öğrenme platformu. 110 ders, sıfırdan ileri seviyeye. Neden ve nasıl odaklı, tarayıcıda çalışır, kurulum gerektirmez.">
 <meta name="keywords" content="python öğren, türkçe python, python kursu, python dersleri, python başlangıç, axyon, pylab">
 <meta name="author" content="Axyon.Dev">
 <meta name="robots" content="index, follow">
 <meta property="og:type" content="website">
 <meta property="og:title" content="PyLab — Derinlemesine Türkçe Python">
-<meta property="og:description" content="108 ders · Sıfırdan ileri Python · Neden ve alternatif odaklı · Tarayıcıda çalışır">
+<meta property="og:description" content="110 ders · Sıfırdan ileri Python · Neden ve alternatif odaklı · Tarayıcıda çalışır">
 <meta property="og:image" content="https://axyon.dev/pylab-og.png">
 <meta property="og:url" content="https://axyon.dev/pylab">
 <meta property="og:locale" content="tr_TR">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="PyLab — Türkçe Python">
-<meta name="twitter:description" content="108 ders, sıfırdan ileri Python, tarayıcıda çalışır">
+<meta name="twitter:description" content="110 ders, sıfırdan ileri Python, tarayıcıda çalışır">
 <link rel="canonical" href="https://axyon.dev/pylab">
 <title>Axyon.Dev PyLab</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🐍</text></svg>">
@@ -2639,7 +2639,7 @@ function _startCourse() {
                 var fnStr = desc.checkFn.trim();
                 // GÜVENLİK: checkFn sadece arrow fn veya function ifadesi olabilir
                 // document, window, fetch, eval gibi tehlikeli keyword'ler bloklansın
-                var BLOCKED = /\b(document|window|fetch|XMLHttpRequest|eval|Function|import|require|process|__proto__|constructor)\b/;
+                var BLOCKED = /\b(document|window|fetch|XMLHttpRequest|eval|Function|require|process|__proto__|constructor)\b/;
                 if(BLOCKED.test(fnStr)){
                   return {pts:0, max:10, ok:false, msg:'Güvenlik hatası: izin verilmeyen ifade'};
                 }
