@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="tr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Sevcan, Ahmet ve Murathan'ın oyun sayfası.">
+    <title>AXYON</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@400;600;700&display=swap"
+        rel="stylesheet">
+
+    <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+
+    <canvas id="bg-canvas"></canvas>
+    <div class="grid-overlay"></div>
+    <div class="scanline"></div>
+
+    <div class="page">
+
+        <header class="header">
+            <div class="logo">AXY<span>ON</span></div>
+
+            <div class="names-band">
+                <div class="name-chip chip-sevcan">♥ Sevcan ♥</div>
+                <div class="name-chip chip-ahmet">♥ Ahmet ♥</div>
+                <div class="name-chip chip-murathan">♥ Murathan ♥</div>
+            </div>
+        </header>
+
+        <div class="divider"></div>
+
+        <section class="category-container collapsed">
+            <div class="category-header">
+                <h2 class="category-title">◈ OYUNLAR ◈</h2>
+                <span class="toggle-icon">▼</span>
+            </div>
+
+            <div class="category-content">
+                <div class="category-content-inner">
+                    <div class="cards-row">
+
+                        <a href="axyon_sum_crystal_drop.html" target="_blank" rel="noopener noreferrer"
+                            class="game-card card-crystal">
+                            <div class="card-art">
+                                <div class="pixel-grid">
+                                    <div class="px-cell px-c1">512</div>
+                                    <div class="px-cell px-c3"></div>
+                                    <div class="px-cell px-c4">256</div>
+                                    <div class="px-cell px-c3"></div>
+                                    <div class="px-cell px-c2">128</div>
+                                    <div class="px-cell px-c3"></div>
+                                    <div class="px-cell px-c2">64</div>
+                                    <div class="px-cell px-c3"></div>
+                                    <div class="px-cell px-c1">32</div>
+                                    <div class="px-cell px-c3"></div>
+                                    <div class="px-cell px-c4">16</div>
+                                    <div class="px-cell px-c3"></div>
+                                    <div class="px-cell px-c3"></div>
+                                    <div class="px-cell px-c2">8</div>
+                                    <div class="px-cell px-c3"></div>
+                                </div>
+                            </div>
+                            <div class="card-body">
+                                <div class="card-tag">◈ Drop &amp; Merge</div>
+                                <div class="card-title">AXYON Sum<br>Crystal Drop</div>
+                                <div class="card-desc">Kristalleri düşür, eşleştir ve birleştir. Yüksek skor için
+                                    strateji kur.</div>
+                                <div class="card-cta">Oyna <span class="cta-arrow">→</span></div>
+                            </div>
+                        </a>
+
+                        <a href="axyon_crystal_merge.html" target="_blank" rel="noopener noreferrer"
+                            class="game-card card-jewelry">
+                            <div class="card-art">
+                                <div class="pixel-grid">
+                                    <div class="px-cell px-j1">2048</div>
+                                    <div class="px-cell px-j3"></div>
+                                    <div class="px-cell px-j2">1024</div>
+                                    <div class="px-cell px-j3"></div>
+                                    <div class="px-cell px-j4">512</div>
+                                    <div class="px-cell px-j3"></div>
+                                    <div class="px-cell px-j4">256</div>
+                                    <div class="px-cell px-j3"></div>
+                                    <div class="px-cell px-j1">128</div>
+                                    <div class="px-cell px-j3"></div>
+                                    <div class="px-cell px-j2">64</div>
+                                    <div class="px-cell px-j3"></div>
+                                    <div class="px-cell px-j3"></div>
+                                    <div class="px-cell px-j4">32</div>
+                                    <div class="px-cell px-j3"></div>
+                                </div>
+                            </div>
+                            <div class="card-body">
+                                <div class="card-tag">◈ Slide &amp; Merge</div>
+                                <div class="card-title">AXYON Crystal<br>Merge</div>
+                                <div class="card-desc">Kaydır, birleştir ve efsanevi kristale ulaş. Zihin açıcı klasik
+                                    bulmaca.</div>
+                                <div class="card-cta">Oyna <span class="cta-arrow">→</span></div>
+                            </div>
+                        </a>
+
+                        <a href="axyon_tetris_classic.html" target="_blank" rel="noopener noreferrer"
+                            class="game-card card-tetris">
+                            <div class="card-art">
+                                <div class="pixel-grid">
+                                    <div class="px-cell px-t3"></div>
+                                    <div class="px-cell px-t1"></div>
+                                    <div class="px-cell px-t3"></div>
+                                    <div class="px-cell px-t2"></div>
+                                    <div class="px-cell px-t2"></div>
+                                    <div class="px-cell px-t1"></div>
+                                    <div class="px-cell px-t1"></div>
+                                    <div class="px-cell px-t1"></div>
+                                    <div class="px-cell px-t3"></div>
+                                    <div class="px-cell px-t2"></div>
+                                    <div class="px-cell px-t3"></div>
+                                    <div class="px-cell px-t3"></div>
+                                    <div class="px-cell px-t3"></div>
+                                    <div class="px-cell px-t3"></div>
+                                    <div class="px-cell px-t2"></div>
+                                </div>
+                            </div>
+                            <div class="card-body">
+                                <div class="card-tag">◈ Block Puzzle</div>
+                                <div class="card-title">AXYON Tetris<br>Classic</div>
+                                <div class="card-desc">Blokları yerleştir, satırları temizle. Klasik deneyimin neon
+                                    modern hali.</div>
+                                <div class="card-cta">Oyna <span class="cta-arrow">→</span></div>
+                            </div>
+                        </a>
+
+                        <a href="axyon_pegrix.html" target="_blank" rel="noopener noreferrer"
+                            class="game-card card-pegrix">
+                            <div class="card-art">
+                                <div class="pixel-grid">
+                                    <div class="px-cell px-p4">$5</div>
+                                    <div class="px-cell px-p3"></div>
+                                    <div class="px-cell px-p2">$2</div>
+                                    <div class="px-cell px-p3"></div>
+                                    <div class="px-cell px-p1">50¢</div>
+                                    <div class="px-cell px-p3"></div>
+                                    <div class="px-cell px-p2">★</div>
+                                    <div class="px-cell px-p3"></div>
+                                    <div class="px-cell px-p1">!</div>
+                                    <div class="px-cell px-p3"></div>
+                                    <div class="px-cell px-p4">$</div>
+                                    <div class="px-cell px-p3"></div>
+                                    <div class="px-cell px-p3"></div>
+                                    <div class="px-cell px-p2">▼</div>
+                                    <div class="px-cell px-p3"></div>
+                                </div>
+                            </div>
+                            <div class="card-body">
+                                <div class="card-tag">◈ Nail Bouncer</div>
+                                <div class="card-title">AXYON Pegrix</div>
+                                <div class="card-desc">Topları bırak, neon engellerden sektir ve parayı katla. Upgrade
+                                    yap ve prestije ulaş!</div>
+                                <div class="card-cta">Oyna <span class="cta-arrow">→</span></div>
+                            </div>
+                        </a>
+
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="category-container collapsed">
+            <div class="category-header">
+                <h2 class="category-title">◈ ARAÇLAR ◈</h2>
+                <span class="toggle-icon">▼</span>
+            </div>
+
+            <div class="category-content">
+                <div class="category-content-inner">
+                    <div class="cards-row">
+
+                        <a href="axyon_vignette-tool.html" target="_blank" rel="noopener noreferrer"
+                            class="tool-card tool-vignette">
+                            <div class="tool-art art-vignette">
+                                <div class="mock-dropzone">
+                                    <div class="mock-icon-img"></div>
+                                </div>
+                                <div class="mock-slider"></div>
+                            </div>
+                            <div class="card-body">
+                                <div class="card-tag">Fotoğraf & Grafik</div>
+                                <div class="card-title">Vignette Tool</div>
+                                <div class="card-desc">Görsellerinize profesyonel vinyet efektleri uygulayın ve arka
+                                    plan indirin.</div>
+                                <div class="card-cta">Aracı Aç <span class="cta-arrow">→</span></div>
+                            </div>
+                        </a>
+
+                        <a href="axyon_imsakiye.html" target="_blank" rel="noopener noreferrer"
+                            class="tool-card tool-imsakiye">
+                            <div class="tool-art art-imsakiye">
+                                <svg class="mock-moon-svg" viewBox="0 0 24 24">
+                                    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                                </svg>
+                                <div class="mock-time-grid">
+                                    <div class="mock-time-box"></div>
+                                    <div class="mock-time-box active"></div>
+                                    <div class="mock-time-box"></div>
+                                    <div class="mock-time-box"></div>
+                                </div>
+                            </div>
+                            <div class="card-body">
+                                <div class="card-tag">Dini Takvim</div>
+                                <div class="card-title">İmsakiye 1447</div>
+                                <div class="card-desc">Ramazan ayına özel detaylı iftar, sahur vakitleri ve geri sayım.
+                                </div>
+                                <div class="card-cta">Aracı Aç <span class="cta-arrow">→</span></div>
+                            </div>
+                        </a>
+
+                        <a href="axyon_zikirmatik.html" target="_blank" rel="noopener noreferrer"
+                            class="tool-card tool-zikir">
+                            <div class="tool-art art-zikir">
+                                <div class="mock-ring">
+                                    <div class="mock-ring-inner">33</div>
+                                </div>
+                            </div>
+                            <div class="card-body">
+                                <div class="card-tag">Sayaç & Rehber</div>
+                                <div class="card-title">Dijital Zikirmatik</div>
+                                <div class="card-desc">Dokunsal geri bildirimli sayaç, esmaül hüsna ve özel zikir
+                                    rehberi.</div>
+                                <div class="card-cta">Aracı Aç <span class="cta-arrow">→</span></div>
+                            </div>
+                        </a>
+
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <footer class="footer">AXYON · MADE WITH ♥</footer>
+
+    </div>
+
+    <script src="js/main.js"></script>
+</body>
+
+</html>

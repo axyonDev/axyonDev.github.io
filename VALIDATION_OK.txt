@@ -1,0 +1,1 @@
+Local link/image scan OK. Inline JS syntax parse OK. Revalidated after index footer rewrite.
