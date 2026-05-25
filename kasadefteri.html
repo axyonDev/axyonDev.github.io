@@ -1,0 +1,739 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Kasa Defteri – Axyon | Küçük işletmeler ve serbest çalışanlar için gelir-gider takip uygulaması. Google Play'de ücretsiz.">
+<title>Kasa Defteri – Axyon | AXYON.DEV</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --c-bg:#04060f;--c-deep:#070c1a;
+  --c-crystal:#5bc8f5;--c-crystal-glow:rgba(91,200,245,0.35);
+  --c-gold:#f0b429;--c-gold-glow:rgba(240,180,41,0.35);
+  --c-pink:#ff4d8d;--c-blue:#4d9fff;
+  --c-green:#4cca80;--c-white:#e8f0ff;
+  --c-grid:rgba(91,200,245,0.06);--c-border:rgba(91,200,245,0.18);
+  /* Kasa brand */
+  --k-navy:#0d1b2a;--k-navy2:#1a2c44;
+  --k-gold:#c9a227;--k-gold2:#f0c040;--k-gold3:#fde68a;
+  --k-green:#22c55e;--k-red:#ef4444;
+  --k-gold-glow:rgba(201,162,39,0.4);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{width:100%;background:var(--c-bg);color:var(--c-white);font-family:'Rajdhani',sans-serif;overflow-x:hidden}
+
+#bg-canvas{position:fixed;inset:0;z-index:0;pointer-events:none}
+.grid-overlay{position:fixed;inset:0;z-index:1;pointer-events:none;
+  background-image:linear-gradient(var(--c-grid) 1px,transparent 1px),linear-gradient(90deg,var(--c-grid) 1px,transparent 1px);
+  background-size:60px 60px;mask-image:radial-gradient(ellipse 80% 80% at 50% 50%,black 30%,transparent 100%)}
+.scanline{position:fixed;inset:0;z-index:2;pointer-events:none;
+  background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.03) 2px,rgba(0,0,0,0.03) 4px)}
+
+/* ── BARS ── */
+.theme-bar{position:fixed;top:18px;left:22px;z-index:100;display:flex;align-items:center;gap:6px;
+  background:rgba(7,12,26,.55);border:1px solid var(--c-border);border-radius:30px;
+  padding:7px 11px;backdrop-filter:blur(14px)}
+.theme-dot{width:13px;height:13px;border-radius:50%;cursor:pointer;border:2px solid transparent;transition:transform .2s,box-shadow .2s}
+.theme-dot:hover{transform:scale(1.3)}
+.theme-dot.active{border-color:rgba(255,255,255,.85);box-shadow:0 0 8px var(--t-col,#5bc8f5)}
+.theme-dot[data-t="void"]{background:#5bc8f5;--t-col:#5bc8f5}
+.theme-dot[data-t="obsidian"]{background:#00ffe7;--t-col:#00ffe7}
+.theme-dot[data-t="ember"]{background:#ff7730;--t-col:#ff7730}
+.theme-dot[data-t="cloud"]{background:#0069a0;--t-col:#0069a0}
+.theme-dot[data-t="paper"]{background:#8b4a00;--t-col:#8b4a00}
+.theme-dot[data-t="mist"]{background:#5020a0;--t-col:#5020a0}
+.theme-sep{width:1px;height:14px;background:var(--c-border);margin:0 1px}
+.theme-label{font-family:'Orbitron',monospace;font-size:7px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--c-crystal);opacity:.55;margin-right:2px;white-space:nowrap}
+.lang-bar{position:fixed;top:18px;right:22px;z-index:100;display:flex;gap:6px;align-items:center}
+.lang-btn{font-family:'Orbitron',monospace;font-size:9px;font-weight:700;letter-spacing:0.15em;text-transform:uppercase;padding:5px 11px;border-radius:20px;cursor:pointer;border:1px solid;transition:all 0.2s;background:transparent}
+.lang-btn[data-lang="tr"]{color:var(--c-crystal);border-color:rgba(91,200,245,0.4)}
+.lang-btn[data-lang="en"]{color:var(--c-gold);border-color:rgba(240,180,41,0.4)}
+.lang-btn.active{background:rgba(91,200,245,0.12);box-shadow:0 0 12px rgba(91,200,245,0.25)}
+.lang-btn[data-lang="en"].active{background:rgba(240,180,41,0.12);box-shadow:0 0 12px rgba(240,180,41,0.25)}
+@media(max-width:480px){.theme-label{display:none}}
+
+/* ── PAGE ── */
+.page{position:relative;z-index:10;min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:0 20px 80px}
+
+/* ── TOP NAV ── */
+.top-nav{width:100%;max-width:960px;display:flex;align-items:center;justify-content:space-between;
+  padding:clamp(60px,10vw,90px) 0 0;margin-bottom:40px;flex-wrap:wrap;gap:12px}
+.back-btn{font-family:'Orbitron',monospace;font-size:10px;font-weight:700;letter-spacing:0.14em;
+  text-transform:uppercase;padding:9px 20px;border-radius:30px;border:1px solid rgba(91,200,245,0.3);
+  background:rgba(91,200,245,0.06);color:var(--c-crystal);cursor:pointer;text-decoration:none;
+  transition:all 0.25s;display:inline-flex;align-items:center;gap:7px}
+.back-btn:hover{border-color:var(--c-crystal);background:rgba(91,200,245,0.14);box-shadow:0 0 18px rgba(91,200,245,0.25);transform:translateY(-2px)}
+.site-wordmark{font-family:'Orbitron',monospace;font-size:13px;font-weight:900;letter-spacing:0.18em;
+  color:transparent;background:linear-gradient(90deg,var(--c-crystal),var(--c-gold));-webkit-background-clip:text;background-clip:text;text-decoration:none}
+
+/* ── HERO ── */
+.hero{width:100%;max-width:960px;display:grid;grid-template-columns:auto 1fr;gap:36px;
+  align-items:center;margin-bottom:40px;padding:40px 44px;
+  background:linear-gradient(135deg,rgba(13,27,42,0.8) 0%,rgba(26,44,68,0.5) 100%);
+  border:1px solid rgba(201,162,39,0.2);border-radius:24px;backdrop-filter:blur(16px);
+  position:relative;overflow:hidden}
+.hero::before{content:'';position:absolute;top:-80px;right:-80px;width:300px;height:300px;border-radius:50%;
+  background:radial-gradient(circle,rgba(201,162,39,0.12) 0%,transparent 70%);pointer-events:none}
+.hero::after{content:'';position:absolute;bottom:-60px;left:-60px;width:200px;height:200px;border-radius:50%;
+  background:radial-gradient(circle,rgba(201,162,39,0.07) 0%,transparent 70%);pointer-events:none}
+.hero-logo{width:clamp(110px,14vw,148px);height:clamp(110px,14vw,148px);border-radius:24px;
+  object-fit:cover;flex-shrink:0;
+  box-shadow:0 0 0 1px rgba(201,162,39,0.3),0 0 40px rgba(201,162,39,0.25),0 0 80px rgba(201,162,39,0.1)}
+.hero-text{display:flex;flex-direction:column;gap:11px;position:relative;z-index:1}
+.hero-badge{font-family:'Orbitron',monospace;font-size:9px;letter-spacing:0.22em;text-transform:uppercase;
+  color:rgba(201,162,39,0.8);margin-bottom:2px}
+.hero-title{font-family:'Orbitron',monospace;font-size:clamp(22px,5vw,42px);font-weight:900;
+  letter-spacing:0.06em;line-height:1.1;color:#fff}
+.hero-title span{color:transparent;background:linear-gradient(135deg,var(--k-gold),var(--k-gold2));
+  -webkit-background-clip:text;background-clip:text}
+.hero-sub{font-size:clamp(13px,2vw,15px);font-weight:600;color:rgba(220,230,255,0.6);line-height:1.6;max-width:500px}
+.hero-tags{display:flex;flex-wrap:wrap;gap:8px;margin-top:2px}
+.tag{font-family:'Orbitron',monospace;font-size:9px;font-weight:700;letter-spacing:0.14em;
+  text-transform:uppercase;padding:5px 13px;border-radius:20px;border:1px solid;transition:all 0.2s}
+.tag-gold{color:var(--k-gold2);border-color:rgba(201,162,39,0.35);background:rgba(201,162,39,0.08)}
+.tag-blue{color:var(--c-crystal);border-color:rgba(91,200,245,0.3);background:rgba(91,200,245,0.06)}
+.tag-green{color:var(--k-green);border-color:rgba(34,197,94,0.3);background:rgba(34,197,94,0.06)}
+.hero-cta{display:inline-flex;align-items:center;gap:10px;padding:13px 28px;border-radius:14px;
+  font-family:'Orbitron',monospace;font-size:11px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;
+  border:1px solid rgba(201,162,39,0.45);background:rgba(201,162,39,0.1);color:var(--k-gold2);
+  text-decoration:none;transition:all 0.25s;margin-top:4px;width:fit-content;
+  box-shadow:0 0 20px rgba(201,162,39,0.1)}
+.hero-cta:hover{border-color:rgba(201,162,39,0.75);background:rgba(201,162,39,0.2);
+  box-shadow:0 0 36px rgba(201,162,39,0.3);transform:translateY(-2px)}
+.cta-arrow{transition:transform 0.2s}
+.hero-cta:hover .cta-arrow{transform:translateX(4px)}
+@media(max-width:620px){
+  .hero{grid-template-columns:1fr;text-align:center;padding:28px 24px}
+  .hero-logo{margin:0 auto}
+  .hero-tags{justify-content:center}
+  .hero-cta{margin:0 auto}
+}
+
+/* ── FEATURE BANNER ── */
+.feature-wrap{width:100%;max-width:960px;border-radius:20px;overflow:hidden;margin-bottom:40px;
+  border:1px solid rgba(201,162,39,0.15);box-shadow:0 4px 60px rgba(201,162,39,0.08);cursor:pointer}
+.feature-img{width:100%;display:block;object-fit:cover;transition:opacity 0.3s}
+
+/* ── DIVIDER ── */
+.divider{width:100%;max-width:960px;height:1px;
+  background:linear-gradient(90deg,transparent,rgba(201,162,39,0.2),transparent);margin:8px 0 30px}
+
+/* ── SECTION HEADER ── */
+.section{width:100%;max-width:960px;margin-bottom:32px}
+.sec-label{font-family:'Orbitron',monospace;font-size:9px;letter-spacing:0.22em;text-transform:uppercase;
+  color:var(--k-gold);opacity:0.7;margin-bottom:10px}
+.sec-title{font-family:'Orbitron',monospace;font-size:clamp(16px,3vw,22px);font-weight:900;
+  letter-spacing:0.08em;color:#fff;margin-bottom:20px;line-height:1.3}
+
+/* ── STATS BAR ── */
+.stats-bar{width:100%;max-width:960px;display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:36px}
+.stat-card{padding:22px 16px;border-radius:16px;text-align:center;
+  background:rgba(10,15,28,0.7);border:1px solid rgba(201,162,39,0.12);
+  backdrop-filter:blur(10px);transition:transform 0.25s,border-color 0.25s}
+.stat-card:hover{transform:translateY(-4px);border-color:rgba(201,162,39,0.3)}
+.stat-num{font-family:'Orbitron',monospace;font-size:clamp(20px,4vw,30px);font-weight:900;
+  color:var(--k-gold2);line-height:1;margin-bottom:6px}
+.stat-label{font-size:11px;color:rgba(220,230,255,0.45);font-weight:600;line-height:1.3}
+@media(max-width:500px){.stats-bar{grid-template-columns:repeat(2,1fr)}}
+
+/* ── FEATURES GRID ── */
+.features-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:16px}
+.feat-card{padding:22px 20px;border-radius:16px;border:1px solid rgba(255,255,255,0.07);
+  background:rgba(10,15,28,0.65);backdrop-filter:blur(10px);
+  transition:transform 0.25s,border-color 0.25s,box-shadow 0.25s;position:relative;overflow:hidden}
+.feat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,transparent,var(--fc,rgba(201,162,39,0.4)),transparent);opacity:0;transition:opacity 0.3s}
+.feat-card:hover{transform:translateY(-4px);border-color:rgba(201,162,39,0.25);box-shadow:0 0 24px rgba(201,162,39,0.08)}
+.feat-card:hover::before{opacity:1}
+.feat-icon{font-size:30px;margin-bottom:13px;display:block}
+.feat-title{font-family:'Orbitron',monospace;font-size:12px;font-weight:700;letter-spacing:0.1em;color:#fff;margin-bottom:7px}
+.feat-desc{font-size:12px;color:rgba(220,230,255,0.42);line-height:1.65}
+
+/* ── PROMO SCREENSHOTS (marketing cards) ── */
+.promo-grid{width:100%;max-width:960px;display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-bottom:36px}
+.promo-card{border-radius:20px;overflow:hidden;border:1px solid rgba(201,162,39,0.14);
+  background:rgba(240,235,225,0.04);transition:transform 0.3s,box-shadow 0.3s,border-color 0.3s;
+  cursor:pointer;position:relative}
+.promo-card::after{content:'';position:absolute;inset:0;border-radius:20px;
+  background:linear-gradient(135deg,rgba(201,162,39,0.06) 0%,transparent 60%);
+  opacity:0;transition:opacity 0.3s;pointer-events:none}
+.promo-card:hover{transform:translateY(-7px) scale(1.01);
+  box-shadow:0 20px 60px rgba(201,162,39,0.18),0 4px 20px rgba(0,0,0,0.4);
+  border-color:rgba(201,162,39,0.35)}
+.promo-card:hover::after{opacity:1}
+.promo-card img{width:100%;display:block;aspect-ratio:9/16;object-fit:cover;object-position:top}
+.promo-label{padding:11px 14px;font-family:'Orbitron',monospace;font-size:8px;letter-spacing:0.16em;
+  text-transform:uppercase;color:rgba(201,162,39,0.6);border-top:1px solid rgba(201,162,39,0.1);
+  background:rgba(5,10,20,0.5)}
+@media(max-width:700px){.promo-grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:440px){.promo-grid{grid-template-columns:1fr}}
+
+/* ── TABLET SCREENSHOTS ── */
+.tablet-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:18px}
+.tablet-item{border-radius:16px;overflow:hidden;border:1px solid rgba(201,162,39,0.12);
+  background:rgba(5,10,20,0.6);transition:transform 0.3s,box-shadow 0.3s}
+.tablet-item:hover{transform:translateY(-5px);box-shadow:0 14px 50px rgba(201,162,39,0.12);border-color:rgba(201,162,39,0.28)}
+.tablet-item img{width:100%;display:block;object-fit:cover}
+.tablet-caption{padding:11px 16px;font-family:'Orbitron',monospace;font-size:8px;letter-spacing:0.14em;
+  text-transform:uppercase;color:rgba(201,162,39,0.55);border-top:1px solid rgba(201,162,39,0.08)}
+@media(max-width:600px){.tablet-grid{grid-template-columns:1fr}}
+
+/* ── LEDGER PREVIEW (animated mock) ── */
+.ledger-preview{width:100%;max-width:960px;margin-bottom:36px;padding:32px 36px;
+  background:linear-gradient(135deg,rgba(13,27,42,0.7) 0%,rgba(7,12,26,0.8) 100%);
+  border:1px solid rgba(201,162,39,0.18);border-radius:24px;backdrop-filter:blur(14px)}
+.ledger-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;flex-wrap:wrap;gap:12px}
+.ledger-title-wrap{}
+.ledger-badge{font-family:'Orbitron',monospace;font-size:8px;letter-spacing:0.2em;text-transform:uppercase;
+  color:rgba(201,162,39,0.65);margin-bottom:5px}
+.ledger-title{font-family:'Orbitron',monospace;font-size:clamp(14px,2.5vw,20px);font-weight:900;color:#fff}
+.balance-chip{display:flex;flex-direction:column;align-items:flex-end;
+  padding:14px 22px;border-radius:14px;background:rgba(201,162,39,0.08);border:1px solid rgba(201,162,39,0.2)}
+.balance-label{font-family:'Orbitron',monospace;font-size:8px;letter-spacing:0.18em;text-transform:uppercase;
+  color:rgba(201,162,39,0.6);margin-bottom:4px}
+.balance-num{font-family:'Orbitron',monospace;font-size:clamp(18px,3.5vw,28px);font-weight:900;color:var(--k-gold2);
+  animation:count-up 2s ease-out forwards}
+@keyframes count-up{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+.ledger-rows{display:flex;flex-direction:column;gap:10px}
+.ledger-row{display:flex;align-items:center;gap:14px;padding:14px 18px;border-radius:12px;
+  background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);
+  transition:background 0.2s}
+.ledger-row:hover{background:rgba(255,255,255,0.06)}
+.lr-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.lr-dot.income{background:var(--k-green);box-shadow:0 0 8px rgba(34,197,94,0.5)}
+.lr-dot.expense{background:var(--k-red);box-shadow:0 0 8px rgba(239,68,68,0.5)}
+.lr-cat{font-family:'Orbitron',monospace;font-size:9px;letter-spacing:0.12em;text-transform:uppercase;
+  color:rgba(220,230,255,0.5);flex:0 0 90px}
+.lr-desc{flex:1;font-size:13px;font-weight:600;color:rgba(220,230,255,0.75)}
+.lr-amount{font-family:'Orbitron',monospace;font-size:13px;font-weight:700}
+.lr-amount.income{color:var(--k-green)}
+.lr-amount.expense{color:var(--k-red)}
+.lr-date{font-size:11px;color:rgba(220,230,255,0.3);flex:0 0 60px;text-align:right}
+
+/* ── WHO IS IT FOR ── */
+.who-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px}
+.who-card{padding:20px;border-radius:16px;border:1px solid rgba(255,255,255,0.07);
+  background:rgba(10,15,28,0.6);display:flex;align-items:flex-start;gap:14px;
+  transition:transform 0.25s,border-color 0.25s}
+.who-card:hover{transform:translateY(-3px);border-color:rgba(201,162,39,0.25)}
+.who-icon{font-size:26px;flex-shrink:0}
+.who-title{font-family:'Orbitron',monospace;font-size:10px;font-weight:700;letter-spacing:0.1em;color:var(--k-gold2);margin-bottom:4px}
+.who-desc{font-size:11px;color:rgba(220,230,255,0.42);line-height:1.55}
+
+/* ── BACKUP SECTION ── */
+.backup-section{width:100%;max-width:960px;margin-bottom:36px;
+  display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.backup-card{padding:28px;border-radius:20px;border:1px solid rgba(255,255,255,0.07);
+  background:rgba(10,15,28,0.7);backdrop-filter:blur(10px)}
+.bc-icon{font-size:36px;margin-bottom:14px}
+.bc-title{font-family:'Orbitron',monospace;font-size:13px;font-weight:700;letter-spacing:0.1em;color:#fff;margin-bottom:8px}
+.bc-desc{font-size:12px;color:rgba(220,230,255,0.42);line-height:1.65}
+.bc-badge{display:inline-block;margin-top:12px;font-family:'Orbitron',monospace;font-size:8px;
+  letter-spacing:0.15em;text-transform:uppercase;padding:4px 12px;border-radius:20px}
+.bc-local{border-color:rgba(91,200,245,0.3);background:rgba(91,200,245,0.08);color:var(--c-crystal)}
+.bc-cloud{border-color:rgba(34,197,94,0.3);background:rgba(34,197,94,0.08);color:var(--k-green)}
+@media(max-width:600px){.backup-section{grid-template-columns:1fr}}
+
+/* ── STORE CTA ── */
+.store-cta{width:100%;max-width:960px;display:flex;align-items:center;gap:20px;
+  padding:28px 36px;border-radius:20px;border:1px solid rgba(201,162,39,0.3);
+  background:rgba(201,162,39,0.06);text-decoration:none;
+  transition:all 0.3s;margin-bottom:36px;backdrop-filter:blur(10px)}
+.store-cta:hover{border-color:rgba(201,162,39,0.55);background:rgba(201,162,39,0.12);
+  box-shadow:0 0 40px rgba(201,162,39,0.18);transform:translateY(-3px)}
+.store-icon{font-size:48px;flex-shrink:0;filter:drop-shadow(0 0 12px rgba(201,162,39,0.5))}
+.store-info{flex:1}
+.store-label{font-family:'Orbitron',monospace;font-size:9px;letter-spacing:0.22em;text-transform:uppercase;
+  color:rgba(201,162,39,0.7);margin-bottom:5px}
+.store-name{font-family:'Orbitron',monospace;font-size:clamp(16px,3vw,22px);font-weight:900;color:#fff}
+.store-status{font-size:12px;color:rgba(201,162,39,0.8);margin-top:4px;font-weight:600}
+.store-arrow{font-size:28px;color:rgba(201,162,39,0.6);transition:transform 0.2s}
+.store-cta:hover .store-arrow{transform:translateX(5px)}
+
+/* ── FOOTER ── */
+.footer{width:100%;max-width:960px;text-align:center;padding:28px 20px 0;
+  border-top:1px solid rgba(91,200,245,0.1);margin-top:10px}
+.footer-logo{font-family:'Orbitron',monospace;font-size:13px;font-weight:900;letter-spacing:0.18em;
+  color:transparent;background:linear-gradient(90deg,var(--c-crystal),var(--c-gold));
+  -webkit-background-clip:text;background-clip:text;margin-bottom:10px}
+.footer-contact{font-size:13px;font-weight:600;color:rgba(220,230,255,0.55);margin-bottom:6px}
+.footer-contact a{color:var(--c-crystal);text-decoration:none}
+.footer-links{display:flex;gap:18px;justify-content:center;margin-top:12px;flex-wrap:wrap}
+.footer-link{font-family:'Orbitron',monospace;font-size:9px;letter-spacing:0.15em;text-transform:uppercase;
+  color:rgba(91,200,245,0.5);text-decoration:none;transition:color 0.2s}
+.footer-link:hover{color:var(--c-crystal)}
+.footer-copy{font-size:11px;color:rgba(220,230,255,0.2);margin-top:14px;padding-bottom:10px}
+
+/* ── THEME OVERRIDES ── */
+[data-theme="obsidian"]{--c-bg:#020208;--c-deep:#04040f;--c-crystal:#00ffe7;--c-crystal-glow:rgba(0,255,231,.35);--c-gold:#ff00cc;--c-gold-glow:rgba(255,0,204,.35);--c-pink:#ffee00;--c-blue:#00aaff;--c-green:#00ff88;--c-white:#f0fff8;--c-grid:rgba(0,255,231,.05);--c-border:rgba(0,255,231,.2)}
+[data-theme="ember"]{--c-bg:#080300;--c-deep:#0f0500;--c-crystal:#ff7730;--c-crystal-glow:rgba(255,119,48,.35);--c-gold:#ffc200;--c-gold-glow:rgba(255,194,0,.35);--c-pink:#ff2255;--c-blue:#ff8855;--c-green:#ffaa00;--c-white:#fff5ee;--c-grid:rgba(255,119,48,.06);--c-border:rgba(255,119,48,.22)}
+[data-theme="cloud"]{--c-bg:#e8f2ff;--c-deep:#d0e5ff;--c-crystal:#0069a0;--c-crystal-glow:rgba(0,105,160,.18);--c-gold:#b06b00;--c-gold-glow:rgba(176,107,0,.18);--c-pink:#c0004a;--c-blue:#0044cc;--c-green:#007744;--c-white:#0a1628;--c-grid:rgba(0,50,100,.07);--c-border:rgba(0,105,160,.22)}
+[data-theme="paper"]{--c-bg:#f8f2e6;--c-deep:#f0e8d4;--c-crystal:#8b4a00;--c-crystal-glow:rgba(139,74,0,.18);--c-gold:#706000;--c-gold-glow:rgba(112,96,0,.18);--c-pink:#900030;--c-blue:#004488;--c-green:#2a6040;--c-white:#1a0f00;--c-grid:rgba(80,50,0,.07);--c-border:rgba(139,74,0,.2)}
+[data-theme="mist"]{--c-bg:#f0ecff;--c-deep:#e4deff;--c-crystal:#5020a0;--c-crystal-glow:rgba(80,32,160,.18);--c-gold:#8c3000;--c-gold-glow:rgba(140,48,0,.18);--c-pink:#900060;--c-blue:#3344aa;--c-green:#2a7050;--c-white:#100820;--c-grid:rgba(50,20,100,.07);--c-border:rgba(80,32,160,.22)}
+[data-theme="cloud"] .feat-card,[data-theme="paper"] .feat-card,[data-theme="mist"] .feat-card,
+[data-theme="cloud"] .who-card,[data-theme="paper"] .who-card,[data-theme="mist"] .who-card,
+[data-theme="cloud"] .backup-card,[data-theme="paper"] .backup-card,[data-theme="mist"] .backup-card,
+[data-theme="cloud"] .stat-card,[data-theme="paper"] .stat-card,[data-theme="mist"] .stat-card,
+[data-theme="cloud"] .ledger-preview,[data-theme="paper"] .ledger-preview,[data-theme="mist"] .ledger-preview{
+  background:rgba(255,255,255,.78);border-color:rgba(0,0,0,.09);box-shadow:0 2px 16px rgba(0,0,0,.06)}
+[data-theme="cloud"] .hero,[data-theme="paper"] .hero,[data-theme="mist"] .hero{background:rgba(255,255,255,.55)}
+[data-theme="cloud"] .feat-desc,[data-theme="paper"] .feat-desc,[data-theme="mist"] .feat-desc,
+[data-theme="cloud"] .who-desc,[data-theme="paper"] .who-desc,[data-theme="mist"] .who-desc,
+[data-theme="cloud"] .bc-desc,[data-theme="paper"] .bc-desc,[data-theme="mist"] .bc-desc,
+[data-theme="cloud"] .hero-sub,[data-theme="paper"] .hero-sub,[data-theme="mist"] .hero-sub{color:rgba(10,22,40,.55)}
+[data-theme="cloud"] #bg-canvas,[data-theme="paper"] #bg-canvas,[data-theme="mist"] #bg-canvas{opacity:.18}
+[data-theme="cloud"] .theme-bar,[data-theme="paper"] .theme-bar,[data-theme="mist"] .theme-bar{background:rgba(255,255,255,.62)}
+[data-theme="cloud"] .footer-copy,[data-theme="paper"] .footer-copy,[data-theme="mist"] .footer-copy{color:rgba(10,22,40,.3)}
+
+/* ── ANIMATIONS ── */
+@keyframes fade-up{from{opacity:0;transform:translateY(28px)}to{opacity:1;transform:translateY(0)}}
+.hero{animation:fade-up 0.55s ease both}
+.feature-wrap{animation:fade-up 0.55s 0.08s ease both}
+.stats-bar{animation:fade-up 0.55s 0.12s ease both}
+.section{animation:fade-up 0.55s 0.15s ease both}
+.ledger-preview{animation:fade-up 0.55s 0.18s ease both}
+.store-cta{animation:fade-up 0.55s 0.22s ease both}
+</style>
+</head>
+<body>
+<canvas id="bg-canvas"></canvas>
+<div class="grid-overlay"></div>
+<div class="scanline"></div>
+
+<div class="theme-bar">
+  <span class="theme-label" id="theme-name">VOID</span>
+  <button class="theme-dot active" data-t="void" onclick="setTheme('void')"></button>
+  <button class="theme-dot" data-t="obsidian" onclick="setTheme('obsidian')"></button>
+  <button class="theme-dot" data-t="ember" onclick="setTheme('ember')"></button>
+  <div class="theme-sep"></div>
+  <button class="theme-dot" data-t="cloud" onclick="setTheme('cloud')"></button>
+  <button class="theme-dot" data-t="paper" onclick="setTheme('paper')"></button>
+  <button class="theme-dot" data-t="mist" onclick="setTheme('mist')"></button>
+</div>
+
+<div class="lang-bar">
+  <button class="lang-btn active" data-lang="tr" onclick="setLang('tr')">TR</button>
+  <button class="lang-btn" data-lang="en" onclick="setLang('en')">EN</button>
+</div>
+
+<div class="page">
+
+  <!-- NAV -->
+  <nav class="top-nav">
+    <a href="index.html" class="back-btn">← <span data-i18n="back">Ana Sayfa</span></a>
+    <a href="index.html" class="site-wordmark">AXYON.DEV</a>
+  </nav>
+
+  <!-- HERO -->
+  <div class="hero">
+    <img class="hero-logo" src="assets/kasadefteri/logo_full.png" alt="Kasa Defteri Logo" data-kd-img="logo">
+    <div class="hero-text">
+      <div class="hero-badge" data-i18n="hero_badge">📒 MOBİL UYGULAMA · ANDROID · FİNANSAL TAKİP</div>
+      <h1 class="hero-title"><span>Kasa Defteri</span> – Axyon</h1>
+      <p class="hero-sub" data-i18n="hero_sub">Küçük işletmeler, serbest çalışanlar ve kasa takibi yapan herkes için sade gelir-gider defteri. Cari takip, raporlar ve şifreli yedekleme.</p>
+      <div class="hero-tags">
+        <span class="tag tag-gold" data-i18n="tag_free">Ücretsiz</span>
+        <span class="tag tag-blue" data-i18n="tag_offline">Çevrimdışı Çalışır</span>
+        <span class="tag tag-green" data-i18n="tag_backup">Google Drive Yedek</span>
+        <span class="tag tag-gold" data-i18n="tag_cari">Cari Takip</span>
+      </div>
+      <a href="https://play.google.com/store/apps/developer?id=axyon" target="_blank" rel="noopener" class="hero-cta">
+        <span>📲</span>
+        <span data-i18n="hero_cta">Google Play'de İndir</span>
+        <span class="cta-arrow">→</span>
+      </a>
+    </div>
+  </div>
+
+  <!-- FEATURE GRAPHIC -->
+  <div class="feature-wrap" id="feature-wrap" onclick="toggleFeature()" title="Açık temayı görmek için tıkla">
+    <img class="feature-img" id="feat-img" src="assets/kasadefteri/feature.png" alt="Kasa Defteri Feature" data-kd-img="feature">
+  </div>
+
+  <!-- STATS -->
+  <div class="stats-bar">
+    <div class="stat-card">
+      <div class="stat-num">∞</div>
+      <div class="stat-label" data-i18n="s1">Sınırsız İşlem</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-num">📊</div>
+      <div class="stat-label" data-i18n="s2">Kategori Bazlı Raporlar</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-num">🔐</div>
+      <div class="stat-label" data-i18n="s3">Şifreli Yedekleme</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-num">🌙</div>
+      <div class="stat-label" data-i18n="s4">Çoklu Tema</div>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- LEDGER MOCK -->
+  <div class="ledger-preview">
+    <div class="ledger-header">
+      <div class="ledger-title-wrap">
+        <div class="ledger-badge" data-i18n="ledger_badge">◈ CANLI ÖNİZLEME</div>
+        <div class="ledger-title" data-i18n="ledger_title">Mayıs 2026 Kasası</div>
+      </div>
+      <div class="balance-chip">
+        <div class="balance-label" data-i18n="balance_label">NET BAKİYE</div>
+        <div class="balance-num" id="balance-num">₺ 12.450</div>
+      </div>
+    </div>
+    <div class="ledger-rows">
+      <div class="ledger-row">
+        <div class="lr-dot income"></div>
+        <div class="lr-cat" data-i18n="lcat_sale">SATIŞ</div>
+        <div class="lr-desc" data-i18n="ldesc1">Mayıs ayı ürün satışları</div>
+        <div class="lr-amount income">+ ₺ 8.200</div>
+        <div class="lr-date">26 May</div>
+      </div>
+      <div class="ledger-row">
+        <div class="lr-dot income"></div>
+        <div class="lr-cat" data-i18n="lcat_service">HİZMET</div>
+        <div class="lr-desc" data-i18n="ldesc2">Danışmanlık ödemesi</div>
+        <div class="lr-amount income">+ ₺ 5.500</div>
+        <div class="lr-date">24 May</div>
+      </div>
+      <div class="ledger-row">
+        <div class="lr-dot expense"></div>
+        <div class="lr-cat" data-i18n="lcat_rent">KİRA</div>
+        <div class="lr-desc" data-i18n="ldesc3">Ofis kirası</div>
+        <div class="lr-amount expense">− ₺ 3.750</div>
+        <div class="lr-date">22 May</div>
+      </div>
+      <div class="ledger-row">
+        <div class="lr-dot expense"></div>
+        <div class="lr-cat" data-i18n="lcat_supply">TEDARİK</div>
+        <div class="lr-desc" data-i18n="ldesc4">Malzeme alımı</div>
+        <div class="lr-amount expense">− ₺ 1.200</div>
+        <div class="lr-date">20 May</div>
+      </div>
+      <div class="ledger-row">
+        <div class="lr-dot expense"></div>
+        <div class="lr-cat" data-i18n="lcat_plan">PLANLANDI</div>
+        <div class="lr-desc" data-i18n="ldesc5">Haziran kira ödemesi</div>
+        <div class="lr-amount expense">− ₺ 3.750</div>
+        <div class="lr-date">01 Haz</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FEATURES -->
+  <section class="section">
+    <div class="sec-label" data-i18n="feat_label">◈ ÖZELLİKLER</div>
+    <h2 class="sec-title" data-i18n="feat_title">Kasa yönetiminde ihtiyacınız olan her şey</h2>
+    <div class="features-grid">
+      <div class="feat-card">
+        <span class="feat-icon">💰</span>
+        <div class="feat-title" data-i18n="f1t">Gelir & Gider Kaydı</div>
+        <p class="feat-desc" data-i18n="f1d">Hızlı işlem girişi, not ve kategori etiketleme. Net bakiye anlık güncellenir.</p>
+      </div>
+      <div class="feat-card">
+        <span class="feat-icon">📊</span>
+        <div class="feat-title" data-i18n="f2t">Aylık Raporlar</div>
+        <p class="feat-desc" data-i18n="f2d">Kategori bazlı gelir-gider özeti, aylık karşılaştırma grafikleri ve trend analizi.</p>
+      </div>
+      <div class="feat-card">
+        <span class="feat-icon">👥</span>
+        <div class="feat-title" data-i18n="f3t">Cari & Müşteri Takibi</div>
+        <p class="feat-desc" data-i18n="f3d">Müşteri veya tedarikçilerin borç ve alacaklarını ayrı ayrı takip edin.</p>
+      </div>
+      <div class="feat-card">
+        <span class="feat-icon">📅</span>
+        <div class="feat-title" data-i18n="f4t">Planlı Ödemeler</div>
+        <p class="feat-desc" data-i18n="f4d">Kira, abonelik ve bekleyen ödemeleri planlayın, vadesi gelenleri kaçırmayın.</p>
+      </div>
+      <div class="feat-card">
+        <span class="feat-icon">🏷️</span>
+        <div class="feat-title" data-i18n="f5t">Kategori Yönetimi</div>
+        <p class="feat-desc" data-i18n="f5d">Kendi kategorilerinizi oluşturun ve işlemleri filtreleyin.</p>
+      </div>
+      <div class="feat-card">
+        <span class="feat-icon">🎨</span>
+        <div class="feat-title" data-i18n="f6t">Tema & Dil</div>
+        <p class="feat-desc" data-i18n="f6d">Açık ve koyu temalar. Türkçe ve İngilizce dil desteği.</p>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- PROMO SCREENSHOTS -->
+  <section class="section">
+    <div class="sec-label" data-i18n="phone_label">◈ UYGULAMA EKRANLARI</div>
+    <h2 class="sec-title" data-i18n="phone_title">Her ekran, bir hikaye</h2>
+  </section>
+  <div class="promo-grid">
+    <div class="promo-card">
+      <img src="assets/kasadefteri/promo1.png" alt="Kasanı tek bakışta yönet" data-kd-img="promo1">
+      <div class="promo-label" data-i18n="ph1c">Ana Ekran</div>
+    </div>
+    <div class="promo-card">
+      <img src="assets/kasadefteri/promo2.png" alt="İşlemlerini saniyeler içinde ekle" data-kd-img="promo2">
+      <div class="promo-label" data-i18n="ph2c">İşlem Ekle</div>
+    </div>
+    <div class="promo-card">
+      <img src="assets/kasadefteri/promo3.png" alt="Raporlarını sade ve net gör" data-kd-img="promo3">
+      <div class="promo-label" data-i18n="ph3c">Raporlar</div>
+    </div>
+    <div class="promo-card">
+      <img src="assets/kasadefteri/promo4.png" alt="Tüm modüller tek menüde" data-kd-img="promo4">
+      <div class="promo-label" data-i18n="ph4c">Ana Menü</div>
+    </div>
+    <div class="promo-card">
+      <img src="assets/kasadefteri/promo5.png" alt="Sana uygun görünümü seç" data-kd-img="promo5">
+      <div class="promo-label" data-i18n="ph5c">Tema & Ayarlar</div>
+    </div>
+    <div class="promo-card">
+      <img src="assets/kasadefteri/promo6.png" alt="Şifreli yedek ve senkron" data-kd-img="promo6">
+      <div class="promo-label" data-i18n="ph6c">Yedek & Sync</div>
+    </div>
+  </div>
+
+  <!-- TABLET SCREENSHOTS -->
+  <section class="section" style="margin-top:16px">
+    <div class="sec-label" data-i18n="tab_label">◈ TABLET GÖRÜNÜMLERİ</div>
+    <h2 class="sec-title" data-i18n="tab_title">Büyük ekranda daha fazlası</h2>
+    <div class="tablet-grid">
+      <div class="tablet-item">
+        <img src="assets/kasadefteri/tab1.jpg" alt="Tablet 7 Genel" data-kd-img="tab1">
+        <div class="tablet-caption" data-i18n="tc1">Tablet 7″ · Genel Bakış</div>
+      </div>
+      <div class="tablet-item">
+        <img src="assets/kasadefteri/tab2.jpg" alt="Tablet 7 Ayarlar" data-kd-img="tab2">
+        <div class="tablet-caption" data-i18n="tc2">Tablet 7″ · Ayarlar & Sync</div>
+      </div>
+      <div class="tablet-item">
+        <img src="assets/kasadefteri/tab3.jpg" alt="Tablet 10 Genel" data-kd-img="tab3">
+        <div class="tablet-caption" data-i18n="tc3">Tablet 10″ · Genel Bakış</div>
+      </div>
+      <div class="tablet-item">
+        <img src="assets/kasadefteri/tab4.jpg" alt="Tablet 10 Yedek" data-kd-img="tab4">
+        <div class="tablet-caption" data-i18n="tc4">Tablet 10″ · Yedekleme</div>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- WHO IS IT FOR -->
+  <section class="section">
+    <div class="sec-label" data-i18n="who_label">◈ KİMLER İÇİN</div>
+    <h2 class="sec-title" data-i18n="who_title">Herkes için sade kasa defteri</h2>
+    <div class="who-grid">
+      <div class="who-card"><div class="who-icon">🏪</div><div><div class="who-title" data-i18n="w1t">Küçük İşletme</div><div class="who-desc" data-i18n="w1d">Dükkan, market, atölye sahibi — günlük kasa takibi için ideal.</div></div></div>
+      <div class="who-card"><div class="who-icon">💼</div><div><div class="who-title" data-i18n="w2t">Serbest Çalışan</div><div class="who-desc" data-i18n="w2d">Freelancer ve danışmanlar için müşteri ve ödeme takibi.</div></div></div>
+      <div class="who-card"><div class="who-icon">🏠</div><div><div class="who-title" data-i18n="w3t">Bireysel Kullanım</div><div class="who-desc" data-i18n="w3d">Aile bütçesi ve kişisel gelir-gider kontrolü için.</div></div></div>
+      <div class="who-card"><div class="who-icon">🤝</div><div><div class="who-title" data-i18n="w4t">Cari Takibi</div><div class="who-desc" data-i18n="w4d">Müşteri ve tedarikçi borç-alacak yönetimi yapanlar için.</div></div></div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- BACKUP -->
+  <section class="section">
+    <div class="sec-label" data-i18n="bak_label">◈ VERİ GÜVENLİĞİ</div>
+    <h2 class="sec-title" data-i18n="bak_title">Verileriniz güvende</h2>
+  </section>
+  <div class="backup-section">
+    <div class="backup-card">
+      <div class="bc-icon">📱</div>
+      <div class="bc-title" data-i18n="bc1t">Yerel Öncelikli</div>
+      <p class="bc-desc" data-i18n="bc1d">Tüm veriler cihazınızda tutulur. İnternet bağlantısı gerekmez, çevrimdışı çalışır. Verileriniz sizin kontrolünüzde.</p>
+      <span class="bc-badge bc-local" data-i18n="bc1b">Çevrimdışı ✓</span>
+    </div>
+    <div class="backup-card">
+      <div class="bc-icon">☁️</div>
+      <div class="bc-title" data-i18n="bc2t">Şifreli Drive Yedek</div>
+      <p class="bc-desc" data-i18n="bc2d">İsteğe bağlı olarak Google Drive'a şifreli yedekleme yapın. Şifreyi sadece siz bilirsiniz — kimse erişemez.</p>
+      <span class="bc-badge bc-cloud" data-i18n="bc2b">AES Şifreleme ✓</span>
+    </div>
+  </div>
+
+  <!-- STORE CTA -->
+  <a href="https://play.google.com/store/apps/developer?id=axyon" target="_blank" rel="noopener" class="store-cta">
+    <div class="store-icon">📲</div>
+    <div class="store-info">
+      <div class="store-label" data-i18n="store_label">Android Uygulama · Google Play</div>
+      <div class="store-name">Kasa Defteri – Axyon</div>
+      <div class="store-status" data-i18n="store_status">🟢 Google Play'de İndirin · Ücretsiz</div>
+    </div>
+    <div class="store-arrow">→</div>
+  </a>
+
+  <!-- FOOTER -->
+  <footer class="footer">
+    <div class="footer-logo">AXYON.DEV · MADE WITH ♥</div>
+    <div class="footer-contact" data-i18n="footer_contact">İletişim: <a href="mailto:axyon.dev@gmail.com">axyon.dev@gmail.com</a></div>
+    <div class="footer-links">
+      <a href="index.html" class="footer-link" data-i18n="footer_home">Ana Sayfa</a>
+      <a href="privacy/kasa-defteri-axyon-privacy-policy.html" class="footer-link" data-i18n="footer_privacy">Gizlilik Politikası</a>
+      <a href="delete-data.html" class="footer-link" data-i18n="footer_delete">Veri Silme</a>
+      <a href="https://play.google.com/store/apps/developer?id=axyon" target="_blank" rel="noopener" class="footer-link">Google Play</a>
+    </div>
+    <div class="footer-copy">© 2026 AXYON.DEV</div>
+  </footer>
+
+</div>
+
+<script>
+/* ── i18n ── */
+const i18n = {
+  tr:{
+    back:'Ana Sayfa',
+    hero_badge:'📒 MOBİL UYGULAMA · ANDROID · FİNANSAL TAKİP',
+    hero_sub:'Küçük işletmeler, serbest çalışanlar ve kasa takibi yapan herkes için sade gelir-gider defteri. Cari takip, raporlar ve şifreli yedekleme.',
+    tag_free:'Ücretsiz',tag_offline:'Çevrimdışı Çalışır',tag_backup:'Drive Yedek',tag_cari:'Cari Takip',
+    hero_cta:'Google Play\'de İndir',
+    s1:'Sınırsız İşlem',s2:'Kategori Raporları',s3:'Şifreli Yedek',s4:'Çoklu Tema',
+    ledger_badge:'◈ CANLI ÖNİZLEME',ledger_title:'Mayıs 2026 Kasası',balance_label:'NET BAKİYE',
+    lcat_sale:'SATIŞ',lcat_service:'HİZMET',lcat_rent:'KİRA',lcat_supply:'TEDARİK',lcat_plan:'PLANLANDI',
+    ldesc1:'Mayıs ayı ürün satışları',ldesc2:'Danışmanlık ödemesi',ldesc3:'Ofis kirası',ldesc4:'Malzeme alımı',ldesc5:'Haziran kira ödemesi',
+    feat_label:'◈ ÖZELLİKLER',feat_title:'Kasa yönetiminde ihtiyacınız olan her şey',
+    f1t:'Gelir & Gider Kaydı',f1d:'Hızlı işlem girişi, not ve kategori etiketleme. Net bakiye anlık güncellenir.',
+    f2t:'Aylık Raporlar',f2d:'Kategori bazlı gelir-gider özeti, aylık karşılaştırma ve trend analizi.',
+    f3t:'Cari & Müşteri Takibi',f3d:'Müşteri veya tedarikçilerin borç ve alacaklarını ayrı ayrı takip edin.',
+    f4t:'Planlı Ödemeler',f4d:'Kira, abonelik ve bekleyen ödemeleri planlayın, vadesi gelenleri kaçırmayın.',
+    f5t:'Kategori Yönetimi',f5d:'Kendi kategorilerinizi oluşturun ve işlemleri filtreleyin.',
+    f6t:'Tema & Dil',f6d:'Açık ve koyu temalar. Türkçe ve İngilizce dil desteği.',
+    phone_label:'◈ UYGULAMA EKRANLARI',phone_title:'Her ekran, bir hikaye',
+    ph1c:'Ana Ekran',ph2c:'İşlem Ekle',ph3c:'Raporlar',ph4c:'Ana Menü',ph5c:'Tema & Ayarlar',ph6c:'Yedek & Sync',
+    tab_label:'◈ TABLET GÖRÜNÜMLERİ',tab_title:'Büyük ekranda daha fazlası',
+    tc1:'Tablet 7″ · Genel Bakış',tc2:'Tablet 7″ · Ayarlar & Sync',tc3:'Tablet 10″ · Genel Bakış',tc4:'Tablet 10″ · Yedekleme',
+    who_label:'◈ KİMLER İÇİN',who_title:'Herkes için sade kasa defteri',
+    w1t:'Küçük İşletme',w1d:'Dükkan, market, atölye sahibi — günlük kasa takibi için ideal.',
+    w2t:'Serbest Çalışan',w2d:'Freelancer ve danışmanlar için müşteri ve ödeme takibi.',
+    w3t:'Bireysel Kullanım',w3d:'Aile bütçesi ve kişisel gelir-gider kontrolü için.',
+    w4t:'Cari Takibi',w4d:'Müşteri ve tedarikçi borç-alacak yönetimi yapanlar için.',
+    bak_label:'◈ VERİ GÜVENLİĞİ',bak_title:'Verileriniz güvende',
+    bc1t:'Yerel Öncelikli',bc1d:'Tüm veriler cihazınızda tutulur. İnternet bağlantısı gerekmez, çevrimdışı çalışır.',bc1b:'Çevrimdışı ✓',
+    bc2t:'Şifreli Drive Yedek',bc2d:'İsteğe bağlı Google Drive şifreli yedekleme. Şifreyi sadece siz bilirsiniz.',bc2b:'AES Şifreleme ✓',
+    store_label:'Android Uygulama · Google Play',store_status:'🟢 Google Play\'de İndirin · Ücretsiz',
+    footer_contact:'İletişim: <a href="mailto:axyon.dev@gmail.com">axyon.dev@gmail.com</a>',
+    footer_home:'Ana Sayfa',footer_privacy:'Gizlilik Politikası',footer_delete:'Veri Silme'
+  },
+  en:{
+    back:'Home',
+    hero_badge:'📒 MOBILE APP · ANDROID · FINANCIAL TRACKER',
+    hero_sub:'Simple cash ledger for small businesses, freelancers and personal budgeting. Receivables tracking, reports and encrypted backup.',
+    tag_free:'Free',tag_offline:'Works Offline',tag_backup:'Drive Backup',tag_cari:'Receivables',
+    hero_cta:'Download on Google Play',
+    s1:'Unlimited Records',s2:'Category Reports',s3:'Encrypted Backup',s4:'Multiple Themes',
+    ledger_badge:'◈ LIVE PREVIEW',ledger_title:'May 2026 Ledger',balance_label:'NET BALANCE',
+    lcat_sale:'SALES',lcat_service:'SERVICE',lcat_rent:'RENT',lcat_supply:'SUPPLY',lcat_plan:'PLANNED',
+    ldesc1:'May product sales',ldesc2:'Consulting payment',ldesc3:'Office rent',ldesc4:'Material purchase',ldesc5:'June rent payment',
+    feat_label:'◈ FEATURES',feat_title:'Everything you need to manage your cash',
+    f1t:'Income & Expense',f1d:'Quick record entry with notes and category tags. Net balance updates instantly.',
+    f2t:'Monthly Reports',f2d:'Category-based income-expense summary and monthly trend comparisons.',
+    f3t:'Customer Ledger',f3d:'Track receivables and payables per customer or supplier separately.',
+    f4t:'Planned Payments',f4d:'Schedule rent, subscriptions and pending payments. Never miss a due date.',
+    f5t:'Category Management',f5d:'Create your own categories and filter transactions easily.',
+    f6t:'Themes & Language',f6d:'Light and dark themes. Turkish and English language support.',
+    phone_label:'◈ APP SCREENS',phone_title:'Every screen tells a story',
+    ph1c:'Home Screen',ph2c:'Add Record',ph3c:'Reports',ph4c:'Main Menu',ph5c:'Themes & Settings',ph6c:'Backup & Sync',
+    tab_label:'◈ TABLET VIEWS',tab_title:'More on larger screens',
+    tc1:'Tablet 7″ · Overview',tc2:'Tablet 7″ · Settings & Sync',tc3:'Tablet 10″ · Overview',tc4:'Tablet 10″ · Backup',
+    who_label:'◈ WHO IS IT FOR',who_title:'A simple cash book for everyone',
+    w1t:'Small Business',w1d:'Shop, market or workshop owner — ideal for daily cash tracking.',
+    w2t:'Freelancer',w2d:'Track clients and payments for freelancers and consultants.',
+    w3t:'Personal Use',w3d:'Family budgeting and personal income-expense tracking.',
+    w4t:'Receivables',w4d:'For those managing customer and supplier debt tracking.',
+    bak_label:'◈ DATA SECURITY',bak_title:'Your data is safe',
+    bc1t:'Offline First',bc1d:'All data is stored on your device. No internet required, works fully offline.',bc1b:'Offline ✓',
+    bc2t:'Encrypted Drive Backup',bc2d:'Optional encrypted backup to Google Drive. Only you know the password.',bc2b:'AES Encryption ✓',
+    store_label:'Android App · Google Play',store_status:'🟢 Download on Google Play · Free',
+    footer_contact:'Contact: <a href="mailto:axyon.dev@gmail.com">axyon.dev@gmail.com</a>',
+    footer_home:'Home',footer_privacy:'Privacy Policy',footer_delete:'Data Deletion'
+  }
+};
+
+let currentLang='tr';
+function setLang(lang){
+  currentLang=lang;
+  document.documentElement.lang=lang;
+  document.querySelectorAll('.lang-btn').forEach(b=>b.classList.toggle('active',b.dataset.lang===lang));
+  const d=i18n[lang];
+  document.querySelectorAll('[data-i18n]').forEach(el=>{
+    const key=el.dataset.i18n;
+    if(d[key]!==undefined){if(d[key].includes('<a '))el.innerHTML=d[key];else el.textContent=d[key];}
+  });
+}
+
+/* ── FEATURE TOGGLE (dark/light) ── */
+let featLight=false;
+function toggleFeature(){
+  featLight=!featLight;
+  const img=document.getElementById('feat-img');
+  if(featLight){img.src='assets/kasadefteri/feature_light.png';img.dataset.kdImg='feature_light';}
+  else{img.src='assets/kasadefteri/feature.png';img.dataset.kdImg='feature';}
+  // re-run image loader
+  if(window.KD_IMGS&&KD_IMGS[img.dataset.kdImg])img.src=KD_IMGS[img.dataset.kdImg];
+}
+
+/* ── THEME ── */
+const THEMES=['void','obsidian','ember','cloud','paper','mist'];
+const THEME_LABELS={void:'VOID',obsidian:'OBSIDIAN',ember:'EMBER',cloud:'CLOUD',paper:'PAPER',mist:'MIST'};
+function setTheme(name){
+  if(!THEMES.includes(name))name='void';
+  document.documentElement.dataset.theme=name;
+  document.querySelectorAll('.theme-dot').forEach(d=>d.classList.toggle('active',d.dataset.t===name));
+  document.getElementById('theme-name').textContent=THEME_LABELS[name];
+  try{localStorage.setItem('axyon-theme',name);}catch(e){}
+}
+try{const s=localStorage.getItem('axyon-theme');if(s&&THEMES.includes(s))setTheme(s);}catch(e){}
+
+/* ── BALANCE COUNTER ANIMATION ── */
+function animateBalance(){
+  const el=document.getElementById('balance-num');
+  if(!el)return;
+  const target=12450;let current=0;
+  const step=()=>{current+=Math.ceil((target-current)/12);el.textContent='₺ '+current.toLocaleString('tr-TR');if(current<target)requestAnimationFrame(step);else el.textContent='₺ '+target.toLocaleString('tr-TR');};
+  setTimeout(()=>requestAnimationFrame(step),600);
+}
+window.addEventListener('load',animateBalance);
+
+/* ── BACKGROUND CANVAS ── */
+const canvas=document.getElementById('bg-canvas');
+const ctx=canvas.getContext('2d');
+let W,H,t0=null;
+let stars=[],dustMotes=[],shootingStars=[],fairies=[],trailDust=[];
+const dustColors=[[201,162,39],[240,192,64],[91,200,245],[255,255,180],[34,197,94],[255,255,255]];
+function randColor(){return dustColors[Math.floor(Math.random()*dustColors.length)];}
+function resize(){W=canvas.width=window.innerWidth;H=canvas.height=window.innerHeight;}
+window.addEventListener('resize',resize);resize();
+window.addEventListener('mousemove',e=>{for(let i=0;i<4;i++)spawnTrail(e.clientX,e.clientY);});
+for(let i=0;i<200;i++)stars.push({x:Math.random(),y:Math.random(),r:Math.random()*1.3+0.15,a:Math.random()*0.65+0.1,phase:Math.random()*Math.PI*2,speed:Math.random()*0.0008+0.0002});
+for(let i=0;i<50;i++)dustMotes.push(makeDust(true));
+function makeDust(ry){const[r,g,b]=randColor();return{x:Math.random()*W,y:ry?Math.random()*H:H+10,vx:(Math.random()-0.5)*0.4,vy:-(Math.random()*0.5+0.15),r:Math.random()*2.5+0.6,maxAlpha:Math.random()*0.5+0.15,phase:Math.random()*Math.PI*2,speed:Math.random()*0.003+0.001,cr:r,cg:g,cb:b,life:1,maxLife:200+Math.random()*400};}
+function spawnTrail(x,y){const[r,g,b]=randColor();const a=Math.random()*Math.PI*2;const s=Math.random()*1.8+0.3;trailDust.push({x:x+(Math.random()-0.5)*12,y:y+(Math.random()-0.5)*12,vx:Math.cos(a)*s,vy:Math.sin(a)*s-0.8,r:Math.random()*3+1,alpha:0.9,cr:r,cg:g,cb:b,decay:Math.random()*0.025+0.018,gravity:0.04});}
+for(let i=0;i<6;i++)fairies.push(makeFairy());
+function makeFairy(){const[r,g,b]=randColor();return{x:Math.random()*W,y:Math.random()*H,vx:(Math.random()-0.5)*0.6,vy:(Math.random()-0.5)*0.4,r:Math.random()*5+4,alpha:Math.random()*0.4+0.15,phase:Math.random()*Math.PI*2,speed:Math.random()*0.002+0.001,cr:r,cg:g,cb:b,trail:[]};}
+function spawnShooter(){shootingStars.push({x:W*(0.3+Math.random()*0.7),y:Math.random()*H*0.35,vx:-2.8-Math.random()*2.2,vy:1.6+Math.random()*1.4,len:100+Math.random()*90,alpha:1,width:1.2+Math.random()});setTimeout(spawnShooter,1600+Math.random()*3000);}
+spawnShooter();
+function draw(ts){
+  if(!t0)t0=ts;const t=ts-t0;ctx.clearRect(0,0,W,H);
+  [{y:0,h:H*0.4,cr:100,cg:80,cb:20,a:0.04},{y:0,h:H*0.25,cr:20,cg:60,cb:150,a:0.025}].forEach((b,i)=>{
+    const w=Math.sin(t*0.0003+i*1.4)*0.5+0.5;
+    const grd=ctx.createLinearGradient(0,b.y,0,b.y+b.h);
+    grd.addColorStop(0,`rgba(${b.cr},${b.cg},${b.cb},${b.a*w})`);grd.addColorStop(0.5,`rgba(${b.cr},${b.cg},${b.cb},${b.a*w*0.6})`);grd.addColorStop(1,`rgba(${b.cr},${b.cg},${b.cb},0)`);
+    ctx.fillStyle=grd;ctx.fillRect(0,b.y,W,b.h);
+  });
+  stars.forEach(p=>{const pulse=Math.sin(t*p.speed*1000+p.phase)*0.35+0.65;ctx.beginPath();ctx.arc(p.x*W,p.y*H,p.r,0,Math.PI*2);ctx.fillStyle=`rgba(255,240,180,${p.a*pulse*0.6})`;ctx.fill();});
+  for(let i=shootingStars.length-1;i>=0;i--){const s=shootingStars[i];const grd=ctx.createLinearGradient(s.x,s.y,s.x-s.vx*(s.len/3),s.y-s.vy*(s.len/3));grd.addColorStop(0,`rgba(240,192,64,${s.alpha})`);grd.addColorStop(1,'rgba(240,192,64,0)');ctx.beginPath();ctx.moveTo(s.x,s.y);ctx.lineTo(s.x-s.vx*(s.len/3),s.y-s.vy*(s.len/3));ctx.strokeStyle=grd;ctx.lineWidth=s.width;ctx.stroke();s.x+=s.vx;s.y+=s.vy;s.alpha-=0.013;if(s.alpha<=0||s.x<-150||s.y>H+100)shootingStars.splice(i,1);}
+  fairies.forEach(f=>{f.trail.push({x:f.x,y:f.y});if(f.trail.length>18)f.trail.shift();f.trail.forEach((pt,i)=>{const a=(i/f.trail.length)*f.alpha*0.4;const rr=f.r*(i/f.trail.length)*0.7;ctx.beginPath();ctx.arc(pt.x,pt.y,rr,0,Math.PI*2);ctx.fillStyle=`rgba(${f.cr},${f.cg},${f.cb},${a})`;ctx.fill();});const pulse=Math.sin(t*f.speed*1000+f.phase)*0.4+0.6;const grd=ctx.createRadialGradient(f.x,f.y,0,f.x,f.y,f.r*3.5);grd.addColorStop(0,`rgba(255,255,255,${f.alpha*pulse*0.9})`);grd.addColorStop(0.3,`rgba(${f.cr},${f.cg},${f.cb},${f.alpha*pulse*0.6})`);grd.addColorStop(1,`rgba(${f.cr},${f.cg},${f.cb},0)`);ctx.beginPath();ctx.arc(f.x,f.y,f.r*3.5,0,Math.PI*2);ctx.fillStyle=grd;ctx.fill();f.x+=f.vx;f.y+=f.vy;if(f.x<-20)f.x=W+20;if(f.x>W+20)f.x=-20;if(f.y<-20)f.y=H+20;if(f.y>H+20)f.y=-20;});
+  for(let i=dustMotes.length-1;i>=0;i--){const d=dustMotes[i];d.life++;const lr=d.life/d.maxLife;const fade=lr<0.15?lr/0.15:lr>0.8?1-(lr-0.8)/0.2:1;const pulse=Math.sin(t*d.speed*1000+d.phase)*0.3+0.7;const a=d.maxAlpha*fade*pulse;const grd=ctx.createRadialGradient(d.x,d.y,0,d.x,d.y,d.r*2.5);grd.addColorStop(0,`rgba(255,255,255,${a*0.8})`);grd.addColorStop(0.4,`rgba(${d.cr},${d.cg},${d.cb},${a*0.5})`);grd.addColorStop(1,`rgba(${d.cr},${d.cg},${d.cb},0)`);ctx.beginPath();ctx.arc(d.x,d.y,d.r*2.5,0,Math.PI*2);ctx.fillStyle=grd;ctx.fill();d.x+=d.vx;d.y+=d.vy;if(d.life>=d.maxLife||d.y<-20)dustMotes[i]=makeDust(false);}
+  for(let i=trailDust.length-1;i>=0;i--){const d=trailDust[i];if(d.r<0.6){trailDust.splice(i,1);continue;}const grd=ctx.createRadialGradient(d.x,d.y,0,d.x,d.y,d.r*2);grd.addColorStop(0,`rgba(255,255,255,${d.alpha*0.9})`);grd.addColorStop(0.4,`rgba(${d.cr},${d.cg},${d.cb},${d.alpha*0.7})`);grd.addColorStop(1,`rgba(${d.cr},${d.cg},${d.cb},0)`);ctx.beginPath();ctx.arc(d.x,d.y,d.r*2,0,Math.PI*2);ctx.fillStyle=grd;ctx.fill();d.x+=d.vx;d.y+=d.vy;d.vy+=d.gravity;d.vx*=0.97;d.vy*=0.97;d.alpha-=d.decay;d.r*=0.97;}
+  requestAnimationFrame(draw);
+}
+requestAnimationFrame(draw);
+</script>
+<script src="assets/kasadefteri/images.js" onerror="console.log('images.js not found')"></script>
+</body>
+</html>
