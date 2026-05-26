@@ -3,18 +3,24 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="description" content="Kasa Defteri – Axyon | Küçük işletmeler, serbest çalışanlar ve bireysel kullanıcılar için sade gelir-gider, cari takip ve yedekleme uygulaması.">
+<meta name="description" content="Kasa Defteri – Axyon | Küçük işletmeler ve serbest çalışanlar için gelir, gider, cari takip ve şifreli yedekleme uygulaması.">
 <title>Kasa Defteri – Axyon | AXYON.DEV</title>
-<link rel="icon" type="image/png" href="../kasa-defteri/assets/app-icon.png"/>
-<meta property="og:title" content="Kasa Defteri – Axyon | Gelir Gider Takip Uygulaması"/>
-<meta property="og:description" content="Küçük işletmeler ve serbest çalışanlar için gelir, gider, cari takip ve şifreli yedekleme uygulaması."/>
-<meta property="og:image" content="https://www.axyondev.com/kasa-defteri/assets/feature.png"/>
-<meta property="og:type" content="website"/>
-<meta property="og:url" content="https://www.axyondev.com/kasa-defteri/"/>
-<meta name="twitter:card" content="summary_large_image"/>
-<meta name="twitter:title" content="Kasa Defteri – Axyon | Gelir Gider Takip Uygulaması"/>
-<meta name="twitter:description" content="Küçük işletmeler ve serbest çalışanlar için gelir, gider, cari takip ve şifreli yedekleme uygulaması."/>
-<meta name="twitter:image" content="https://www.axyondev.com/kasa-defteri/assets/feature.png"/>
+<link rel="icon" type="image/png" href="../assets/favicon.png">
+<link rel="apple-touch-icon" href="../assets/apple-touch-icon.png">
+<link rel="canonical" href="https://www.axyondev.com/kasa-defteri/">
+<meta property="og:title" content="Kasa Defteri – Axyon | Gelir Gider Takip Uygulaması">
+<meta property="og:description" content="Gelir, gider, cari, planlı ödeme ve şifreli yedekleme için sade Android uygulaması.">
+<meta property="og:image" content="https://www.axyondev.com/kasa-defteri/assets/feature.png">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://www.axyondev.com/kasa-defteri/">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Kasa Defteri – Axyon | Gelir Gider Takip Uygulaması">
+<meta name="twitter:description" content="Gelir, gider, cari, planlı ödeme ve şifreli yedekleme için sade Android uygulaması.">
+<meta name="twitter:image" content="https://www.axyondev.com/kasa-defteri/assets/feature.png">
+
+
+
+
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
@@ -112,6 +118,19 @@ html,body{width:100%;background:var(--c-bg);color:var(--c-white);font-family:'Ra
 [data-theme="cloud"] .build-next,[data-theme="paper"] .build-next,[data-theme="mist"] .build-next,
 [data-theme="cloud"] .contact-strip,[data-theme="paper"] .contact-strip,[data-theme="mist"] .contact-strip,
 [data-theme="cloud"] .store-cta,[data-theme="paper"] .store-cta,[data-theme="mist"] .store-cta{background:var(--ax-panel-light)!important;border-color:rgba(10,22,40,.10)!important}
+
+
+/* AXYON final layout patch: fixed language position, safer mobile header spacing */
+.lang-bar{right:22px!important;left:auto!important;direction:ltr;text-align:left}
+html[lang="ar"] .lang-bar{right:22px!important;left:auto!important;direction:ltr;text-align:left}
+html[lang="ar"] .theme-bar{left:22px!important;right:auto!important;direction:ltr;text-align:left}
+@media(max-width:620px){
+  .lang-bar{top:12px!important;right:12px!important;left:auto!important}
+  .theme-bar{top:12px!important;left:12px!important;right:auto!important;max-width:calc(100vw - 116px);overflow-x:auto;scrollbar-width:none}
+  .theme-bar::-webkit-scrollbar{display:none}
+  .top-nav{padding-top:96px!important}
+  .back-link{padding-top:96px!important}
+}
 
 </style>
 </head>
@@ -232,7 +251,7 @@ html,body{width:100%;background:var(--c-bg);color:var(--c-white);font-family:'Ra
 
   <section class="section">
     <div class="section-label" data-i18n="lang_label">◈ DİL DESTEĞİ</div>
-    <h2 class="section-title" data-i18n="lang_title">Türkçe ve İngilizce arayüz</h2>
+    <h2 class="section-title" data-i18n="lang_title">Türkçe, İngilizce ve Arapça arayüz</h2>
   </section>
   <div class="lang-section">
     <div class="lang-card">

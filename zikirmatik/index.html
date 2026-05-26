@@ -3,18 +3,24 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="description" content="Zikirmatik – Axyon | Zikir sayacı, namaz vakitleri, ezan hatırlatması ve Esmaül Hüsna. Google Play'de ücretsiz.">
-<link rel="icon" type="image/png" href="../kasa-defteri/assets/app-icon.png"/>
-<meta property="og:title" content="Zikirmatik – Axyon | Dijital Tesbih Uygulaması"/>
-<meta property="og:description" content="Dijital tesbih, zikir sayacı ve namaz vakitleri için sade Android uygulaması. Google Play'de ücretsiz."/>
-<meta property="og:image" content="https://www.axyondev.com/zikirmatik/assets/feature.png"/>
-<meta property="og:type" content="website"/>
-<meta property="og:url" content="https://www.axyondev.com/zikirmatik/"/>
-<meta name="twitter:card" content="summary_large_image"/>
-<meta name="twitter:title" content="Zikirmatik – Axyon | Dijital Tesbih Uygulaması"/>
-<meta name="twitter:description" content="Dijital tesbih, zikir sayacı ve namaz vakitleri için sade Android uygulaması. Google Play'de ücretsiz."/>
-<meta name="twitter:image" content="https://www.axyondev.com/zikirmatik/assets/feature.png"/>
+<meta name="description" content="Zikirmatik – Axyon | Zikir sayacı, namaz vakitleri, Esmaül Hüsna ve sade mobil ibadet takip uygulaması.">
+
+
+
 <title>Zikirmatik – Axyon | AXYON.DEV</title>
+<link rel="icon" type="image/png" href="../assets/favicon.png">
+<link rel="apple-touch-icon" href="../assets/apple-touch-icon.png">
+<link rel="canonical" href="https://www.axyondev.com/zikirmatik/">
+<meta property="og:title" content="Zikirmatik – Axyon | Dijital Zikir Uygulaması">
+<meta property="og:description" content="Zikir sayacı, namaz vakitleri, Esmaül Hüsna ve sade Android deneyimi.">
+<meta property="og:image" content="https://www.axyondev.com/zikirmatik/assets/feature.png">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://www.axyondev.com/zikirmatik/">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Zikirmatik – Axyon | Dijital Zikir Uygulaması">
+<meta name="twitter:description" content="Zikir sayacı, namaz vakitleri, Esmaül Hüsna ve sade Android deneyimi.">
+<meta name="twitter:image" content="https://www.axyondev.com/zikirmatik/assets/feature.png">
+
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@400;600;700&family=Noto+Naskh+Arabic:wght@400;700&display=swap" rel="stylesheet">
 <style>
@@ -311,6 +317,19 @@ html[lang="ar"]{direction:rtl}
 [data-theme="cloud"] .contact-strip,[data-theme="paper"] .contact-strip,[data-theme="mist"] .contact-strip,
 [data-theme="cloud"] .store-cta,[data-theme="paper"] .store-cta,[data-theme="mist"] .store-cta{background:var(--ax-panel-light)!important;border-color:rgba(10,22,40,.10)!important}
 
+
+/* AXYON final layout patch: fixed language position, safer mobile header spacing */
+.lang-bar{right:22px!important;left:auto!important;direction:ltr;text-align:left}
+html[lang="ar"] .lang-bar{right:22px!important;left:auto!important;direction:ltr;text-align:left}
+html[lang="ar"] .theme-bar{left:22px!important;right:auto!important;direction:ltr;text-align:left}
+@media(max-width:620px){
+  .lang-bar{top:12px!important;right:12px!important;left:auto!important}
+  .theme-bar{top:12px!important;left:12px!important;right:auto!important;max-width:calc(100vw - 116px);overflow-x:auto;scrollbar-width:none}
+  .theme-bar::-webkit-scrollbar{display:none}
+  .top-nav{padding-top:96px!important}
+  .back-link{padding-top:96px!important}
+}
+
 </style>
 </head>
 <body>
@@ -347,7 +366,7 @@ html[lang="ar"]{direction:rtl}
 
   <!-- HERO -->
   <div class="hero">
-    <img class="hero-logo" src="assets/logo.png" alt="Zikirmatik Logo" data-zkr-img="logo">
+    <img class="hero-logo" src="assets/logo.png" alt="Zikirmatik Logo">
     <div class="hero-text">
       <div class="hero-badge" data-i18n="hero_badge">📿 MOBİL UYGULAMA · ANDROID</div>
       <h1 class="hero-title"><span>Zikirmatik</span> – Axyon</h1>
@@ -359,7 +378,7 @@ html[lang="ar"]{direction:rtl}
         <span class="tag tag-purple" data-i18n="tag_esma">Esmaül Hüsna</span>
         <span class="tag tag-green" data-i18n="tag_noads">Reklamsız Pro</span>
       </div>
-      <a href="https://play.google.com/store/apps/developer?id=axyon" target="_blank" rel="noopener" class="hero-cta">
+      <a href="https://play.google.com/store/apps/details?id=com.axyon.zikirmatik" target="_blank" rel="noopener" class="hero-cta">
         <span>📲</span>
         <span data-i18n="hero_cta">Google Play'de İndir</span>
         <span class="hero-cta-arrow">→</span>
@@ -369,7 +388,7 @@ html[lang="ar"]{direction:rtl}
 
   <!-- FEATURE GRAPHIC -->
   <div class="feature-wrap">
-    <img class="feature-img" src="assets/feature.png" alt="Zikirmatik Feature" data-zkr-img="feature">
+    <img class="feature-img" src="assets/feature.png" alt="Zikirmatik Feature">
   </div>
 
   <!-- FEATURES -->
@@ -418,19 +437,19 @@ html[lang="ar"]{direction:rtl}
     <h2 class="section-title" data-i18n="screen_title">Zikir ve vakitler tek uygulamada</h2>
     <div class="screenshots-grid">
       <div class="shot-wrap">
-        <img src="assets/screen1.jpg" alt="Genel Bakış" data-zkr-img="screen1">
+        <img src="assets/screen1.jpg" alt="Genel Bakış">
         <div class="shot-caption" data-i18n="cap1">Zikir · Rehber · Vakitler</div>
       </div>
       <div class="shot-wrap">
-        <img src="assets/screen2.jpg" alt="Ayarlar ve Hilal Pro" data-zkr-img="screen2">
+        <img src="assets/screen2.jpg" alt="Ayarlar ve Hilal Pro">
         <div class="shot-caption" data-i18n="cap2">Ayarlar · Hilal Pro</div>
       </div>
       <div class="shot-wrap">
-        <img src="assets/screen3.jpg" alt="10 inç Tablet Genel Bakış" data-zkr-img="screen3">
+        <img src="assets/screen3.jpg" alt="10 inç Tablet Genel Bakış">
         <div class="shot-caption" data-i18n="cap3">Tablet 10″ · Kişiselleştirme</div>
       </div>
       <div class="shot-wrap">
-        <img src="assets/screen4.jpg" alt="10 inç Tablet Ayarlar" data-zkr-img="screen4">
+        <img src="assets/screen4.jpg" alt="10 inç Tablet Ayarlar">
         <div class="shot-caption" data-i18n="cap4">Tablet 10″ · Pro Ekranı</div>
       </div>
     </div>
@@ -504,7 +523,7 @@ html[lang="ar"]{direction:rtl}
   </div>
 
   <!-- STORE CTA -->
-  <a href="https://play.google.com/store/apps/developer?id=axyon" target="_blank" rel="noopener" class="store-cta">
+  <a href="https://play.google.com/store/apps/details?id=com.axyon.zikirmatik" target="_blank" rel="noopener" class="store-cta">
     <div class="store-icon">📲</div>
     <div class="store-info">
       <div class="store-label" data-i18n="store_label">Android Uygulama · Google Play</div>
@@ -522,7 +541,7 @@ html[lang="ar"]{direction:rtl}
       <a href="../index.html" class="footer-link" data-i18n="footer_home">Ana Sayfa</a>
       <a href="privacy/index.html" class="footer-link" data-i18n="footer_privacy">Gizlilik Politikası</a>
       <a href="../delete-data.html" class="footer-link" data-i18n="footer_delete">Veri Silme</a>
-      <a href="https://play.google.com/store/apps/developer?id=axyon" target="_blank" rel="noopener" class="footer-link">Google Play</a>
+      <a href="https://play.google.com/store/apps/details?id=com.axyon.zikirmatik" target="_blank" rel="noopener" class="footer-link">Google Play</a>
     </div>
     <div class="footer-copy">© 2026 AXYON.DEV</div>
   </footer>
@@ -709,6 +728,5 @@ function draw(ts){
 }
 requestAnimationFrame(draw);
 </script>
-<script src="assets/images.js" onerror="console.log('images.js not found, using relative paths')"></script>
 </body>
 </html>
