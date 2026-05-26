@@ -67,6 +67,68 @@ html[lang="ar"] .theme-bar{left:22px!important;right:auto!important;direction:lt
   .back-link{padding-top:96px!important}
 }
 
+
+/* FINAL POLISH: animated light-theme background layers */
+html[data-theme="cloud"] body::before,
+html[data-theme="paper"] body::before,
+html[data-theme="mist"] body::before{
+  content:"";
+  position:fixed;
+  inset:-22%;
+  z-index:0;
+  pointer-events:none;
+  background:
+    radial-gradient(circle at 18% 22%, rgba(77,159,255,.20) 0, transparent 32%),
+    radial-gradient(circle at 78% 18%, rgba(240,180,41,.18) 0, transparent 30%),
+    radial-gradient(circle at 48% 78%, rgba(255,77,141,.13) 0, transparent 36%),
+    linear-gradient(135deg, rgba(255,255,255,.50), rgba(255,255,255,0));
+  filter:blur(12px);
+  opacity:.95;
+  transform:translate3d(0,0,0) scale(1);
+  animation:lightActionBg 18s ease-in-out infinite alternate;
+}
+html[data-theme="cloud"] body::after,
+html[data-theme="paper"] body::after,
+html[data-theme="mist"] body::after{
+  content:"";
+  position:fixed;
+  inset:0;
+  z-index:1;
+  pointer-events:none;
+  opacity:.34;
+  background-image:
+    radial-gradient(circle at 12% 18%, rgba(77,159,255,.35) 0 1px, transparent 2px),
+    radial-gradient(circle at 82% 28%, rgba(240,180,41,.30) 0 1px, transparent 2px),
+    radial-gradient(circle at 44% 72%, rgba(255,77,141,.24) 0 1px, transparent 2px);
+  background-size:120px 120px,150px 150px,180px 180px;
+  animation:lightParticleDrift 22s linear infinite;
+}
+html[data-theme="cloud"] #bg-canvas,
+html[data-theme="paper"] #bg-canvas,
+html[data-theme="mist"] #bg-canvas{opacity:.72;mix-blend-mode:multiply;}
+html[data-theme="cloud"] .grid-overlay,
+html[data-theme="paper"] .grid-overlay,
+html[data-theme="mist"] .grid-overlay{opacity:.72;}
+html[data-theme="cloud"] .scanline,
+html[data-theme="paper"] .scanline,
+html[data-theme="mist"] .scanline{opacity:.42;}
+@keyframes lightActionBg{
+  0%{transform:translate3d(-2%,-1%,0) scale(1);filter:blur(12px) saturate(1.05);}
+  45%{transform:translate3d(2%,1%,0) scale(1.05);filter:blur(15px) saturate(1.18);}
+  100%{transform:translate3d(1%,-2%,0) scale(1.02);filter:blur(13px) saturate(1.1);}
+}
+@keyframes lightParticleDrift{
+  0%{background-position:0 0,0 0,0 0;}
+  100%{background-position:120px 80px,-150px 110px,180px -120px;}
+}
+@media (prefers-reduced-motion:reduce){
+  html[data-theme="cloud"] body::before,
+  html[data-theme="paper"] body::before,
+  html[data-theme="mist"] body::before,
+  html[data-theme="cloud"] body::after,
+  html[data-theme="paper"] body::after,
+  html[data-theme="mist"] body::after{animation:none;}
+}
 </style></head><body><canvas id=bg-canvas></canvas><div class=grid-overlay></div><div class=scanline></div><div class=theme-bar><span class=theme-label id=theme-name>VOID</span><button class="theme-dot active" data-t=void title=Void onclick="setTheme('void')"></button><button class=theme-dot data-t=obsidian title=Obsidian onclick="setTheme('obsidian')"></button><button class=theme-dot data-t=ember title=Ember onclick="setTheme('ember')"></button><div class=theme-sep></div><button class=theme-dot data-t=cloud title=Cloud onclick="setTheme('cloud')"></button><button class=theme-dot data-t=paper title=Paper onclick="setTheme('paper')"></button><button class=theme-dot data-t=mist title=Mist onclick="setTheme('mist')"></button></div><div class=lang-bar><button class="lang-btn active" data-lang=tr onclick="setLang('tr')">TR</button><button class=lang-btn data-lang=en onclick="setLang('en')">EN</button><button class=lang-btn data-lang=ar onclick="setLang('ar')">AR</button></div><div class=page><a href=index.html class=back-link>← <span data-i18n=back>Ana Sayfa</span></a><div class=hero><span class=hero-icon>🛡️</span><div class=hero-tag data-i18n=hero_tag>◈ GİZLİLİK & VERİ ◈</div><h1 class=hero-title data-i18n=hero_title>VERİ SİLME TALEBİ</h1><p class=hero-sub data-i18n=hero_sub> Kişisel verilerinizin silinmesini talep etme hakkına sahipsiniz. Aşağıdaki adımları izleyerek talebinizi iletebilirsiniz. </p></div><div class=divider></div><div class=info-card><div class=info-head data-i18n=steps_head>◈ NASIL YAPILIR?</div><div class=steps><div class=step><div class=step-num>01</div><div class=step-body><div class=step-title data-i18n=s1_title>E-posta gönderin</div><div class=step-desc data-i18n=s1_desc>Aşağıdaki butona tıklayın veya doğrudan axyon.dev@gmail.com adresine e-posta gönderin.</div></div></div><div class=step><div class=step-num>02</div><div class=step-body><div class=step-title data-i18n=s2_title>Bilgilerinizi belirtin</div><div class=step-desc data-i18n=s2_desc>E-postanızda hangi uygulamayı kullandığınızı ve varsa satın alma/abonelik işlem numaranızı veya Google Play sipariş bilginizi belirtin.</div></div></div><div class=step><div class=step-num>03</div><div class=step-body><div class=step-title data-i18n=s3_title>İşlem tamamlanır</div><div class=step-desc data-i18n=s3_desc>Talebiniz en geç 30 gün içinde işleme alınır. Tamamlandığında e-posta ile bilgilendirilirsiniz.</div></div></div></div></div><div class=cta-wrap><a id=cta-btn href="mailto:axyon.dev@gmail.com?subject=Veri%20Silme%20Talebi&body=Merhaba%2C%20kişisel%20verilerimin%20silinmesini%20talep%20ediyorum.%0A%0AUygulama%3A%20%0AKayıtlı%20e-posta%3A%20" class=cta-btn><span class=cta-icon>✉️</span><span data-i18n=cta_label>Talep E-postası Gönder</span><span class=cta-arrow>→</span></a></div><div class=email-strip><span class=email-label data-i18n=or_label>veya doğrudan</span><a href=mailto:axyon.dev@gmail.com class=email-val>axyon.dev@gmail.com</a></div><div class=divider></div><div class=notice><span class=notice-icon>⚠️</span><span class=notice-text data-i18n=notice> Veri silme işlemi geri alınamaz. Uygulamaya bağlı silinebilir verileriniz ve destek talepleriniz kalıcı olarak silinir. Uygulama içi satın alımlarınız bu işlemden etkilenmez. </span></div><footer class=footer><div class=footer-logo>AXYON.DEV</div><div class="footer-links" style="display:flex;gap:18px;justify-content:center;margin-top:12px;flex-wrap:wrap"><a href="index.html" class="footer-link" data-i18n="back">Ana Sayfa</a><a href="mailto:axyon.dev@gmail.com" class="footer-link">axyon.dev@gmail.com</a></div><div class=footer-copy>© 2026 AXYON.DEV</div></footer></div><script>const THEMES=['void','obsidian','ember','cloud','paper','mist'];const THEME_LABELS={void:'VOID',obsidian:'OBSIDIAN',ember:'EMBER',cloud:'CLOUD',paper:'PAPER',mist:'MIST'};function setTheme(name){if(!THEMES.includes(name))name='void';document.documentElement.dataset.theme=name;document.querySelectorAll('.theme-dot').forEach(d=>d.classList.toggle('active',d.dataset.t===name));const lbl=document.getElementById('theme-name');if(lbl)lbl.textContent=THEME_LABELS[name];try{localStorage.setItem('axyon-theme',name);}catch(e){}}
 try{const s=localStorage.getItem('axyon-theme');if(s&&THEMES.includes(s))setTheme(s);}catch(e){}
 const i18n={tr:{back:'Ana Sayfa',hero_tag:'◈ GİZLİLİK & VERİ ◈',hero_title:'VERİ SİLME TALEBİ',hero_sub:'Kişisel verilerinizin silinmesini talep etme hakkına sahipsiniz. Aşağıdaki adımları izleyerek talebinizi iletebilirsiniz.',steps_head:'◈ NASIL YAPILIR?',s1_title:'E-posta gönderin',s1_desc:'Aşağıdaki butona tıklayın veya doğrudan axyon.dev@gmail.com adresine e-posta gönderin.',s2_title:'Bilgilerinizi belirtin',s2_desc:'E-postanızda hangi uygulamayı kullandığınızı ve varsa satın alma/abonelik işlem numaranızı veya Google Play sipariş bilginizi belirtin.',s3_title:'İşlem tamamlanır',s3_desc:'Talebiniz en geç 30 gün içinde işleme alınır. Tamamlandığında e-posta ile bilgilendirilirsiniz.',cta_label:'Talep E-postası Gönder',or_label:'veya doğrudan',notice:'Veri silme işlemi geri alınamaz. Uygulamaya bağlı silinebilir verileriniz ve destek talepleriniz kalıcı olarak silinir. Uygulama içi satın alımlarınız bu işlemden etkilenmez.',mailto:'mailto:axyon.dev@gmail.com?subject=Veri%20Silme%20Talebi&body=Merhaba%2C%20ki%C5%9Fisel%20verilerimin%20silinmesini%20talep%20ediyorum.%0A%0AUygulama%3A%20%0AKay%C4%B1tl%C4%B1%20e-posta%3A%20',},en:{back:'Home',hero_tag:'◈ PRIVACY & DATA ◈',hero_title:'DATA DELETION REQUEST',hero_sub:'You have the right to request deletion of your personal data. Follow the steps below to submit your request.',steps_head:'◈ HOW IT WORKS',s1_title:'Send an email',s1_desc:'Click the button below or send an email directly to axyon.dev@gmail.com.',s2_title:'Include your details',s2_desc:'Mention which app you used and, if available, your purchase/subscription order number or Google Play order details.',s3_title:'Request is processed',s3_desc:'Your request will be processed within 30 days. You will be notified by email once completed.',cta_label:'Send Deletion Request',or_label:'or directly',notice:'Data deletion is irreversible. Any deletable data tied to the app and your support requests will be permanently removed. In-app purchases are not affected by this process.',mailto:'mailto:axyon.dev@gmail.com?subject=Data%20Deletion%20Request&body=Hello%2C%20I%20would%20like%20to%20request%20deletion%20of%20my%20personal%20data.%0A%0AApp%3A%20%0ARegistered%20email%3A%20',},ar:{back:'الصفحة الرئيسية',hero_tag:'◈ الخصوصية والبيانات ◈',hero_title:'طلب حذف البيانات',hero_sub:'يحق لك طلب حذف بياناتك الشخصية. اتبع الخطوات أدناه لتقديم طلبك.',steps_head:'◈ كيف يتم ذلك؟',s1_title:'أرسل بريداً إلكترونياً',s1_desc:'انقر على الزر أدناه أو أرسل بريداً إلكترونياً مباشرةً إلى axyon.dev@gmail.com.',s2_title:'أدرج تفاصيلك',s2_desc:'اذكر اسم التطبيق الذي استخدمته، وإن توفَّر رقم طلب الشراء/الاشتراك أو تفاصيل طلب Google Play.',s3_title:'تتم معالجة الطلب',s3_desc:'سيُعالَج طلبك خلال 30 يوماً على الأكثر. ستُخطَر بالبريد الإلكتروني عند الانتهاء.',cta_label:'إرسال طلب الحذف',or_label:'أو مباشرةً على',notice:'حذف البيانات لا رجعة فيه. ستُحذف بياناتك القابلة للحذف المرتبطة بالتطبيق وطلبات الدعم نهائياً. لا تتأثر عمليات الشراء داخل التطبيق بهذه العملية.',mailto:'mailto:axyon.dev@gmail.com?subject=%D8%B7%D9%84%D8%A8%20%D8%AD%D8%B0%D9%81%20%D8%A7%D9%84%D8%A8%D9%8A%D8%A7%D9%86%D8%A7%D8%AA&body=%D9%85%D8%B1%D8%AD%D8%A8%D8%A7%D8%8C%20%D8%A3%D9%88%D8%AF%20%D8%B7%D9%84%D8%A8%20%D8%AD%D8%B0%D9%81%20%D8%A8%D9%8A%D8%A7%D9%86%D8%A7%D8%AA%D9%8A%20%D8%A7%D9%84%D8%B4%D8%AE%D8%B5%D9%8A%D8%A9.%0A%0A%D8%A7%D9%84%D8%AA%D8%B7%D8%A8%D9%8A%D9%82%3A%20%0A%D8%A7%D9%84%D8%A8%D8%B1%D9%8A%D8%AF%20%D8%A7%D9%84%D9%85%D8%B3%D8%AC%D9%91%D9%84%3A%20',}};function setLang(lang){document.documentElement.lang=lang;document.documentElement.dir=(lang==='ar'?'rtl':'ltr');document.querySelectorAll('.lang-btn').forEach(b=>b.classList.toggle('active',b.dataset.lang===lang));const d=i18n[lang];document.querySelectorAll('[data-i18n]').forEach(el=>{const v=d[el.dataset.i18n];if(v!==undefined)el.textContent=v;});const btn=document.getElementById('cta-btn');if(btn)btn.href=d.mailto;document.title='AXYON.DEV — '+d.hero_title;}

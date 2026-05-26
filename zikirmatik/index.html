@@ -94,6 +94,19 @@ html[lang="ar"]{direction:rtl}
   color:transparent;background:linear-gradient(90deg,var(--c-crystal),var(--c-gold));
   -webkit-background-clip:text;background-clip:text;text-decoration:none}
 
+
+/* FINAL STANDARD: product privacy policy button in app pages */
+.top-nav{direction:ltr;text-align:left}
+.nav-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.privacy-nav-btn{border-color:rgba(240,180,41,.38)!important;background:rgba(240,180,41,.08)!important;color:var(--c-gold)!important}
+.privacy-nav-btn:hover{border-color:rgba(240,180,41,.72)!important;background:rgba(240,180,41,.16)!important;box-shadow:0 0 20px rgba(240,180,41,.24)!important}
+.privacy-nav-btn span{direction:auto;text-align:start}
+@media(max-width:620px){
+  .top-nav{align-items:flex-start!important;gap:14px!important}
+  .nav-actions{width:100%;gap:8px}
+  .nav-actions .back-btn{font-size:9px;padding:8px 13px;letter-spacing:.09em}
+}
+
 /* ── HERO ── */
 .hero{width:100%;max-width:900px;display:grid;grid-template-columns:auto 1fr;gap:32px;
   align-items:center;margin-bottom:40px;padding:36px 40px;
@@ -330,6 +343,68 @@ html[lang="ar"] .theme-bar{left:22px!important;right:auto!important;direction:lt
   .back-link{padding-top:96px!important}
 }
 
+
+/* FINAL POLISH: animated light-theme background layers */
+html[data-theme="cloud"] body::before,
+html[data-theme="paper"] body::before,
+html[data-theme="mist"] body::before{
+  content:"";
+  position:fixed;
+  inset:-22%;
+  z-index:0;
+  pointer-events:none;
+  background:
+    radial-gradient(circle at 18% 22%, rgba(77,159,255,.20) 0, transparent 32%),
+    radial-gradient(circle at 78% 18%, rgba(240,180,41,.18) 0, transparent 30%),
+    radial-gradient(circle at 48% 78%, rgba(255,77,141,.13) 0, transparent 36%),
+    linear-gradient(135deg, rgba(255,255,255,.50), rgba(255,255,255,0));
+  filter:blur(12px);
+  opacity:.95;
+  transform:translate3d(0,0,0) scale(1);
+  animation:lightActionBg 18s ease-in-out infinite alternate;
+}
+html[data-theme="cloud"] body::after,
+html[data-theme="paper"] body::after,
+html[data-theme="mist"] body::after{
+  content:"";
+  position:fixed;
+  inset:0;
+  z-index:1;
+  pointer-events:none;
+  opacity:.34;
+  background-image:
+    radial-gradient(circle at 12% 18%, rgba(77,159,255,.35) 0 1px, transparent 2px),
+    radial-gradient(circle at 82% 28%, rgba(240,180,41,.30) 0 1px, transparent 2px),
+    radial-gradient(circle at 44% 72%, rgba(255,77,141,.24) 0 1px, transparent 2px);
+  background-size:120px 120px,150px 150px,180px 180px;
+  animation:lightParticleDrift 22s linear infinite;
+}
+html[data-theme="cloud"] #bg-canvas,
+html[data-theme="paper"] #bg-canvas,
+html[data-theme="mist"] #bg-canvas{opacity:.72;mix-blend-mode:multiply;}
+html[data-theme="cloud"] .grid-overlay,
+html[data-theme="paper"] .grid-overlay,
+html[data-theme="mist"] .grid-overlay{opacity:.72;}
+html[data-theme="cloud"] .scanline,
+html[data-theme="paper"] .scanline,
+html[data-theme="mist"] .scanline{opacity:.42;}
+@keyframes lightActionBg{
+  0%{transform:translate3d(-2%,-1%,0) scale(1);filter:blur(12px) saturate(1.05);}
+  45%{transform:translate3d(2%,1%,0) scale(1.05);filter:blur(15px) saturate(1.18);}
+  100%{transform:translate3d(1%,-2%,0) scale(1.02);filter:blur(13px) saturate(1.1);}
+}
+@keyframes lightParticleDrift{
+  0%{background-position:0 0,0 0,0 0;}
+  100%{background-position:120px 80px,-150px 110px,180px -120px;}
+}
+@media (prefers-reduced-motion:reduce){
+  html[data-theme="cloud"] body::before,
+  html[data-theme="paper"] body::before,
+  html[data-theme="mist"] body::before,
+  html[data-theme="cloud"] body::after,
+  html[data-theme="paper"] body::after,
+  html[data-theme="mist"] body::after{animation:none;}
+}
 </style>
 </head>
 <body>
@@ -360,7 +435,10 @@ html[lang="ar"] .theme-bar{left:22px!important;right:auto!important;direction:lt
 
   <!-- TOP NAV -->
   <nav class="top-nav">
-    <a href="../index.html" class="back-btn">← <span data-i18n="back">Ana Sayfa</span></a>
+    <div class="nav-actions">
+      <a href="../index.html" class="back-btn">← <span data-i18n="back">Ana Sayfa</span></a>
+      <a href="privacy/index.html" class="back-btn privacy-nav-btn">🔒 <span data-i18n="privacy_nav">Zikirmatik Gizlilik Politikası</span></a>
+    </div>
     <a href="../index.html" class="site-wordmark">AXYON.DEV</a>
   </nav>
 
@@ -552,7 +630,7 @@ html[lang="ar"] .theme-bar{left:22px!important;right:auto!important;direction:lt
 /* ── i18n ── */
 const i18n={
   tr:{
-    back:'Ana Sayfa',hero_badge:'📿 MOBİL UYGULAMA · ANDROID',
+    back:'Ana Sayfa',privacy_nav:'Zikirmatik Gizlilik Politikası',hero_badge:'📿 MOBİL UYGULAMA · ANDROID',
     hero_sub:'Zikir sayacı, namaz vakitleri ve ezan hatırlatması tek uygulamada. Sade arayüz, konum bazlı vakitler ve günlük zikir takibi.',
     tag_free:'Ücretsiz',tag_pro:'Hilal Pro',tag_esma:'Esmaül Hüsna',tag_noads:'Reklamsız Pro',
     hero_cta:'Google Play\'de İndir',
@@ -576,7 +654,7 @@ const i18n={
     footer_home:'Ana Sayfa',footer_privacy:'Gizlilik Politikası',footer_delete:'Veri Silme'
   },
   en:{
-    back:'Home',hero_badge:'📿 MOBILE APP · ANDROID',
+    back:'Home',privacy_nav:'Zikirmatik Privacy Policy',hero_badge:'📿 MOBILE APP · ANDROID',
     hero_sub:'Dhikr counter, prayer times and adhan reminder in one app. Simple UI, location-based times and daily dhikr tracking.',
     tag_free:'Free',tag_pro:'Hilal Pro',tag_esma:'99 Names',tag_noads:'Ad-free Pro',
     hero_cta:'Download on Google Play',
@@ -600,7 +678,7 @@ const i18n={
     footer_home:'Home',footer_privacy:'Privacy Policy',footer_delete:'Data Deletion'
   },
   ar:{
-    back:'الرئيسية',hero_badge:'📿 تطبيق موبايل · أندرويد',
+    back:'الرئيسية',privacy_nav:'سياسة الخصوصية لتطبيق Zikirmatik',hero_badge:'📿 تطبيق موبايل · أندرويد',
     hero_sub:'عداد الأذكار وأوقات الصلاة وتذكير الأذان في تطبيق واحد. واجهة بسيطة وأوقات مبنية على الموقع.',
     tag_free:'مجاني',tag_pro:'هلال برو',tag_esma:'أسماء الله الحسنى',tag_noads:'بدون إعلانات',
     hero_cta:'تنزيل من Google Play',
