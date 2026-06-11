@@ -83,6 +83,14 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .list-item.active-item{color:var(--accent);background:var(--list-hover)}
 .list-item-ref{font-size:.63rem;color:var(--text-dim);letter-spacing:.06em;white-space:nowrap;flex-shrink:0}
 
+
+/* ── BIG CARD (Besmele / Sadaka) ─────────────────────────── */
+.card.big-card .arabic-text{font-size:clamp(2.8rem,8vw,4.4rem);line-height:2.0}
+.card.big-card .translit-text{font-size:clamp(1.5rem,3.5vw,2.1rem);line-height:1.85}
+.card.big-card .meaning-text{font-size:clamp(1.4rem,3.2vw,2rem);line-height:1.85}
+.card.big-card .arabic-section{padding:3rem 2rem 2.5rem}
+.card.big-card .translit-section,.card.big-card .meaning-section{padding:1.6rem 2rem 2rem}
+
 .hint{margin-top:2.2rem;font-size:.63rem;font-weight:300;letter-spacing:.1em;color:var(--text-dim);opacity:.45;text-align:center}
 
 @media(max-width:600px){
@@ -152,6 +160,11 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 
 <script>
 const prayers = [
+  {source:"Besmele",ayahs:[],big:true,
+   arabic:"بِسْمِ اللَّهِ الرَّحْمَّنِ الرَّحِيمِ",
+   translit:"Bismillâhirrahmânirrahîm.",
+   meaning:"Rahman ve Rahim olan Allah'ın adıyla."},
+
   {source:"Fâtiha, 5-7",ayahs:[{s:1,a:5},{s:1,a:6},{s:1,a:7}],
    arabic:"\u0625\u0650\u064a\u064e\u0651\u0627\u0643\u064e \u0646\u064e\u0639\u0652\u0628\u064f\u062f\u064f \u0648\u064e\u0625\u0650\u064a\u064e\u0651\u0627\u0643\u064e \u0646\u064e\u0633\u0652\u062a\u064e\u0639\u0650\u064a\u0646\u064f \u06dd \u0627\u0650\u0647\u0652\u062f\u0650\u0646\u064e\u0627 \u0627\u0644\u0635\u0651\u0650\u0631\u064e\u0627\u0637\u064e \u0627\u0644\u0652\u0645\u064f\u0633\u0652\u062a\u064e\u0642\u0650\u064a\u0645\u064e \u06dd \u0635\u0650\u0631\u064e\u0627\u0637\u064e \u0627\u0644\u064e\u0651\u0630\u0650\u064a\u0646\u064e \u0623\u064e\u0646\u0652\u0639\u064e\u0645\u0652\u062a\u064e \u0639\u064e\u0644\u064e\u064a\u0652\u0647\u0650\u0645\u0652 \u063a\u064e\u064a\u0652\u0631\u0650 \u0627\u0644\u0652\u0645\u064e\u063a\u0652\u0636\u064f\u0648\u0628\u0650 \u0639\u064e\u0644\u064e\u064a\u0652\u0647\u0650\u0645\u0652 \u0648\u064e\u0644\u064e\u0627 \u0627\u0644\u0636\u064e\u0651\u0627\u0644\u0651\u0650\u064a\u0646\u064e",
    meaning:"Yalnız Sana kulluk eder, yalnız Senden yardım dileriz. Bizi dosdoğru yola ilet. Kendilerine nimet verdiklerinin yoluna; gazaba uğrayanların ve sapmışların yoluna değil.",
@@ -235,7 +248,12 @@ const prayers = [
   {source:"Mü'minûn, 97-98",ayahs:[{s:23,a:97},{s:23,a:98}],
    arabic:"\u0631\u064e\u0628\u0651\u0650 \u0623\u064e\u0639\u064f\u0648\u0630\u064f \u0628\u0650\u0643\u064e \u0645\u0650\u0646\u0652 \u0647\u064e\u0645\u064e\u0632\u064e\u0627\u062a\u0650 \u0627\u0644\u0634\u064e\u0651\u064a\u064e\u0627\u0637\u0650\u064a\u0646\u064e \u06dd \u0648\u064e\u0623\u064e\u0639\u064f\u0648\u0630\u064f \u0628\u0650\u0643\u064e \u0631\u064e\u0628\u0651\u0650 \u0623\u064e\u0646\u0652 \u064a\u064e\u062d\u0652\u0636\u064f\u0631\u064f\u0648\u0646\u0650",
    meaning:"Rabbim! Şeytanların gizli kışkırtmalarından Sana sığınırım. Onların yanımda bulunmalarından da Sana sığınırım Rabbim.",
-   translit:"Rabbi eûzü bike min hemezâti'ş-şeyâtîn. Ve eûzü bike rabbi en yahdurûn."}
+   translit:"Rabbi eûzü bike min hemezâti'ş-şeyâtîn. Ve eûzü bike rabbi en yahdurûn."},
+
+  {source:"Hatim",ayahs:[],big:true,
+   arabic:"صَدَقَ اللَّهُ الْعَظِيمُ",
+   translit:"Sadakallâhü'l-azîm.",
+   meaning:"Yüce Allah doğru söyledi."}
 ];
 
 let currentIdx = 0;
@@ -255,6 +273,7 @@ function fill(p, idx) {
   document.getElementById('translit').textContent = p.translit;
   document.getElementById('meaning').textContent  = p.meaning;
   document.getElementById('source').textContent   = p.source;
+  document.getElementById('card').classList.toggle('big-card', !!p.big);
   document.getElementById('counter').textContent  = (idx+1) + ' / ' + prayers.length;
   document.getElementById('prevBtn').disabled = idx === 0;
   document.getElementById('nextBtn').disabled = idx === prayers.length-1;
