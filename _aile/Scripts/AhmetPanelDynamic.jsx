@@ -1,5 +1,5 @@
-/* ============================================================================
-   AHMET PANEL LAUNCHER v11.5 - FAVORITE BAR EDITION
+﻿/* ============================================================================
+   AHMET PANEL LAUNCHER v11.5.3 - PANELS INTEGRATION
 
    Bu dosya, Adobe Illustrator içinde çalışan bir script başlatıcı paneldir.
    Panel, scriptleri klasör yapısından okur, kategorilere ayırır ve favorileri
@@ -33,6 +33,10 @@
    - Sağ tık        → Context menü: Çalıştır / Favori / Bar
 
    VERSİYON GEÇMİŞİ:
+   v11.5.3 - ScriptsAX/Paneller kategorisi eklendi; Axyon PATH Panel v1.0.2 ve
+             Sticker Araçları v1.0.4 ana dinamik panele entegre edildi.
+   v11.5.2 - Güvenli ekran konumu: monitör/çözünürlük değişince panel ve favori bar
+             görünür alan dışındaysa otomatik merkeze/üst ortaya alınır
    v11.5 - Bağımsız Favori Barı: yatay, dinamik genişlik, manuel sıralama,
            katmanlı etiket sistemi, sağ tık context menüsü, mini mod,
            context menüye "Bar'a Ekle/Çıkar" seçeneği eklendi
@@ -109,7 +113,7 @@ var CONFIG = {
         "Script-Barcode-EAN-13-for-Adobe-AI-master"
     ],
     
-    VERSION: "11.5",
+    VERSION: "11.5.3-panels",
     
     // ---- FAVORİ BARI SABİTLERİ ----
     // Bar genişliği ekran genişliğinin bu oranı kadar olur (ilk açılışta)
@@ -195,7 +199,7 @@ var safeStringify = function(obj) {
                 // prototype zincirinden gelenleri alma
                 if (val.hasOwnProperty(key)) {
                     var v = serialize(val[key], depth + 1);
-                    if (v !== undefined) pairs.push('"' + key + '":' + v);
+                    if (v !== undefined) pairs.push(serialize(String(key), depth + 1) + ':' + v);
                 }
             }
             return '{' + pairs.join(',') + '}';
@@ -262,9 +266,15 @@ var Utils = {
      *   error   → JavaScript'in hata nesnesi (e.toString() ile metne çevrilir)
      */
     logError: function(message, error) {
+        var line = "[ERROR] " + message + ": " + (error ? error.toString() : "unknown");
+        try { $.writeln(line); } catch(e) {}
         try {
-            $.writeln("[ERROR] " + message + ": " + (error ? error.toString() : "unknown"));
-        } catch(e) {}
+            var f = new File(Folder.userData + "/AhmetPanel_ErrorLog.txt");
+            f.encoding = "UTF-8";
+            f.open("a");
+            f.writeln(new Date().toString() + " " + line);
+            f.close();
+        } catch(e2) {}
     },
     
     /*
@@ -294,16 +304,9 @@ var Utils = {
     },
     
     /*
-     * sanitizePosition: Koordinatı güvenli sınırlar içine sıkıştırır (clamp).
-     *
-     * isValidPosition() false döndürüp tamamen reddetmek yerine,
-     * bu fonksiyon değeri düzeltmeye çalışır.
-     *
-     * Örnek: x = 99999 gelirse → CONFIG.MAX_WINDOW_X değerine (10000) indirilir.
-     * Math.max(min, Math.min(değer, max)) → "clamp" denen klasik teknik.
-     *
-     * Geçersiz sayılar (NaN, dizi değil vb.) için null döner.
-     * Döndürür: [x, y] dizisi veya null
+     * sanitizePosition: Koordinatı temel güvenli sınırlar içine sıkıştırır.
+     * Bu fonksiyon sadece sayı/JSON bozukluğu için kullanılır; gerçek ekran
+     * görünürlüğü için ensureWindowOnScreen() kullanılır.
      */
     sanitizePosition: function(pos) {
         if (!pos || !(pos instanceof Array) || pos.length !== 2) {
@@ -318,6 +321,118 @@ var Utils = {
         x = Math.max(CONFIG.MIN_WINDOW_X, Math.min(x, CONFIG.MAX_WINDOW_X));
         y = Math.max(CONFIG.MIN_WINDOW_Y, Math.min(y, CONFIG.MAX_WINDOW_Y));
         return [x, y];
+    },
+
+    /*
+     * getScreens: Illustrator/ScriptUI'nin bildirdiği monitör alanlarını okur.
+     * Eğer $.screens erişilemezse 1920x1080 güvenli fallback döner.
+     */
+    getScreens: function() {
+        var screens = [];
+        try {
+            if (typeof $.screens !== 'undefined' && $.screens && $.screens.length > 0) {
+                for (var i = 0; i < $.screens.length; i++) {
+                    var s = $.screens[i];
+                    var l = Number(s.left);
+                    var t = Number(s.top);
+                    var r = Number(s.right);
+                    var b = Number(s.bottom);
+                    if (!isNaN(l) && !isNaN(t) && !isNaN(r) && !isNaN(b) && r > l && b > t) {
+                        screens.push({ left: l, top: t, right: r, bottom: b, width: r - l, height: b - t });
+                    }
+                }
+            }
+        } catch(e) {}
+        if (screens.length === 0) {
+            screens.push({ left: 0, top: 0, right: 1920, bottom: 1080, width: 1920, height: 1080 });
+        }
+        return screens;
+    },
+
+    getPrimaryScreen: function() {
+        var screens = this.getScreens();
+        for (var i = 0; i < screens.length; i++) {
+            var s = screens[i];
+            if (0 >= s.left && 0 <= s.right && 0 >= s.top && 0 <= s.bottom) {
+                return s;
+            }
+        }
+        return screens[0];
+    },
+
+    getScreenForPoint: function(pos) {
+        if (!this.isValidPosition(pos)) return null;
+        var screens = this.getScreens();
+        var x = pos[0], y = pos[1];
+        for (var i = 0; i < screens.length; i++) {
+            var s = screens[i];
+            if (x >= s.left && x <= s.right && y >= s.top && y <= s.bottom) {
+                return s;
+            }
+        }
+        return null;
+    },
+
+    getScreenForRect: function(pos, size) {
+        if (!this.isValidPosition(pos)) return null;
+        var w = (size && size.length >= 2 && size[0] > 0) ? size[0] : 300;
+        var h = (size && size.length >= 2 && size[1] > 0) ? size[1] : 200;
+        var cx = pos[0] + (w / 2);
+        var cy = pos[1] + (h / 2);
+        var screens = this.getScreens();
+        for (var i = 0; i < screens.length; i++) {
+            var s = screens[i];
+            if (cx >= s.left && cx <= s.right && cy >= s.top && cy <= s.bottom) {
+                return s;
+            }
+        }
+        return this.getScreenForPoint(pos);
+    },
+
+    clampWindowToScreen: function(pos, size, screen) {
+        if (!this.isValidPosition(pos) || !screen) return null;
+        var margin = 20;
+        var w = (size && size.length >= 2 && size[0] > 0) ? size[0] : 300;
+        var h = (size && size.length >= 2 && size[1] > 0) ? size[1] : 200;
+        var usableW = Math.max(60, Math.min(w, screen.width));
+        var usableH = Math.max(40, Math.min(h, screen.height));
+        var minX = screen.left + margin;
+        var minY = screen.top + margin;
+        var maxX = screen.right - usableW - margin;
+        var maxY = screen.bottom - usableH - margin;
+        if (maxX < minX) maxX = screen.left;
+        if (maxY < minY) maxY = screen.top;
+        var x = Math.max(minX, Math.min(pos[0], maxX));
+        var y = Math.max(minY, Math.min(pos[1], maxY));
+        return [x, y];
+    },
+
+    centerWindowOnScreen: function(size, preferredPos) {
+        var screen = this.getScreenForPoint(preferredPos) || this.getPrimaryScreen();
+        var w = (size && size.length >= 2 && size[0] > 0) ? size[0] : 300;
+        var h = (size && size.length >= 2 && size[1] > 0) ? size[1] : 200;
+        var x = screen.left + Math.floor((screen.width - Math.min(w, screen.width)) / 2);
+        var y = screen.top + Math.floor((screen.height - Math.min(h, screen.height)) / 2);
+        return [x, y];
+    },
+
+    ensureWindowOnScreen: function(pos, size, centerIfOffscreen) {
+        if (!this.isValidPosition(pos)) {
+            return centerIfOffscreen ? this.centerWindowOnScreen(size, null) : null;
+        }
+        var screen = this.getScreenForRect(pos, size);
+        if (!screen) {
+            return centerIfOffscreen ? this.centerWindowOnScreen(size, null) : null;
+        }
+        return this.clampWindowToScreen(pos, size, screen);
+    },
+
+    fitWidthToScreen: function(width, preferredPos, minWidth) {
+        var screen = this.getScreenForPoint(preferredPos) || this.getPrimaryScreen();
+        var minW = minWidth || 320;
+        var maxW = Math.max(minW, screen.width - 40);
+        var w = (typeof width === 'number' && !isNaN(width) && width > 0) ? width : Math.floor(screen.width * CONFIG.FAVBAR_WIDTH_RATIO);
+        return Math.max(minW, Math.min(w, maxW));
     }
 };
 
@@ -339,7 +454,15 @@ var Paths = (function() {
     // $.fileName → ExtendScript'in özel değişkeni, çalışan dosyanın yolu.
     // app.activeScript → ESTK'de çalıştırıldığında $.fileName boş gelebilir,
     // bu yüzden ikisi birlikte || ile kullanılır.
-    var scriptFile = ($.fileName || app.activeScript);
+    var scriptFile = null;
+    try { scriptFile = $.fileName; } catch(e) {}
+    if (!scriptFile || String(scriptFile) === "") {
+        try { scriptFile = app.activeScript; } catch(e2) {}
+    }
+    if (!scriptFile || String(scriptFile) === "") {
+        alert("Ahmet Panel başlatılamadı: Script dosya yolu bulunamadı.\n\nÇözüm: Dosyayı Illustrator içinden File > Scripts > Other Script ile veya Scripts klasöründen çalıştır.");
+        throw new Error("AhmetPanel: script file path not found");
+    }
     
     // .parent.fsName → dosyanın bulunduğu klasörün tam yolu.
     // Örnek: "C:/Users/Ahmet/Scripts/AhmetPanel"
@@ -705,8 +828,14 @@ var PersistenceManager = {
             // Her alan güvenli şekilde yüklenir
             if (data.pos)                         AppState.lastPosition   = Utils.sanitizePosition(data.pos);
             if (data.history instanceof Array)    AppState.searchHistory  = data.history;
-            if (data.favorites instanceof Array)  AppState.favorites      = data.favorites;
-            else                                  AppState.favorites      = [];
+            AppState.favorites = [];
+            if (data.favorites instanceof Array) {
+                for (var fi = 0; fi < data.favorites.length; fi++) {
+                    if (typeof data.favorites[fi] === "string" && data.favorites[fi].length > 0) {
+                        AppState.favorites.push(data.favorites[fi]);
+                    }
+                }
+            }
             
             // Kullanım istatistiklerini scriptDatabase'e geri yaz
             var statsData = data.stats || [];
@@ -1574,13 +1703,27 @@ var WindowManager = {
      * pencere ortaya değil, ekranın sol üstüne yerleşir.
      */
     positionWindow: function(win, startPosition) {
-        if (Utils.isValidPosition(startPosition)) {
-            win.location = startPosition;
-        } else if (Utils.isValidPosition(AppState.lastPosition)) {
-            win.location = AppState.lastPosition;
-        } else {
-            win.center(); // İlk çalıştırma — layout hesaplandıktan sonra çağrılır
+        var winSize = [
+            (win.size && win.size.width)  ? win.size.width  : 300,
+            (win.size && win.size.height) ? win.size.height : 300
+        ];
+        var candidates = [startPosition, AppState.lastPosition];
+        for (var i = 0; i < candidates.length; i++) {
+            if (Utils.isValidPosition(candidates[i])) {
+                var safe = Utils.ensureWindowOnScreen(candidates[i], winSize, false);
+                if (safe) {
+                    win.location = safe;
+                    AppState.lastPosition = safe;
+                    PersistenceManager.save();
+                    return;
+                }
+            }
         }
+        // Kayıtlı konum monitör/çözünürlük değişimi yüzünden görünür değilse merkeze al.
+        var centered = Utils.centerWindowOnScreen(winSize, startPosition || AppState.lastPosition);
+        win.location = centered;
+        AppState.lastPosition = centered;
+        PersistenceManager.save();
     },
     
     /*
@@ -2042,19 +2185,19 @@ var WindowManager = {
     closeAndMinimize: function(win) {
         AppState.lastPosition = [win.location.x, win.location.y];
         PersistenceManager.save();
-        
-        // Flag: win.close() → onClose tetiklenince bar kapatılmasın
-        AppState.isMinimizing = true;
-        win.close();
-        AppState.isMinimizing = false;
-        
-        // Mini panel ana panelin sağ üst köşesine yerleşir
+
+        // Mini panel konumunu pencere kapanmadan önce hesapla.
         var miniPosition = [
             win.location.x + win.size.width - CONFIG.MINI_BUTTON_SIZE - 4,
             win.location.y
         ];
-        
-        win.close();
+
+        // Flag: win.close() → onClose tetiklenince favori bar kapatılmasın.
+        AppState.isMinimizing = true;
+        try { win.close(); } catch(e) { Utils.logError("closeAndMinimize close failed", e); }
+        AppState.isMinimizing = false;
+        AppState.launcherWindow = null;
+
         PopupManager.closeActive();
         this.openMiniPanel(miniPosition);
     },
@@ -2089,16 +2232,22 @@ var WindowManager = {
             WindowManager.openLauncher(AppState.lastPosition);
         };
         
+        mini.layout.layout(true);
+        mini.layout.resize();
+        var miniSize = [
+            (mini.size && mini.size.width)  ? mini.size.width  : CONFIG.MINI_BUTTON_SIZE,
+            (mini.size && mini.size.height) ? mini.size.height : CONFIG.MINI_BUTTON_SIZE
+        ];
+        var miniPos = null;
         if (position && position instanceof Array && position.length === 2) {
-            mini.location = position;
+            miniPos = position;
         } else if (Utils.isValidPosition(AppState.lastPosition)) {
-            mini.location = [
+            miniPos = [
                 AppState.lastPosition[0] + 200, // Panel genişliğinin tahmini
                 AppState.lastPosition[1]
             ];
-        } else {
-            mini.center();
         }
+        mini.location = Utils.ensureWindowOnScreen(miniPos, miniSize, true);
         
         mini.show();
     }
@@ -2152,11 +2301,26 @@ var FavBarManager = {
             if (!raw) return;
             var data = safeParse(raw);
             if (!data) return;
-            if (data.order      instanceof Array)  FavBarState.order      = data.order;
-            if (data.buttonSize)                   FavBarState.buttonSize = data.buttonSize;
-            if (typeof data.rows === "number")     FavBarState.rows       = data.rows;
-            if (data.pos)                          FavBarState.pos        = Utils.sanitizePosition(data.pos);
-            if (typeof data.savedWidth === "number") FavBarState.savedWidth = data.savedWidth;
+            if (data.order instanceof Array) {
+                FavBarState.order = [];
+                for (var oi = 0; oi < data.order.length; oi++) {
+                    var item = data.order[oi];
+                    if (typeof item === "string" && item.length > 0) {
+                        FavBarState.order.push({ realName: item, customLabel: null });
+                    } else if (item && typeof item.realName === "string" && item.realName.length > 0) {
+                        FavBarState.order.push({
+                            realName: item.realName,
+                            customLabel: (typeof item.customLabel === "string" && item.customLabel.length > 0) ? item.customLabel : null
+                        });
+                    }
+                }
+            }
+            if (data.buttonSize === "small" || data.buttonSize === "medium" || data.buttonSize === "large") {
+                FavBarState.buttonSize = data.buttonSize;
+            }
+            if (data.rows === 1 || data.rows === 2) FavBarState.rows = data.rows;
+            if (data.pos) FavBarState.pos = Utils.sanitizePosition(data.pos);
+            if (typeof data.savedWidth === "number" && data.savedWidth > 100) FavBarState.savedWidth = data.savedWidth;
         } catch(e) { Utils.logError("FavBarManager.load failed", e); }
     },
 
@@ -2182,37 +2346,32 @@ var FavBarManager = {
     //   3. realName olduğu gibi → "MaskeleriResmeCevir"
 
     getLabel: function(entry) {
-        if (entry.customLabel) return entry.customLabel;
-        return entry.realName;
+        if (!entry) return "";
+        if (typeof entry === "string") return entry;
+        if (entry.customLabel) return String(entry.customLabel);
+        var rn = entry.realName || "";
+        var alias = AppState.aliases[rn];
+        if (alias && typeof alias === "string") {
+            var parts = alias.split(" ");
+            if (parts.length > 0 && parts[0].length > 0) return parts[0];
+        }
+        return rn;
     },
 
     // ---- EKRAN VE BOYUT HESAPLAMA ----
 
     _getScreenInfo: function() {
-        var w = 1920, l = 0, t = 0;
-        try {
-            if (typeof $.screens !== "undefined" && $.screens && $.screens.length > 0) {
-                var sc = $.screens[0];
-                // Eğer barın kayıtlı konumu varsa, o monitörü bul
-                if (FavBarState.pos) {
-                    for (var i = 0; i < $.screens.length; i++) {
-                        var s = $.screens[i];
-                        if (FavBarState.pos[0] >= s.left && FavBarState.pos[0] <= s.right) {
-                            sc = s; break;
-                        }
-                    }
-                }
-                w = sc.right - sc.left;
-                l = sc.left;
-                t = sc.top;
-            }
-        } catch(e) {}
-        return { width: w, left: l, top: t };
+        var sc = Utils.getScreenForPoint(FavBarState.pos) || Utils.getPrimaryScreen();
+        return { width: sc.width, height: sc.height, left: sc.left, top: sc.top, right: sc.right, bottom: sc.bottom };
     },
 
     _calcBarWidth: function() {
-        if (FavBarState.savedWidth && FavBarState.savedWidth > 200) return FavBarState.savedWidth;
-        return Math.floor(this._getScreenInfo().width * CONFIG.FAVBAR_WIDTH_RATIO);
+        var sc = this._getScreenInfo();
+        var wanted = FavBarState.savedWidth;
+        if (!(typeof wanted === "number" && wanted > 200)) {
+            wanted = Math.floor(sc.width * CONFIG.FAVBAR_WIDTH_RATIO);
+        }
+        return Utils.fitWidthToScreen(wanted, FavBarState.pos, 320);
     },
 
     _btnWidth: function() {
@@ -2335,16 +2494,22 @@ var FavBarManager = {
     },
 
     _positionBar: function(bar, barWidth) {
-        if (Utils.isValidPosition(FavBarState.pos)) {
-            bar.location = FavBarState.pos;
-        } else {
-            // İlk açılış: ekranın üst ortasına
-            var sc  = this._getScreenInfo();
-            var x   = sc.left + Math.floor((sc.width - barWidth) / 2);
-            var y   = sc.top + 20;
-            bar.location    = [x, y];
-            FavBarState.pos = [x, y];
+        var barSize = [
+            barWidth || ((bar.size && bar.size.width) ? bar.size.width : this._calcBarWidth()),
+            (bar.size && bar.size.height) ? bar.size.height : 60
+        ];
+        var safe = Utils.ensureWindowOnScreen(FavBarState.pos, barSize, false);
+        if (!safe) {
+            // İlk açılış veya monitör/çözünürlük değişimi: ekranın üst ortasına al.
+            var sc = this._getScreenInfo();
+            var bw = Math.min(barSize[0], sc.width - 40);
+            var x  = sc.left + Math.floor((sc.width - bw) / 2);
+            var y  = sc.top + 20;
+            safe = [x, y];
         }
+        bar.location    = safe;
+        FavBarState.pos = safe;
+        this.save();
     },
 
     // ---- BUTONLARI (YENİDEN) OLUŞTUR ----
@@ -2473,7 +2638,7 @@ var FavBarManager = {
 
     _createBarButton: function(parent, entry, idx, btnW, btnH, barRef) {
         var self  = this;
-        var label = this.getLabel(entry);
+        var label = String(this.getLabel(entry) || "");
 
         // Etiketi butona sığdır: yaklaşık 6px/karakter
         var maxChars  = Math.max(3, Math.floor((btnW - 10) / 6));
@@ -2481,7 +2646,8 @@ var FavBarManager = {
             ? label.substring(0, maxChars - 1) + "\u2026"
             : label;
 
-        var fullDesc = AppState.aliases[entry.realName] || entry.realName;
+        var rn = (typeof entry === "string") ? entry : (entry ? entry.realName : "");
+        var fullDesc = AppState.aliases[rn] || rn;
         var btn = parent.add("button", [0, 0, btnW, btnH], dispLabel);
         btn.helpTip = label + "\n" + fullDesc + "\n[Sa\u011F Click] Se\u00E7enekler";
 
@@ -2498,14 +2664,19 @@ var FavBarManager = {
     // ---- SCRIPT ÇALIŞTIR (bardan) ----
 
     _runScript: function(entry) {
+        var rn = (typeof entry === "string") ? entry : (entry ? entry.realName : null);
+        if (!rn) {
+            alert("Script bulunamadı: favori bar kaydı bozuk.");
+            return;
+        }
         for (var i = 0; i < AppState.scriptDatabase.length; i++) {
             var sc = AppState.scriptDatabase[i];
-            if (sc.realName === entry.realName) {
+            if (sc.realName === rn) {
                 ScriptExecutor.runFromBar(sc);
                 return;
             }
         }
-        alert("Script bulunamad\u0131: " + entry.realName + "\nDosya silinmi\u015F olabilir.");
+        alert("Script bulunamad\u0131: " + rn + "\nDosya silinmi\u015F olabilir.");
     },
 
     // ---- BUTON CONTEXT MEN\u00DC ----
@@ -2633,7 +2804,9 @@ var FavBarManager = {
 
     isInBar: function(realName) {
         for (var i = 0; i < FavBarState.order.length; i++) {
-            if (FavBarState.order[i].realName === realName) return true;
+            var item = FavBarState.order[i];
+            var rn = (typeof item === "string") ? item : (item ? item.realName : null);
+            if (rn === realName) return true;
         }
         return false;
     },
@@ -2648,7 +2821,9 @@ var FavBarManager = {
 
     removeFromBar: function(realName) {
         for (var i = 0; i < FavBarState.order.length; i++) {
-            if (FavBarState.order[i].realName === realName) {
+            var item = FavBarState.order[i];
+            var rn = (typeof item === "string") ? item : (item ? item.realName : null);
+            if (rn === realName) {
                 FavBarState.order.splice(i, 1);
                 this.save();
                 this.rebuild();
@@ -2790,11 +2965,13 @@ var FavBarManager = {
             self.open();
         };
 
-        if (Utils.isValidPosition(FavBarState.pos)) {
-            mini.location = FavBarState.pos;
-        } else {
-            mini.center();
-        }
+        mini.layout.layout(true);
+        mini.layout.resize();
+        var miniSize = [
+            (mini.size && mini.size.width)  ? mini.size.width  : 60,
+            (mini.size && mini.size.height) ? mini.size.height : 28
+        ];
+        mini.location = Utils.ensureWindowOnScreen(FavBarState.pos, miniSize, true);
 
         FavBarState.miniWindow = mini;
         mini.show();
@@ -2810,23 +2987,28 @@ var FavBarManager = {
 // ============================================================================
 
 (function init() {
-    // 1. Alias dosyasını yükle (script isim eşleştirmeleri)
-    //    Bu önce yüklenmeli çünkü scanFolder() sırasında aliases'a bakılır
-    AppState.aliases = AliasManager.load();
-    
-    // 2. Disk üzerindeki scriptleri tara ve veritabanını oluştur
-    //    Kategoriler de bu aşamada belirlenir
-    AppState.scriptDatabase = DatabaseManager.generate();
-    AppState.categories     = DatabaseManager.getCategories(AppState.scriptDatabase);
-    
-    // 3. Kaydedilmiş kullanıcı verilerini yükle
-    //    scriptDatabase zaten oluşturulmuş olmalı çünkü
-    //    load() içinde count değerleri scriptDatabase'e yazılır
-    PersistenceManager.load();
-    
-    // 4. Favori Bar verilerini yükle (panelden bağımsız dosyadan)
-    FavBarManager.load();
-    
-    // 5. Ana paneli aç — lastPosition load() tarafından doldurulmuş olabilir
-    WindowManager.openLauncher(AppState.lastPosition);
+    try {
+        // 1. Alias dosyasını yükle (script isim eşleştirmeleri)
+        //    Bu önce yüklenmeli çünkü scanFolder() sırasında aliases'a bakılır
+        AppState.aliases = AliasManager.load();
+        
+        // 2. Disk üzerindeki scriptleri tara ve veritabanını oluştur
+        //    Kategoriler de bu aşamada belirlenir
+        AppState.scriptDatabase = DatabaseManager.generate();
+        AppState.categories     = DatabaseManager.getCategories(AppState.scriptDatabase);
+        
+        // 3. Kaydedilmiş kullanıcı verilerini yükle
+        //    scriptDatabase zaten oluşturulmuş olmalı çünkü
+        //    load() içinde count değerleri scriptDatabase'e yazılır
+        PersistenceManager.load();
+        
+        // 4. Favori Bar verilerini yükle (panelden bağımsız dosyadan)
+        FavBarManager.load();
+        
+        // 5. Ana paneli aç — lastPosition load() tarafından doldurulmuş olabilir
+        WindowManager.openLauncher(AppState.lastPosition);
+    } catch(e) {
+        Utils.logError("init failed", e);
+        alert("Ahmet Panel açılış hatası:\n" + e.toString() + "\n\nLog: " + Folder.userData + "/AhmetPanel_ErrorLog.txt");
+    }
 })();

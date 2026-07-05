@@ -3,7 +3,7 @@ var doc = app.activeDocument;
   
 var lays = doc.layers;  
   
-for ( var i = 0; i &lt; lays.length; i++ ) {  
+for ( var i = 0; i < lays.length; i++ ) {  
   
           var grp = lays[i].groupItems.add();  
   

@@ -1,0 +1,40 @@
+AXYON ILLUSTRATOR ANA PANEL — GÜNCELLEME RAPORU
+Sürüm: v11.5.3 Panels Integration
+Tarih: 2026-07-05
+
+SOURCE OF TRUTH
+- Paket: Axyon_Illustrator_Ana_Panel_v11.5.3_Paneller.zip
+- SHA-256: 1631ade8d9a92c08936f7ba0a8457517c7bfc430c123f72a96f85166d0a33fb0
+
+EKLENEN DOSYALAR
+- ScriptsAX/Paneller/Axyon_Path_Panel_v1.0.2.jsx
+  SHA-256: 11ae6a04ca7ec04b386f550770d10f20cc4c354bd6cd58fd49a6424e8cb3715e
+- ScriptsAX/Paneller/Axyon_Illustrator_Sticker_Araclari_Tek_Panel_v1.0.4.jsx
+  SHA-256: b25a74fbe3a806d710b7023d425cf1aea8af0a407f92eaed50caea49a2be70e2
+
+GÜNCELLENEN DOSYALAR
+- AhmetPanelDynamic.jsx (CONFIG.VERSION: 11.5.3-panels)
+- AhmetPanel_Aliases.json (2 yeni açıklama)
+- Axyon_Illustrator_Script_Envanteri.html (154 script / AX Paneller: 2)
+- CHANGELOG_v11.5.3.txt
+
+DOĞRULAMA
+- GEÇTİ: Node syntax: AhmetPanelDynamic.jsx
+- GEÇTİ: Node syntax: Axyon_Path_Panel_v1.0.2.jsx
+- GEÇTİ: Node syntax: Axyon_Illustrator_Sticker_Araclari_Tek_Panel_v1.0.4.jsx
+- GEÇTİ: Aliases JSON parse (154 entries)
+- GEÇTİ: Total .js/.jsx count (154)
+- GEÇTİ: AX/Paneller count (2)
+- GEÇTİ: Inventory count text (154)
+- GEÇTİ: Inventory panel rows (2 rows)
+- GEÇTİ: Alias keys (2 keys)
+- GEÇTİ: Main panel version (11.5.3-panels)
+- GEÇTİ: Duplicate script stems ({})
+- GEÇTİ: ZIP bütünlük testi
+- ZIP giriş sayısı: 188
+
+GERÇEK CİHAZ / ILLUSTRATOR NOTU
+- Sticker panel v1.0.4 önceki gerçek Illustrator testinde 4/4 işlemden geçti.
+- PATH panel v1.0.2 mevcut çalışan kaynak olarak pakete alındı.
+- Ana panel dinamik klasör taraması nedeniyle AX / Paneller kategorisini otomatik yükler.
+- Nihai kabul: AhmetPanelDynamic.jsx açıldığında AX / Paneller kategorisinin ve iki panelin açılışının kontrol edilmesi.
