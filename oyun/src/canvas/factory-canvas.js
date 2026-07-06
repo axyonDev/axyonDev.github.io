@@ -133,8 +133,13 @@
           callbacks.onSelect(dragEntity);
         }
         dragEntity = null;
-      } else if (!pointer.moved && ent && callbacks.onSelect) {
-        callbacks.onSelect(ent);
+      } else if (!pointer.moved) {
+        if (ent && callbacks.onSelect) callbacks.onSelect(ent);
+        else if (!ent) {
+          // kapalı sektöre tıklama → aç isteği
+          const sc = E.cellSector(c.gx, c.gy);
+          if (!E.isSectorOpen(state, sc.sx, sc.sy) && callbacks.onSectorClick) callbacks.onSectorClick(sc.sx, sc.sy);
+        }
       }
     } else if (mode === 'place' && !pointer.moved) {
       const fn = placeType === 'plant' ? E.placePlant : E.placeMachine;
@@ -154,7 +159,14 @@
       }
       linkFrom = null;
     } else if (mode === 'delete') {
-      if (ent && !pointer.moved) { E.removeEntity(state, ent.id); if (callbacks.onChange) callbacks.onChange(); }
+      if (!pointer.moved) {
+        if (ent) { E.removeEntity(state, ent.id); if (callbacks.onChange) callbacks.onChange(); }
+        else {
+          // #1: bağlantıya (konveyör/hat) tıklandıysa sil
+          const w = screenToWorld(p.x, p.y);
+          if (E.removeLineNear(state, w.x / cell, w.y / cell, 0.45) && callbacks.onChange) callbacks.onChange();
+        }
+      }
     }
     pointer.down = false; panning = false;
   }
@@ -198,6 +210,8 @@
 
     const side = E.gridSize(state);
     drawSurface(side);
+    drawSectors(side);
+    drawNodes();
     drawGrid(side);
     drawPowerLines();
     drawConveyors();
@@ -208,11 +222,57 @@
     ctx.restore();
   }
 
-  function drawSurface(side) {
-    // gezegen yüzeyi zemini
-    ctx.fillStyle = theme.surface;
-    roundRect(0, 0, side * cell, side * cell, 10); ctx.fill();
+  // Açık sektörler aydınlık, kapalı sektörler sisli/kilitli
+  function drawSectors(side) {
+    const M = window.Axyon.Data.map;
+    const sps = Math.floor(M.size / M.sectorSize), ss = M.sectorSize;
+    for (let sy = 0; sy < sps; sy++) for (let sx = 0; sx < sps; sx++) {
+      const open = E.isSectorOpen(state, sx, sy);
+      const px = sx * ss * cell, py = sy * ss * cell, pw = ss * cell;
+      if (open) {
+        ctx.fillStyle = theme.surface; ctx.globalAlpha = 1;
+        ctx.fillRect(px, py, pw, pw);
+      } else {
+        // sisli kapalı bölge
+        ctx.fillStyle = theme.bg; ctx.globalAlpha = 0.82;
+        ctx.fillRect(px, py, pw, pw);
+        ctx.globalAlpha = 1;
+        // açılabilir mi? kilit ikonu
+        const openable = E.openableSectors(state).some((o) => o.sx === sx && o.sy === sy);
+        ctx.fillStyle = theme.dim;
+        ctx.font = `${cell * 0.9}px sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.globalAlpha = openable ? 0.5 : 0.22;
+        ctx.fillText(openable ? '🔓' : '🔒', px + pw / 2, py + pw / 2);
+        ctx.globalAlpha = 1;
+      }
+      // sektör sınırı
+      ctx.strokeStyle = open ? theme.grid : (E.openableSectors(state).some((o)=>o.sx===sx&&o.sy===sy) ? theme.accent : theme.grid);
+      ctx.globalAlpha = open ? 0.4 : 0.6; ctx.lineWidth = 1.5;
+      ctx.strokeRect(px, py, pw, pw); ctx.globalAlpha = 1;
+    }
   }
+
+  // Kaynak nodları (sadece açık sektörlerde görünür)
+  function drawNodes() {
+    const RN = window.Axyon.Data.resourceNodes;
+    for (const key in state.map.nodes) {
+      const [x, y] = key.split(',').map(Number);
+      if (!E.isCellOpen(state, x, y)) continue;
+      const nd = state.map.nodes[key], def = RN[nd.type];
+      const px = x * cell, py = y * cell;
+      // nod zemini (yumuşak renkli daire)
+      ctx.fillStyle = def.color; ctx.globalAlpha = 0.28;
+      ctx.beginPath(); ctx.arc(px + cell / 2, py + cell / 2, cell * 0.46, 0, Math.PI * 2); ctx.fill();
+      ctx.globalAlpha = 0.7; ctx.lineWidth = 1.5; ctx.strokeStyle = def.color;
+      ctx.beginPath(); ctx.arc(px + cell / 2, py + cell / 2, cell * 0.46, 0, Math.PI * 2); ctx.stroke();
+      ctx.globalAlpha = 1;
+      // ikon
+      ctx.font = `${cell * 0.5}px sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText(def.icon, px + cell / 2, py + cell / 2);
+    }
+  }
+
+  function drawSurface(side) { /* zemin drawSectors içinde çizilir */ }
   function drawGrid(side) {
     ctx.strokeStyle = theme.grid; ctx.lineWidth = 1;
     ctx.globalAlpha = 0.5;
@@ -314,6 +374,25 @@
       if (e.type === 'machine' && !state.machines[e.defId].hasManager) {
         ctx.fillStyle = theme.dim; ctx.font = `${wsz * 0.22}px sans-serif`;
         ctx.fillText('✋', x + wsz - wsz * 0.2, y + wsz * 0.22);
+      }
+      // #3: üzerinde mini istatistik (yakınken): güç + üretim/sn
+      if (cam.zoom > 0.85) {
+        const N = window.Axyon.Numbers;
+        let line = '';
+        if (e.type === 'machine') {
+          const m = state.machines[e.defId];
+          const outItem = Object.keys(def.recipe.out)[0];
+          const rate = m.hasManager ? E.machineRate(state, e.defId) * m.eff : 0;
+          line = `⚡${m.hasManager ? def.power * m.count : 0} · ${N.format(rate)}/s`;
+        } else {
+          line = `+${def.output * state.plants[e.defId].count}kW`;
+        }
+        ctx.font = `${Math.max(7, wsz * 0.12)}px sans-serif`;
+        const tw = ctx.measureText(line).width + 8;
+        ctx.fillStyle = theme.bg; ctx.globalAlpha = 0.72;
+        roundRect(x + wsz / 2 - tw / 2, y - wsz * 0.02, tw, wsz * 0.2, 4); ctx.fill();
+        ctx.globalAlpha = 1; ctx.fillStyle = theme.text; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.fillText(line, x + wsz / 2, y + wsz * 0.08);
       }
     }
   }

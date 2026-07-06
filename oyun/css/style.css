@@ -323,3 +323,45 @@ button:active { transform:scale(.97); }
   .fx-hint { display:none; }
   .fxi-btn { min-width:70px; font-size:11px; padding:9px 6px; }
 }
+
+/* ===== v3.0: skor, keşif, gelişmiş oto-sat ===== */
+/* Skor chip */
+.hchip-score { background:linear-gradient(135deg, color-mix(in srgb,var(--accent-2) 18%,var(--bg-3)), var(--bg-3)); border-color:color-mix(in srgb,var(--accent-2) 40%,var(--border)); }
+.hchip-score b { color:var(--accent-2); }
+.hchip-score small { color:var(--dim); font-weight:600; }
+
+/* #4 Toplu işlem çubuğu */
+.bulk-bar { display:flex; align-items:center; gap:10px; flex-wrap:wrap; background:var(--bg-2); border:1px solid var(--border); border-radius:var(--radius); padding:10px 12px; margin-bottom:10px; }
+.bulk-selall { display:flex; align-items:center; gap:6px; font-size:12.5px; font-weight:700; cursor:pointer; }
+.bulk-selall input { width:16px; height:16px; accent-color:var(--accent); cursor:pointer; }
+.bulk-label { font-size:11.5px; color:var(--dim); }
+.bulk-actions { display:flex; align-items:center; gap:6px; margin-left:auto; flex-wrap:wrap; }
+.bulk-grp { font-size:11px; color:var(--dim); font-weight:700; }
+.bulk-btn { padding:7px 11px; border-radius:8px; background:var(--bg-3); border:1px solid var(--border); color:var(--text); font-size:12px; font-weight:700; cursor:pointer; transition:.12s; }
+.bulk-btn:hover { border-color:var(--accent); }
+.bulk-btn.danger:hover { border-color:var(--danger); color:var(--danger); }
+.bulk-btn.oto { color:var(--accent); border-color:color-mix(in srgb,var(--accent) 35%,var(--border)); }
+
+/* #4 Envanter satırı yeni kontroller */
+.inv-row { grid-template-columns:22px minmax(70px,1fr) 16px auto 28px 30px auto auto auto auto; align-items:center; }
+.inv-check { display:flex; align-items:center; justify-content:center; }
+.inv-check input { width:15px; height:15px; accent-color:var(--accent); cursor:pointer; }
+.inv-auto { padding:5px 8px; font-size:10px; font-weight:800; border-radius:6px; background:var(--bg-3); border:1px solid var(--border); color:var(--dim); cursor:pointer; }
+.inv-auto.on { background:color-mix(in srgb,var(--accent) 22%,transparent); border-color:var(--accent); color:var(--accent); }
+.keep-seg { display:inline-flex; border:1px solid var(--border); border-radius:7px; overflow:hidden; opacity:.5; transition:opacity .15s; }
+.keep-seg.active { opacity:1; }
+.keep-seg .ks { padding:5px 6px; font-size:10px; font-weight:700; background:var(--bg-3); border:none; border-right:1px solid var(--border); color:var(--dim); cursor:pointer; min-width:22px; }
+.keep-seg .ks:last-child { border-right:none; }
+.keep-seg .ks.sel { background:color-mix(in srgb,var(--accent) 25%,transparent); color:var(--accent); }
+.keep-seg .ks:hover { color:var(--text); }
+.sell-quick { display:inline-flex; gap:4px; }
+.sell-quick .sq { padding:5px 9px; font-size:11px; font-weight:700; border-radius:6px; background:var(--bg-3); border:1px solid var(--border); color:var(--text); cursor:pointer; }
+.sell-quick .sq:hover { border-color:var(--accent); color:var(--accent); }
+
+@media (max-width:720px){
+  .inv-row { grid-template-columns:20px 1fr auto auto; grid-auto-rows:min-content; row-gap:6px; padding:8px; }
+  .inv-check { grid-row:1; }
+  .inv-flow, .inv-info, .inv-up { display:none; }
+  .keep-seg, .sell-quick, .inv-auto { grid-column:1/-1; justify-self:start; }
+  .bulk-actions { margin-left:0; width:100%; }
+}

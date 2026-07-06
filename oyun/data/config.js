@@ -121,11 +121,24 @@
       { count: 100, multiplier: 3 },
     ],
 
-    land: {
-      baseArea: 140,            // başlangıç arazi (m²)
-      expandAmount: 50,         // her genişletmede eklenen m²
-      expandBaseCost: 250,      // ilk genişletme maliyeti
-      expandGrowth: 1.55,       // her genişletmede maliyet çarpanı
+    // Sabit büyük harita + bölge (sektör) keşif sistemi. "m² genişlet" YERİNE "alan aç".
+    map: {
+      size: 48,                 // harita kenarı (48x48 hücre)
+      sectorSize: 8,            // her sektör 8x8 hücre → 6x6 = 36 sektör
+      startSectors: 2,          // merkezde başlangıçta açık sektör yarıçapı (2x2 blok açık)
+      openBaseCost: 300,        // ilk komşu sektörü açma maliyeti
+      openGrowth: 1.4,          // her açılan sektörle maliyet çarpanı
+    },
+    // Kaynak nodları: çıkarıcılar SADECE eşleşen nodun üzerine kurulur.
+    // node türü -> hangi çıkarıcı makine + hangi item. Nadirlik: merkeze uzaklık.
+    resourceNodes: {
+      ironOre:    { icon:'🪨', name:'Demir Yatağı',   color:'#9ca3af', rarity:1, guaranteedStart:true },
+      copperOre:  { icon:'🟫', name:'Bakır Yatağı',   color:'#c2703d', rarity:1, guaranteedStart:true },
+      coal:       { icon:'⚫', name:'Kömür Damarı',   color:'#4b5563', rarity:1, guaranteedStart:true },
+      stone:      { icon:'⛰️', name:'Taş Ocağı Yatağı', color:'#a8a29e', rarity:1, guaranteedStart:true },
+      water:      { icon:'💧', name:'Su Kaynağı',     color:'#38bdf8', rarity:2, minDistance:1 },
+      crudeOil:   { icon:'🛢️', name:'Petrol Sahası',  color:'#1f2937', rarity:3, minDistance:2 },
+      uraniumOre: { icon:'🟢', name:'Uranyum Yatağı', color:'#22c55e', rarity:4, minDistance:3 },
     },
 
     prestige: {

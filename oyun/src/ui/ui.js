@@ -62,14 +62,24 @@
   }
 
   function buildInventory() {
-    const inv = el('inventory-list'); inv.innerHTML = '';
+    const inv = el('inventory-list'); if (!inv) return; inv.innerHTML = '';
     Object.entries(D.items).forEach(([id, item]) => {
       const row = document.createElement('div');
       row.className = 'inv-row'; row.id = `inv-${id}`;
-      const sellPart = item.research ? `<span class="inv-research">araştırma</span>`
-        : `<button class="inv-btn" data-sell="${id}">Sat</button>
-           <button class="inv-auto" data-auto="${id}" id="auto-${id}">OTO</button>
-           <input class="inv-keep" data-keep="${id}" id="keep-${id}" type="number" min="0" placeholder="eşik" title="Oto-sat eşiği: bu kadarı elde tutulur, üstü satılır" />`;
+      const controls = item.research ? `<span class="inv-research">araştırma</span>`
+        : `<label class="inv-check"><input type="checkbox" data-check="${id}" id="check-${id}" /></label>
+           <button class="inv-auto" data-auto="${id}" id="auto-${id}" title="Otomatik sat">OTO</button>
+           <div class="keep-seg" id="keepseg-${id}" title="Elde tutulacak oran (deponun %'si)">
+             <button class="ks" data-keep="${id}" data-pct="0">0</button>
+             <button class="ks" data-keep="${id}" data-pct="25">25</button>
+             <button class="ks" data-keep="${id}" data-pct="50">50</button>
+             <button class="ks" data-keep="${id}" data-pct="75">75</button>
+             <button class="ks" data-keep="${id}" data-pct="100">100</button>
+           </div>
+           <div class="sell-quick">
+             <button class="sq" data-sellfrac="${id}" data-frac="0.5" title="Yarısını sat">½</button>
+             <button class="sq" data-sellfrac="${id}" data-frac="1" title="Hepsini sat">Sat</button>
+           </div>`;
       row.innerHTML = `
         <span class="inv-icon" data-info="${id}">${item.icon}</span>
         <span class="inv-name" data-info="${id}">${item.name}</span>
@@ -77,9 +87,13 @@
         <span class="inv-amt"><span id="invamt-${id}">0</span><small id="invcap-${id}">/0</small></span>
         <button class="inv-info" data-info="${id}" title="Bilgi">ⓘ</button>
         <button class="inv-up" data-stor="${id}" id="stor-${id}" title="Depoyu yükselt">⤢</button>
-        ${sellPart}`;
+        ${controls}`;
       inv.appendChild(row);
     });
+  }
+  // seçili (checkbox) ürünleri döndür
+  function selectedItems() {
+    return Object.keys(D.items).filter((id) => { const c = el(`check-${id}`); return c && c.checked; });
   }
 
   // #4: Materyal bilgi kartını doldur ve göster
@@ -130,6 +144,8 @@
     el('total-earned').textContent = N.format(state.totalEarned);
     el('nexus-display').textContent = N.format(state.nexus);
     el('multiplier-display').textContent = `x${E.globalMult(state).toFixed(2)}`;
+    if (el('score-display')) el('score-display').textContent = N.format(E.computeScore(state));
+    if (el('topscore-display')) el('topscore-display').textContent = N.format(state.topScore || 0);
 
     // Güç & arazi üst panel
     const p = state._power;
@@ -141,11 +157,14 @@
     el('power-bar').style.width = `${Math.min(100, p.demand>0 ? p.ratio*100 : 100)}%`;
     el('power-bar').classList.toggle('bad', !pOk);
 
-    const used = E.usedLand(state), total = E.totalLand(state);
-    el('land-used').textContent = used; el('land-total').textContent = total;
-    el('land-bar').style.width = `${Math.min(100, (used/total)*100)}%`;
-    el('land-expand-cost').textContent = N.format(E.landExpandCost(state));
-    el('land-expand-btn').classList.toggle('disabled', !E.canExpandLand(state));
+    // Keşif / bölge (eski arazi m² yerine)
+    const openN = E.openSectorList(state).length;
+    const openable = E.openableSectors(state).length;
+    if (el('land-used')) el('land-used').textContent = openN;
+    if (el('land-total')) el('land-total').textContent = openN + openable;
+    if (el('land-bar')) el('land-bar').style.width = `${Math.min(100, (openN/(openN+openable||1))*100)}%`;
+    if (el('land-expand-cost')) el('land-expand-cost').textContent = openable > 0 ? N.format(E.sectorOpenCost(state)) : '—';
+    if (el('land-expand-btn')) el('land-expand-btn').classList.toggle('disabled', !E.canOpenSector(state));
 
     // Makineler (eski panel kartları — grafik arayüzde yok; varsa güncelle)
     D.machines.forEach((def) => {
@@ -183,9 +202,7 @@
       const bc = el(`bcost-${def.id}`);
       bc.textContent = N.format(E.buildCost(state, def.id));
       const buildBtn = card.querySelector('[data-action="build"]');
-      const canB = E.canBuild(state, def.id);
-      buildBtn.classList.toggle('disabled', !canB);
-      buildBtn.classList.toggle('noland', E.freeLand(state) < def.footprint && state.coins >= E.buildCost(state, def.id));
+      if (buildBtn) { const canB = E.canBuild(state, def.id); buildBtn.classList.toggle('disabled', !canB); }
 
       const mgr = el(`mgr-${def.id}`);
       if (m.hasManager) { mgr.textContent = '✓ Oto'; mgr.classList.add('owned'); mgr.classList.remove('disabled'); }
@@ -219,16 +236,19 @@
       if (storBtn) storBtn.title = `Depoyu yükselt (${N.format(E.storageUpgradeCost(state, id))} 🪙)`;
       const auto = el(`auto-${id}`);
       if (auto) auto.classList.toggle('on', !!state.autoSell[id]);
-      const keepInput = el(`keep-${id}`);
-      if (keepInput) {
-        keepInput.classList.toggle('active', !!state.autoSell[id]);
-        // kullanıcı yazarken üzerine yazma; sadece odakta değilse senkronla
-        if (document.activeElement !== keepInput) {
-          const kv = state.autoSellKeep[id] || 0;
-          keepInput.value = kv > 0 ? kv : '';
-        }
+      // %seçici: aktif oto-satsa göster, seçili yüzdeyi vurgula
+      const seg = el(`keepseg-${id}`);
+      if (seg) {
+        seg.classList.toggle('active', !!state.autoSell[id]);
+        const pct = state.autoSellKeep[id] || 0;
+        seg.querySelectorAll('.ks').forEach((b) => b.classList.toggle('sel', parseInt(b.dataset.pct, 10) === pct));
       }
     });
+    // toplu seçim sayacı
+    if (el('bulk-count')) {
+      const n = selectedItems().length;
+      el('bulk-count').textContent = `${n} seçili`;
+    }
 
     // Araştırma
     D.research.forEach((t) => {
@@ -408,7 +428,7 @@
   global.Axyon.UI = {
     el, buildMachineCards, buildPlantCards, buildInventory, buildResearch,
     render, pulse, spawnFloat, showModal, hideModal, renderAchievements, switchTab,
-    showItemInfo, renderReport,
+    showItemInfo, renderReport, selectedItems,
     buildPalette, showInspector, setToolbarMode,
   };
 })(window);

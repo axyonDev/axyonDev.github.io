@@ -1,4 +1,4 @@
-const CACHE = 'axyon-factory-v2-2';
+const CACHE = 'axyon-factory-v3-0';
 const ASSETS = ['./','./index.html','./css/style.css','./manifest.json',
   './src/core/numbers.js','./data/config.js','./src/core/economy.js','./src/core/quests.js',
   './src/services/save-service.js','./src/ui/toast.js','./src/canvas/factory-canvas.js','./src/ui/ui.js','./src/main.js'];

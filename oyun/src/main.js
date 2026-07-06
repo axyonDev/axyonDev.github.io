@@ -32,17 +32,32 @@
     onSelect: (ent) => { selectedEntity = ent; UI.showInspector(state, E, ent); },
     onPlaced: (defId) => { T.show(`🏗️ ${E.mDef(defId)?.name || E.pDef(defId)?.name} yerleştirildi`, 'success'); },
     onPlaceFail: (defId, type) => {
-      const def = type === 'plant' ? E.pDef(defId) : E.mDef(defId);
       const cost = type === 'plant' ? E.plantBuildCost(state, defId) : E.buildCost(state, defId);
-      if (state.coins < cost) T.show('💰 Yetersiz kredi', 'error');
-      else if (E.freeLand(state) < def.footprint) T.show('🗺️ Yetersiz arazi — genişlet', 'error');
-      else T.show('⛔ Buraya yerleştirilemez', 'error');
+      if (state.coins < cost) { T.show('💰 Yetersiz kredi', 'error'); return; }
+      if (type === 'machine' && E.isExtractor(defId)) {
+        const nodeType = E.extractorNodeType(defId);
+        const nodeName = D.resourceNodes[nodeType]?.name || 'kaynak';
+        if (!E.hasFreeNodeFor(state, defId)) T.show(`⛏️ Boş ${nodeName} yok — keşfet ve nod bul`, 'error');
+        else T.show(`⛏️ Bu maden sadece ${nodeName} üzerine kurulur`, 'error');
+      } else T.show('⛔ Buraya kurulamaz (kapalı bölge / dolu / nod üstü)', 'error');
     },
     onPowerFail: () => T.show('⚡ Hat sadece santralden makineye çekilir', 'error'),
     onModeChange: (m) => UI.setToolbarMode(m),
+    onSectorClick: (sx, sy) => tryOpenSector(sx, sy),
   });
   UI.buildPalette(state, E);
   UI.setToolbarMode('select');
+
+  // Bölge açma (canvas tıklaması veya HUD butonu)
+  function tryOpenSector(sx, sy) {
+    if (!E.canOpenSector(state)) {
+      if (E.coins < E.sectorOpenCost(state)) T.show('💰 Bölge açmak için yeterli kredi yok', 'error');
+      return;
+    }
+    const okOpen = E.openSector(state, sx, sy);
+    if (okOpen) { T.show(`🧭 Yeni bölge keşfedildi! Kaynak yatakları ortaya çıktı.`, 'success'); S.save(state); UI.buildPalette(state, E); FC.recenter(); postAction(); }
+    else T.show('🔒 Bu bölge açık bir bölgeye komşu değil', 'error');
+  }
 
   // canvas render döngüsü
   function fcLoop() { if (UI.el('panel-factory').classList.contains('active')) FC.draw(); requestAnimationFrame(fcLoop); }
@@ -120,29 +135,20 @@
   UI.el('inventory-list').addEventListener('touchend', () => { if (pressTimer) clearTimeout(pressTimer); });
   UI.el('inventory-list').addEventListener('touchmove', () => { if (pressTimer) clearTimeout(pressTimer); });
 
-  // #1: Oto-sat eşik girişi
-  UI.el('inventory-list').addEventListener('change', (evt) => {
-    const keep = evt.target.closest('[data-keep]');
-    if (!keep) return;
-    E.setAutoSellKeep(state, keep.dataset.keep, parseFloat(keep.value) || 0);
-    S.save(state);
-  });
-
-  // Santraller (güç sekmesinden hızlı kurulum → haritada boş bir hücreye yerleştir)
+  // Santraller (güç sekmesinden hızlı kurulum → haritada uygun boş hücreye yerleştir)
   const plantsC = UI.el('plants-container');
   if (plantsC) plantsC.addEventListener('click', (evt) => {
     const btn = evt.target.closest('button[data-action="buildplant"]');
     if (!btn || btn.classList.contains('disabled')) return;
     const id = btn.dataset.plant;
     const spot = findFreeCell(id, 'plant');
-    if (!spot) { T.show('🗺️ Haritada boş yer yok — arazi genişlet', 'error'); return; }
+    if (!spot) { T.show('🧭 Açık bölgede boş yer yok — yeni bölge keşfet', 'error'); return; }
     if (E.placePlant(state, id, spot.x, spot.y)) { T.show(`⚡ ${E.pDef(id).name} kuruldu`, 'success'); S.save(state); UI.buildPalette(state, E); }
-    else if (E.freeLand(state) < E.pDef(id).footprint) T.show('🗺️ Yetersiz arazi', 'error');
     else T.show('💰 Yetersiz kredi', 'error');
     postAction();
   });
 
-  // Boş hücre bulucu (otomatik yerleştirme için)
+  // Uygun boş hücre bulucu (otomatik yerleştirme; çıkarıcıysa nod ister)
   function findFreeCell(defId, type) {
     const side = E.gridSize(state);
     for (let y = 0; y < side; y++) for (let x = 0; x < side; x++) {
@@ -151,17 +157,53 @@
     return null;
   }
 
-  // Arazi genişlet
+  // Bölge aç (HUD butonu → ilk açılabilir komşu bölgeyi aç)
   UI.el('land-expand-btn').addEventListener('click', () => {
-    if (E.expandLand(state)) { T.show(`🗺️ Arazi +${D.land.expandAmount}m²`, 'success'); S.save(state); postAction(); }
+    const openable = E.openableSectors(state);
+    if (!openable.length) { T.show('🧭 Açılacak komşu bölge kalmadı', 'info'); return; }
+    tryOpenSector(openable[0].sx, openable[0].sy);
   });
 
-  // Envanter: sat / oto / depo yükselt
+  // #4: Envanter — bilgi/depo/OTO/%seçici/hızlı sat + toplu işlemler
   UI.el('inventory-list').addEventListener('click', (evt) => {
-    const sell = evt.target.closest('[data-sell]'), auto = evt.target.closest('[data-auto]'), stor = evt.target.closest('[data-stor]');
-    if (sell) { const g = E.sellItem(state, sell.dataset.sell); if (g>0) T.show(`💰 +${N.format(g)} 🪙`, 'success'); }
-    else if (auto) { E.toggleAutoSell(state, auto.dataset.auto); }
-    else if (stor) { const it=stor.dataset.stor; if (E.upgradeStorage(state, it)) T.show(`📦 ${D.items[it].name} deposu büyüdü`, 'success'); else T.show('Yetersiz kredi', 'error'); }
+    const auto = evt.target.closest('[data-auto]');
+    const stor = evt.target.closest('[data-stor]');
+    const keep = evt.target.closest('[data-keep]');
+    const frac = evt.target.closest('[data-sellfrac]');
+    if (auto) { E.toggleAutoSell(state, auto.dataset.auto); }
+    else if (stor) { const it = stor.dataset.stor; if (E.upgradeStorage(state, it)) T.show(`📦 ${D.items[it].name} deposu büyüdü`, 'success'); else T.show('Yetersiz kredi', 'error'); }
+    else if (keep) { E.setAutoSellKeep(state, keep.dataset.keep, parseInt(keep.dataset.pct, 10)); if (!state.autoSell[keep.dataset.keep]) E.toggleAutoSell(state, keep.dataset.keep); }
+    else if (frac) { const g = E.sellFraction(state, frac.dataset.sellfrac, parseFloat(frac.dataset.frac)); if (g > 0) T.show(`💰 +${N.format(g)} 🪙`, 'success'); else T.show('Satılacak stok yok', 'info'); }
+    else return;
+    S.save(state); postAction();
+  });
+  // checkbox değişimi → sayaç güncelle
+  UI.el('inventory-list').addEventListener('change', (evt) => {
+    if (evt.target.closest('[data-check]')) UI.render(state, E);
+  });
+
+  // #4: Toplu işlem çubuğu
+  UI.el('bulk-selall').addEventListener('change', (evt) => {
+    const on = evt.target.checked;
+    Object.keys(D.items).forEach((id) => { const c = UI.el(`check-${id}`); if (c) c.checked = on && !D.items[id].research; });
+    UI.render(state, E);
+  });
+  document.querySelectorAll('[data-bulksell]').forEach((b) => b.addEventListener('click', () => {
+    const frac = parseFloat(b.dataset.bulksell);
+    const sel = UI.selectedItems();
+    if (!sel.length) { T.show('☑ Önce ürün seç', 'info'); return; }
+    let total = 0;
+    sel.forEach((id) => { total += E.sellFraction(state, id, frac); });
+    if (total > 0) T.show(`💰 Toplu satış: +${N.format(total)} 🪙`, 'success'); else T.show('Satılacak stok yok', 'info');
+    S.save(state); postAction();
+  }));
+  UI.el('bulk-oto').addEventListener('click', () => {
+    const sel = UI.selectedItems();
+    if (!sel.length) { T.show('☑ Önce ürün seç', 'info'); return; }
+    // seçililerden herhangi biri kapalıysa hepsini aç, hepsi açıksa hepsini kapat
+    const anyOff = sel.some((id) => !state.autoSell[id]);
+    sel.forEach((id) => { if (state.autoSell[id] !== anyOff) E.toggleAutoSell(state, id); });
+    T.show(anyOff ? '✓ Seçililer için OTO açıldı' : 'OTO kapatıldı', 'success');
     S.save(state); postAction();
   });
 
@@ -196,6 +238,7 @@
     if (!confirm('Mevcut kaydın üzerine yazılacak. Emin misin?')) return;
     state = r.state; S.save(state); applyTheme(state.settings.theme);
     if (!state.grid) state.grid = { entities: {}, conveyors: [], powerLines: [], nextId: 1 };
+    if (!state.map) state.map = { openSectors: {}, nodes: {}, nodeNextSeed: 1 };
     UI.buildMachineCards(); UI.buildPlantCards(); UI.buildInventory(); UI.buildResearch();
     FC.setState(state); UI.buildPalette(state, E); UI.el('fx-inspector').classList.add('hidden');
     UI.render(state,E);

@@ -20,44 +20,174 @@
     const inventory = {}, autoSell = {}, autoSellKeep = {}, storageLevel = {}, produced = {}, flow = {};
     Object.keys(D.items).forEach((k) => { inventory[k] = 0; autoSell[k] = false; autoSellKeep[k] = 0; storageLevel[k] = 0; produced[k] = 0; flow[k] = 0; });
 
-    return {
-      version: 7,
+    const s = {
+      version: 8,
       coins: 120, totalEarned: 0, runEarned: 0,
       nexus: 0, prestigeCount: 0,
       inventory, autoSell, autoSellKeep, storageLevel,
       machines, plants,
       researched: {},
-      landExpansions: 0,
+      sectorsOpened: 0,
       questIndex: 0, achievements: {},
       stats: { machinesBuilt: 0, plantsBuilt: 0, managersBought: 0, playTimeSec: 0, produced },
       flow,
       settings: { theme: 'dark' },
       _power: { supply: 0, demand: 0, ratio: 1 },
-      // === MEKÂNSAL KATMAN (grafik arayüz) ===
+      // === MEKÂNSAL KATMAN ===
       grid: {
-        entities: {},      // id -> { id, type:'machine'|'plant', defId, x, y }
-        conveyors: [],     // { from: entityId, to: entityId }
-        powerLines: [],    // { from: entityId, to: entityId }  (santral -> makine)
+        entities: {},      // id -> { id, type, defId, x, y }
+        conveyors: [],     // { from, to }
+        powerLines: [],    // { from, to }
         nextId: 1,
       },
+      // === HARİTA & KEŞİF ===
+      map: {
+        openSectors: {},   // "sx,sy" -> true  (açık bölgeler)
+        nodes: {},         // "x,y" -> { type }  (kaynak yatakları; sadece açık sektörlerdekiler görünür)
+        nodeNextSeed: 1,
+      },
+      topScore: 0,
       lastSeen: Date.now(),
     };
+    initMap(s);
+    return s;
+  }
+
+  // Merkez sektörleri aç ve başlangıç nodlarını yerleştir
+  function initMap(s) {
+    const M = D.map;
+    const sectorsPerSide = Math.floor(M.size / M.sectorSize);
+    const mid = Math.floor(sectorsPerSide / 2);
+    const r = M.startSectors;
+    // merkez r x r blok açık (mid-1 .. mid için 2x2)
+    for (let sy = mid - Math.floor(r/2); sy < mid - Math.floor(r/2) + r; sy++)
+      for (let sx = mid - Math.floor(r/2); sx < mid - Math.floor(r/2) + r; sx++)
+        openSectorInternal(s, sx, sy, true);
+    // başlangıç garantili nodları: her guaranteedStart türünden 2'şer, merkez açık alana dağıt
+    const startCells = openCells(s);
+    const guaranteed = Object.keys(D.resourceNodes).filter((k) => D.resourceNodes[k].guaranteedStart);
+    guaranteed.forEach((type) => {
+      placeNodeRandom(s, type, startCells);
+      placeNodeRandom(s, type, startCells);
+    });
+    // başlangıçta biraz da rastgele ek nod (çeşitlilik)
+    for (let i = 0; i < 3; i++) placeNodeRandom(s, guaranteed[Math.floor(rng(s) * guaranteed.length)], startCells);
   }
 
   const mDef = (id) => D.machines.find((m) => m.id === id);
   const pDef = (id) => D.powerPlants.find((p) => p.id === id);
 
-  // ===== MEKÂNSAL KATMAN =====
-  // Grid boyutu araziye göre: her hücre 1 birim, toplam hücre ~ toplam m² / hücreBaşınaM²
-  const CELL_M2 = 4; // her grid hücresi 4 m² temsil eder
-  function gridSize(s) {
-    // kare grid; kenar = sqrt(toplam m² / CELL_M2)
-    const cells = Math.floor(totalLand(s) / CELL_M2);
-    const side = Math.max(8, Math.floor(Math.sqrt(cells)));
-    return side;
+  // ===== HARİTA / SEKTÖR =====
+  function mapSide(s) { return D.map.size; }
+  function sectorsPerSide() { return Math.floor(D.map.size / D.map.sectorSize); }
+  const sectorKey = (sx, sy) => `${sx},${sy}`;
+  function cellSector(x, y) { return { sx: Math.floor(x / D.map.sectorSize), sy: Math.floor(y / D.map.sectorSize) }; }
+  function isSectorOpen(s, sx, sy) { return !!s.map.openSectors[sectorKey(sx, sy)]; }
+  function isCellOpen(s, x, y) { const c = cellSector(x, y); return isSectorOpen(s, c.sx, c.sy); }
+
+  function openSectorInternal(s, sx, sy, silent) {
+    const sps = sectorsPerSide();
+    if (sx < 0 || sy < 0 || sx >= sps || sy >= sps) return false;
+    if (s.map.openSectors[sectorKey(sx, sy)]) return false;
+    s.map.openSectors[sectorKey(sx, sy)] = true;
+    if (!silent) generateSectorNodes(s, sx, sy);
+    return true;
   }
+
+  // Açık sektörlerin listesi + komşu (açılabilir) sektörler
+  function openSectorList(s) {
+    return Object.keys(s.map.openSectors).map((k) => { const [sx, sy] = k.split(',').map(Number); return { sx, sy }; });
+  }
+  function openableSectors(s) {
+    const sps = sectorsPerSide();
+    const set = {};
+    openSectorList(s).forEach(({ sx, sy }) => {
+      [[1,0],[-1,0],[0,1],[0,-1]].forEach(([dx, dy]) => {
+        const nx = sx + dx, ny = sy + dy;
+        if (nx >= 0 && ny >= 0 && nx < sps && ny < sps && !isSectorOpen(s, nx, ny)) set[sectorKey(nx, ny)] = { sx: nx, sy: ny };
+      });
+    });
+    return Object.values(set);
+  }
+  function sectorOpenCost(s) {
+    return Math.ceil(D.map.openBaseCost * Math.pow(D.map.openGrowth, s.sectorsOpened));
+  }
+  function canOpenSector(s) {
+    return openableSectors(s).length > 0 && s.coins >= sectorOpenCost(s);
+  }
+  // Belirli bir sektörü aç (komşu ve açık değilse). Başarılıysa yeni nodları döndür.
+  function openSector(s, sx, sy) {
+    if (!canOpenSector(s)) return false;
+    const ok = openableSectors(s).some((o) => o.sx === sx && o.sy === sy);
+    if (!ok) return false;
+    s.coins = N.sub(s.coins, sectorOpenCost(s));
+    openSectorInternal(s, sx, sy, false);
+    s.sectorsOpened += 1;
+    return true;
+  }
+
+  // ===== KAYNAK NODLARI =====
+  const nodeKey = (x, y) => `${x},${y}`;
+  function nodeAt(s, x, y) { return s.map.nodes[nodeKey(x, y)] || null; }
+  function nodeVisible(s, x, y) { return isCellOpen(s, x, y) && !!nodeAt(s, x, y); }
+  // deterministik-yeter rastgele (nodeNextSeed sayacıyla; save'e yazıldığı için tutarlı)
+  function rng(s) {
+    // xorshift benzeri; seed state'te
+    let x = (s.map.nodeNextSeed = (s.map.nodeNextSeed * 1103515245 + 12345) & 0x7fffffff);
+    return (x % 100000) / 100000;
+  }
+  function openCells(s) {
+    const cells = [];
+    openSectorList(s).forEach(({ sx, sy }) => {
+      for (let y = sy * D.map.sectorSize; y < (sy + 1) * D.map.sectorSize; y++)
+        for (let x = sx * D.map.sectorSize; x < (sx + 1) * D.map.sectorSize; x++)
+          cells.push({ x, y });
+    });
+    return cells;
+  }
+  function placeNodeRandom(s, type, cellPool) {
+    // boş (nod yok, entity yok) hücre bul
+    const free = cellPool.filter((c) => !nodeAt(s, c.x, c.y) && !cellOccupied(s, c.x, c.y));
+    if (!free.length) return null;
+    const pick = free[Math.floor(rng(s) * free.length)];
+    s.map.nodes[nodeKey(pick.x, pick.y)] = { type };
+    return pick;
+  }
+  // Bir sektör açılınca içine rastgele nodlar serp (merkeze uzaklık = nadirlik kapısı)
+  function generateSectorNodes(s, sx, sy) {
+    const sps = sectorsPerSide();
+    const mid = Math.floor(sps / 2);
+    const dist = Math.max(Math.abs(sx - mid), Math.abs(sy - mid));
+    const cells = [];
+    for (let y = sy * D.map.sectorSize; y < (sy + 1) * D.map.sectorSize; y++)
+      for (let x = sx * D.map.sectorSize; x < (sx + 1) * D.map.sectorSize; x++)
+        cells.push({ x, y });
+    // 2-5 nod
+    const count = 2 + Math.floor(rng(s) * 4);
+    const types = Object.keys(D.resourceNodes).filter((t) => {
+      const minD = D.resourceNodes[t].minDistance || 0;
+      return dist >= minD;
+    });
+    for (let i = 0; i < count; i++) {
+      // nadirliğe göre ağırlıklı seçim (rarity düşük = yaygın)
+      const weighted = [];
+      types.forEach((t) => { const w = Math.max(1, 5 - D.resourceNodes[t].rarity); for (let j = 0; j < w; j++) weighted.push(t); });
+      const type = weighted[Math.floor(rng(s) * weighted.length)];
+      placeNodeRandom(s, type, cells);
+    }
+  }
+  // Bir çıkarıcı makinenin gerektirdiği nod türü (recipe.in boşsa = çıkarıcı, out'u nod türü)
+  function extractorNodeType(defId) {
+    const def = mDef(defId);
+    if (!def || Object.keys(def.recipe.in).length > 0) return null; // çıkarıcı değil
+    return Object.keys(def.recipe.out)[0];
+  }
+  function isExtractor(defId) { return extractorNodeType(defId) !== null; }
+
+  // ===== MEKÂNSAL YERLEŞİM =====
+  const CELL_M2 = 4;
+  function gridSize(s) { return D.map.size; } // sabit büyük harita
   function entityFootprintCells(defId, type) {
-    // makine footprint m² -> hücre sayısı (kare kök, min 1)
     const def = type === 'plant' ? pDef(defId) : mDef(defId);
     return Math.max(1, Math.round(Math.sqrt(def.footprint / CELL_M2)));
   }
@@ -70,14 +200,35 @@
     }
     return false;
   }
+  // Yerleştirme kuralları: harita içinde + tüm hücreler AÇIK sektörde + boş +
+  // ÇIKARICI ise footprint'in bir hücresinde eşleşen kaynak nodu olmalı (katı kural).
   function canPlaceAt(s, defId, type, x, y) {
     const sz = entityFootprintCells(defId, type);
     const side = gridSize(s);
     if (x < 0 || y < 0 || x + sz > side || y + sz > side) return false;
+    let coversNode = false;
+    const needNode = (type === 'machine') ? extractorNodeType(defId) : null;
     for (let dx = 0; dx < sz; dx++) for (let dy = 0; dy < sz; dy++) {
-      if (cellOccupied(s, x + dx, y + dy)) return false;
+      const cx = x + dx, cy = y + dy;
+      if (!isCellOpen(s, cx, cy)) return false;        // kapalı bölgeye kurulamaz
+      if (cellOccupied(s, cx, cy)) return false;       // dolu
+      const nd = nodeAt(s, cx, cy);
+      if (needNode) { if (nd && nd.type === needNode) coversNode = true; }
+      else { if (nd) return false; }                    // çıkarıcı değilse nodun üstüne kurulamaz (nod boş kalsın)
     }
+    if (needNode && !coversNode) return false;          // çıkarıcı ama uygun nod yok
     return true;
+  }
+  // Bir çıkarıcı için, üstüne kurulabilecek boş (uygun tür + boş) nod var mı?
+  function hasFreeNodeFor(s, defId) {
+    const type = extractorNodeType(defId);
+    if (!type) return true;
+    for (const key in s.map.nodes) {
+      if (s.map.nodes[key].type !== type) continue;
+      const [x, y] = key.split(',').map(Number);
+      if (isCellOpen(s, x, y) && !cellOccupied(s, x, y)) return true;
+    }
+    return false;
   }
   // Yerleştir: ekonomik inşa (para+arazi+kilit) + grid'e ekle. Başarılıysa entity id döner.
   function placeMachine(s, defId, x, y) {
@@ -153,6 +304,50 @@
     const sz = entityFootprintCells(e.defId, e.type);
     return { cx: e.x + sz / 2, cy: e.y + sz / 2 };
   }
+  // #1: Verilen hücre koordinatına (kesirli, dünya) en yakın konveyör/hattı sil.
+  // maxDist = hücre biriminde tolerans. Önce konveyör, sonra hat denenir.
+  function removeLineNear(s, wx, wy, maxDist) {
+    const tol = maxDist || 0.4;
+    let best = null, bestD = Infinity, bestKind = null;
+    const check = (arr, kind) => {
+      arr.forEach((l, i) => {
+        const a = s.grid.entities[l.from], b = s.grid.entities[l.to];
+        if (!a || !b) return;
+        const ca = entityCenter(s, a), cb = entityCenter(s, b);
+        const d = pointSegDist(wx, wy, ca.cx, ca.cy, cb.cx, cb.cy);
+        if (d < bestD) { bestD = d; best = i; bestKind = kind; }
+      });
+    };
+    check(s.grid.conveyors, 'conveyor');
+    check(s.grid.powerLines, 'power');
+    if (best === null || bestD > tol) return false;
+    if (bestKind === 'conveyor') s.grid.conveyors.splice(best, 1);
+    else s.grid.powerLines.splice(best, 1);
+    return true;
+  }
+  function pointSegDist(px, py, x1, y1, x2, y2) {
+    const dx = x2 - x1, dy = y2 - y1;
+    const len2 = dx * dx + dy * dy;
+    let t = len2 ? ((px - x1) * dx + (py - y1) * dy) / len2 : 0;
+    t = Math.max(0, Math.min(1, t));
+    const cx = x1 + t * dx, cy = y1 + t * dy;
+    return Math.hypot(px - cx, py - cy);
+  }
+
+  // #5: Bileşik skor — toplam kazanç + prestige + araştırma + keşif + üretim ölçeği.
+  function computeScore(s) {
+    const earn = Math.sqrt(Math.max(0, s.totalEarned)) * 4;
+    const nexusPts = s.nexus * 500;
+    const techPts = Object.keys(s.researched).length * 250;
+    const explorePts = s.sectorsOpened * 150;
+    const buildPts = machineCountTotal(s) * 20 + plantCountTotal(s) * 15;
+    return Math.floor(earn + nexusPts + techPts + explorePts + buildPts);
+  }
+  function updateTopScore(s) {
+    const sc = computeScore(s);
+    if (sc > (s.topScore || 0)) s.topScore = sc;
+    return s.topScore;
+  }
   const globalMult = (s) => 1 + s.nexus * D.prestige.nexusBonusPerPoint;
 
   // --- Araştırma / kilit ---
@@ -183,22 +378,14 @@
   }
 
   // --- Arazi ---
-  function totalLand(s) { return D.land.baseArea + s.landExpansions * D.land.expandAmount; }
-  function usedLand(s) {
-    let used = 0;
-    D.machines.forEach((def) => { used += s.machines[def.id].count * def.footprint; });
-    D.powerPlants.forEach((def) => { used += s.plants[def.id].count * def.footprint; });
-    return used;
+  // Harita istatistikleri (eski m² arazi yerine)
+  function totalCells(s) { return Object.keys(s.map.openSectors).length * D.map.sectorSize * D.map.sectorSize; }
+  function usedCells(s) {
+    let n = 0;
+    for (const id in s.grid.entities) { const e = s.grid.entities[id]; const sz = entityFootprintCells(e.defId, e.type); n += sz * sz; }
+    return n;
   }
-  function freeLand(s) { return totalLand(s) - usedLand(s); }
-  function landExpandCost(s) { return Math.ceil(D.land.expandBaseCost * Math.pow(D.land.expandGrowth, s.landExpansions)); }
-  function canExpandLand(s) { return s.coins >= landExpandCost(s); }
-  function expandLand(s) {
-    if (!canExpandLand(s)) return false;
-    s.coins = N.sub(s.coins, landExpandCost(s));
-    s.landExpansions += 1;
-    return true;
-  }
+  function freeCells(s) { return totalCells(s) - usedCells(s); }
 
   // --- İnşa (makine) ---
   function buildCost(s, id) {
@@ -207,7 +394,7 @@
   }
   function canBuild(s, id) {
     const def = mDef(id);
-    return isMachineUnlocked(s, id) && s.coins >= buildCost(s, id) && freeLand(s) >= def.footprint;
+    return isMachineUnlocked(s, id) && s.coins >= buildCost(s, id);
   }
   function buildMachine(s, id) {
     if (!canBuild(s, id)) return false;
@@ -236,7 +423,7 @@
   }
   function canBuildPlant(s, id) {
     const def = pDef(id);
-    return isPlantUnlocked(s, id) && s.coins >= plantBuildCost(s, id) && freeLand(s) >= def.footprint;
+    return isPlantUnlocked(s, id) && s.coins >= plantBuildCost(s, id);
   }
   function buildPlant(s, id) {
     if (!canBuildPlant(s, id)) return false;
@@ -265,21 +452,35 @@
     return def.baseRate * m.count * m.milestoneMult * globalMult(s);
   }
 
-  // Oto-sat: kullanıcı eşiğinin (autoSellKeep) ve güç yakıtı tamponunun üstündeki fazlayı satar.
+  // Oto-sat: her ürün için "elde tut" = deponun autoSellKeep[item]% kadarı; üstü satılır.
+  // autoSellKeep[item] bir YÜZDE (0,25,50,75,100). 0 = hepsini sat, 100 = hiç satma.
   function runAutoSell(s) {
     for (const [item, on] of Object.entries(s.autoSell)) {
-      if (on && !D.items[item].research && s.inventory[item] > 0 && D.items[item].sell > 0) {
-        const keep = Math.max(fuelReserve(s, item), s.autoSellKeep[item] || 0);
-        const sellable = Math.max(0, s.inventory[item] - keep);
-        if (sellable > 0) {
-          addCoins(s, sellable * D.items[item].sell);
-          s.inventory[item] -= sellable;
-        }
-      }
+      if (!on || D.items[item].research || D.items[item].sell <= 0) continue;
+      if (s.inventory[item] <= 0) continue;
+      const cap = storageCap(s, item);
+      const keepPct = clampPct(s.autoSellKeep[item]);
+      const keepByPct = cap * keepPct / 100;
+      const keep = Math.max(fuelReserve(s, item), keepByPct);
+      const sellable = Math.max(0, s.inventory[item] - keep);
+      if (sellable > 0) { addCoins(s, sellable * D.items[item].sell); s.inventory[item] -= sellable; }
     }
   }
-  function setAutoSellKeep(s, item, value) {
-    s.autoSellKeep[item] = Math.max(0, Math.floor(value) || 0);
+  function clampPct(v) { v = Math.round((v || 0) / 25) * 25; return Math.max(0, Math.min(100, v)); }
+  function setAutoSellKeep(s, item, pct) { s.autoSellKeep[item] = clampPct(pct); }
+
+  // Manuel kısmi satış: envanterin fraction'ını (0..1) sat. Yakıt tamponu korunur.
+  function sellFraction(s, item, fraction) {
+    if (D.items[item].research || D.items[item].sell <= 0) return 0;
+    const have = s.inventory[item] || 0;
+    if (have <= 0) return 0;
+    const reserve = fuelReserve(s, item);
+    const avail = Math.max(0, have - reserve);
+    const amt = Math.min(avail, have * Math.max(0, Math.min(1, fraction)));
+    if (amt <= 0) return 0;
+    const gain = amt * D.items[item].sell;
+    s.inventory[item] -= amt; addCoins(s, gain);
+    return gain;
   }
 
   // Bir parça güç santrali yakıtıysa, çalışan santrallerin ~30sn'lik ihtiyacını döndürür.
@@ -370,6 +571,7 @@
       });
     }
     s.stats.playTimeSec += dt;
+    updateTopScore(s);
     return s;
   }
 
@@ -453,8 +655,10 @@
     D.machines.forEach((def) => { s.machines[def.id] = { count: 0, hasManager: false, eff: 0, milestoneMult: 1 }; });
     D.powerPlants.forEach((def) => { s.plants[def.id] = { count: 0 }; });
     s.researched = {};
-    s.landExpansions = 0;
+    s.sectorsOpened = 0;
     s.grid = { entities: {}, conveyors: [], powerLines: [], nextId: 1 };
+    s.map = { openSectors: {}, nodes: {}, nodeNextSeed: (s.map.nodeNextSeed || 1) + 7 };
+    initMap(s);
     return g;
   }
 
@@ -485,15 +689,21 @@
     createInitialState, mDef, pDef, globalMult,
     isMachineUnlocked, isPlantUnlocked,
     storageCap, storageUpgradeCost, upgradeStorage,
-    totalLand, usedLand, freeLand, landExpandCost, canExpandLand, expandLand,
+    totalCells, usedCells, freeCells,
     buildCost, canBuild, buildMachine, nextMilestone,
     plantBuildCost, canBuildPlant, buildPlant,
     canBuyManager, buyManager,
     machineRate, computePower, tick, manualClick,
-    addCoins, sellItem, toggleAutoSell, setAutoSellKeep, runAutoSell, itemInfo,
+    addCoins, sellItem, sellFraction, toggleAutoSell, setAutoSellKeep, runAutoSell, itemInfo,
     gridSize, entityFootprintCells, canPlaceAt, placeMachine, placePlant, moveEntity,
-    removeEntity, addConveyor, addPowerLine, removeConveyor, entityCenter, cellOccupiedExceptSelf,
+    removeEntity, addConveyor, addPowerLine, removeConveyor, removeLineNear, entityCenter, cellOccupiedExceptSelf,
     CELL_M2,
+    // harita & keşif & nodlar
+    mapSide, sectorsPerSide, cellSector, isSectorOpen, isCellOpen, openSectorList, openableSectors,
+    sectorOpenCost, canOpenSector, openSector, nodeAt, nodeVisible, hasFreeNodeFor,
+    isExtractor, extractorNodeType,
+    // skor
+    computeScore, updateTopScore,
     canResearch, isResearchVisible, doResearch,
     applyOfflineProgress, canPrestige, projectedNexus, prestige,
     machineCountTotal, plantCountTotal,

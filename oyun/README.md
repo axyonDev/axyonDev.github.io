@@ -1,4 +1,4 @@
-# Axyon Idle Factory — v2.2 (Grafik Fabrika)
+# Axyon Idle Factory — v3.0 (Keşif & Kaynak Nodları)
 
 Özgün üretim zinciri idle fabrika oyunu. Kestros Kolonisi'nde hammadeden elektroniğe
 uzanan bir sanayi kur, otomatikleştir, dört darboğazı yönet: **güç, arazi, depo, girdi**.
@@ -64,6 +64,18 @@ Fabrika artık **gezegen yüzeyinde** kuruluyor. Panel yerine tuval:
 > Bu **Yol A**: bağlantılar ve akış görseldir; item ekonomisi hâlâ oranlı-throughput (hızlı, mobil dostu, PWA korunur). İleride bant üzerinde tek tek item fiziğine (**Yol B**) evrilebilir.
 
 Grid boyutu araziye bağlı (her hücre ~4m²) — arazi genişledikçe yüzey büyür. Beşinci darboğaz: **yerleşim/mesafe**.
+
+## 🧭 v3.0 — Keşif, Kaynak Nodları & Gelişmiş Satış
+Büyük güncelleme: harita artık **sabit ve büyük** (48×48), bölgelere ayrılmış. "m² genişlet" kalktı; yerine **keşif**:
+- **Bölge aç/keşfet** — kapalı (sisli) bir bölgeye tıkla veya HUD'dan aç (artan kredi maliyeti). Bölge açılınca içindeki **kaynak yatakları** ortaya çıkar.
+- **Kaynak nodları** — demir/bakır/kömür/taş/su/petrol/uranyum yatakları haritada gizli. Başlangıç bölgesinde temel 4 kaynak garantili; uzak bölgelerde nadir kaynaklar (petrol, uranyum).
+- **Katı kural (Factorio gibi):** madenler/çıkarıcılar SADECE eşleşen kaynak nodunun üzerine kurulur. Daha çok üretim = daha çok keşif. İşleyiciler (fırın, montaj, lab) ve santraller boş zemine kurulur.
+
+### Diğer yenilikler
+- **Bağlantı silme** — Sil modunda konveyör/elektrik hattına tıkla → o hat silinir (yapı silmeden).
+- **Makine üstü istatistik** — yakınlaştırınca her yapının üzerinde güç (kW) ve üretim/sn rozeti.
+- **Gelişmiş oto-sat** — her ürün için OTO + **%0/25/50/75/100 elde tut** oranı. Hızlı sat (½ / Tümü). ☑ ile ürün seç, **toplu sat** (%25/50/75/Tümü) ve toplu OTO.
+- **Skor / En yüksek skor** — bileşik skor (kazanç + prestige + araştırma + keşif + üretim). HUD'da 🏅 gösterilir; ileride online lider tablosu için hazır.
 
 ## ✅ Test durumu
 - Çekirdek: 45+ birim testi (arazi, depo, güç brownout, araştırma, prestige, bütünlük)
