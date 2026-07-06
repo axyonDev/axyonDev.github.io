@@ -1,4 +1,4 @@
-# Axyon Idle Factory — v2.1
+# Axyon Idle Factory — v2.2 (Grafik Fabrika)
 
 Özgün üretim zinciri idle fabrika oyunu. Kestros Kolonisi'nde hammadeden elektroniğe
 uzanan bir sanayi kur, otomatikleştir, dört darboğazı yönet: **güç, arazi, depo, girdi**.
@@ -51,11 +51,25 @@ src/main.js             → loop + olaylar
 4. **Materyal bilgi ekranı** — envanterde parçaya tıkla (mobilde basılı tut): açıklama, üreten, tüketen, değer, akış durumu.
 5. **Excel milestone hiyerarşisine sadakat** — aşama yapısı referans hiyerarşiyle hizalı; isimler tamamen özgün.
 
+## 🗺️ v2.2 — Grafik Fabrika (canvas mekânsal arayüz)
+Fabrika artık **gezegen yüzeyinde** kuruluyor. Panel yerine tuval:
+- **Sürükle-bırak yerleşim** — yapı paletinden seç, yüzeye tıkla. Yeşil = uygun, kırmızı = dolu/yetersiz.
+- **Konveyör çek** — kaynak makineye tıkla, hedefe tıkla. Bant üzerinde üretilen item ikonu **akar** (kaynak çalışıyorsa).
+- **Elektrik hattı** — santralden makineye güç dağıt (kesikli sarı hat).
+- **Pan & zoom** — boş alanı sürükle kaydır, tekerlek/butonla yakınlaş. Mobilde dokunma.
+- **Seç/taşı** — yapıya tıkla: alttan bilgi paneli (çalıştır, manager, bilgi). Sürükle: taşı.
+- **Sil** — yapıyı kaldır (yarı iade), bağlı hatlar otomatik temizlenir.
+- Durum renkli kenarlar: yeşil = tam hız, sarı = kısıtlı, kırmızı = durdu, ✋ = manuel.
+
+> Bu **Yol A**: bağlantılar ve akış görseldir; item ekonomisi hâlâ oranlı-throughput (hızlı, mobil dostu, PWA korunur). İleride bant üzerinde tek tek item fiziğine (**Yol B**) evrilebilir.
+
+Grid boyutu araziye bağlı (her hücre ~4m²) — arazi genişledikçe yüzey büyür. Beşinci darboğaz: **yerleşim/mesafe**.
+
 ## ✅ Test durumu
 - Çekirdek: 45+ birim testi (arazi, depo, güç brownout, araştırma, prestige, bütünlük)
 - Zincir denetleyici: tech ağacında döngüsel/erişilemez kilit YOK (otomatik doğrulama)
-- Yeni özellikler: 13 birim + 13 DOM testi (oto-sat eşiği, rapor, bilgi ekranı)
-- Regresyon: tam-zincir (madenden elektroniğe), deadlock, yakıt tampon, save v6
+- Grafik katman: 14 mekânsal (yerleştir/taşı/sil/konveyör/hat) + 10 DOM (canvas/palet/inspector) testi
+- Regresyon: tam-zincir, deadlock, yakıt tampon, prestige grid sıfırlama, save v7
 - Denge: 5/15/30/60 dk simülasyonlarıyla doğrulandı
 - Çözülen kritik hatalar: başlangıç güç deadlock'u, kömür yakıt kilitlenmesi, zincir açmazı
 

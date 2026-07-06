@@ -21,7 +21,7 @@
     Object.keys(D.items).forEach((k) => { inventory[k] = 0; autoSell[k] = false; autoSellKeep[k] = 0; storageLevel[k] = 0; produced[k] = 0; flow[k] = 0; });
 
     return {
-      version: 6,
+      version: 7,
       coins: 120, totalEarned: 0, runEarned: 0,
       nexus: 0, prestigeCount: 0,
       inventory, autoSell, autoSellKeep, storageLevel,
@@ -32,14 +32,127 @@
       stats: { machinesBuilt: 0, plantsBuilt: 0, managersBought: 0, playTimeSec: 0, produced },
       flow,
       settings: { theme: 'dark' },
-      // güç anlık değerleri (UI için, tick'te güncellenir)
       _power: { supply: 0, demand: 0, ratio: 1 },
+      // === MEKÂNSAL KATMAN (grafik arayüz) ===
+      grid: {
+        entities: {},      // id -> { id, type:'machine'|'plant', defId, x, y }
+        conveyors: [],     // { from: entityId, to: entityId }
+        powerLines: [],    // { from: entityId, to: entityId }  (santral -> makine)
+        nextId: 1,
+      },
       lastSeen: Date.now(),
     };
   }
 
   const mDef = (id) => D.machines.find((m) => m.id === id);
   const pDef = (id) => D.powerPlants.find((p) => p.id === id);
+
+  // ===== MEKÂNSAL KATMAN =====
+  // Grid boyutu araziye göre: her hücre 1 birim, toplam hücre ~ toplam m² / hücreBaşınaM²
+  const CELL_M2 = 4; // her grid hücresi 4 m² temsil eder
+  function gridSize(s) {
+    // kare grid; kenar = sqrt(toplam m² / CELL_M2)
+    const cells = Math.floor(totalLand(s) / CELL_M2);
+    const side = Math.max(8, Math.floor(Math.sqrt(cells)));
+    return side;
+  }
+  function entityFootprintCells(defId, type) {
+    // makine footprint m² -> hücre sayısı (kare kök, min 1)
+    const def = type === 'plant' ? pDef(defId) : mDef(defId);
+    return Math.max(1, Math.round(Math.sqrt(def.footprint / CELL_M2)));
+  }
+  function cellOccupied(s, x, y, ignoreId) {
+    for (const id in s.grid.entities) {
+      if (id === ignoreId) continue;
+      const e = s.grid.entities[id];
+      const sz = entityFootprintCells(e.defId, e.type);
+      if (x >= e.x && x < e.x + sz && y >= e.y && y < e.y + sz) return true;
+    }
+    return false;
+  }
+  function canPlaceAt(s, defId, type, x, y) {
+    const sz = entityFootprintCells(defId, type);
+    const side = gridSize(s);
+    if (x < 0 || y < 0 || x + sz > side || y + sz > side) return false;
+    for (let dx = 0; dx < sz; dx++) for (let dy = 0; dy < sz; dy++) {
+      if (cellOccupied(s, x + dx, y + dy)) return false;
+    }
+    return true;
+  }
+  // Yerleştir: ekonomik inşa (para+arazi+kilit) + grid'e ekle. Başarılıysa entity id döner.
+  function placeMachine(s, defId, x, y) {
+    if (!canPlaceAt(s, defId, 'machine', x, y)) return null;
+    if (!buildMachine(s, defId)) return null; // para/arazi/kilit kontrolü + count++
+    const id = 'e' + s.grid.nextId++;
+    s.grid.entities[id] = { id, type: 'machine', defId, x, y };
+    return id;
+  }
+  function placePlant(s, defId, x, y) {
+    if (!canPlaceAt(s, defId, 'plant', x, y)) return null;
+    if (!buildPlant(s, defId)) return null;
+    const id = 'e' + s.grid.nextId++;
+    s.grid.entities[id] = { id, type: 'plant', defId, x, y };
+    return id;
+  }
+  function moveEntity(s, entityId, x, y) {
+    const e = s.grid.entities[entityId];
+    if (!e) return false;
+    if (!canPlaceAt(s, e.defId, e.type, x, y) && !(x === e.x && y === e.y)) {
+      // hedef, kendi hücresi hariç doluysa taşıma
+      if (cellOccupiedExceptSelf(s, e, x, y)) return false;
+    }
+    e.x = x; e.y = y;
+    return true;
+  }
+  function cellOccupiedExceptSelf(s, e, x, y) {
+    const sz = entityFootprintCells(e.defId, e.type);
+    const side = gridSize(s);
+    if (x < 0 || y < 0 || x + sz > side || y + sz > side) return true;
+    for (let dx = 0; dx < sz; dx++) for (let dy = 0; dy < sz; dy++) {
+      if (cellOccupied(s, x + dx, y + dy, e.id)) return true;
+    }
+    return false;
+  }
+  // Sil: grid'den çıkar + count-- + bağlı hatları temizle + para İADESİ (yarısı)
+  function removeEntity(s, entityId) {
+    const e = s.grid.entities[entityId];
+    if (!e) return false;
+    if (e.type === 'machine') {
+      s.machines[e.defId].count = Math.max(0, s.machines[e.defId].count - 1);
+      if (s.machines[e.defId].count === 0) s.machines[e.defId].hasManager = false;
+    } else {
+      s.plants[e.defId].count = Math.max(0, s.plants[e.defId].count - 1);
+    }
+    delete s.grid.entities[entityId];
+    s.grid.conveyors = s.grid.conveyors.filter((c) => c.from !== entityId && c.to !== entityId);
+    s.grid.powerLines = s.grid.powerLines.filter((l) => l.from !== entityId && l.to !== entityId);
+    return true;
+  }
+  // Konveyör çek: iki makine arası (görsel akış; Yol A). Aynı çift varsa eklemez.
+  function addConveyor(s, fromId, toId) {
+    if (fromId === toId) return false;
+    const from = s.grid.entities[fromId], to = s.grid.entities[toId];
+    if (!from || !to) return false;
+    if (s.grid.conveyors.some((c) => c.from === fromId && c.to === toId)) return false;
+    s.grid.conveyors.push({ from: fromId, to: toId });
+    return true;
+  }
+  function addPowerLine(s, fromId, toId) {
+    const from = s.grid.entities[fromId], to = s.grid.entities[toId];
+    if (!from || !to) return false;
+    // hat sadece santral -> makine
+    if (from.type !== 'plant' || to.type !== 'machine') return false;
+    if (s.grid.powerLines.some((l) => l.from === fromId && l.to === toId)) return false;
+    s.grid.powerLines.push({ from: fromId, to: toId });
+    return true;
+  }
+  function removeConveyor(s, fromId, toId) {
+    s.grid.conveyors = s.grid.conveyors.filter((c) => !(c.from === fromId && c.to === toId));
+  }
+  function entityCenter(s, e) {
+    const sz = entityFootprintCells(e.defId, e.type);
+    return { cx: e.x + sz / 2, cy: e.y + sz / 2 };
+  }
   const globalMult = (s) => 1 + s.nexus * D.prestige.nexusBonusPerPoint;
 
   // --- Araştırma / kilit ---
@@ -341,6 +454,7 @@
     D.powerPlants.forEach((def) => { s.plants[def.id] = { count: 0 }; });
     s.researched = {};
     s.landExpansions = 0;
+    s.grid = { entities: {}, conveyors: [], powerLines: [], nextId: 1 };
     return g;
   }
 
@@ -377,6 +491,9 @@
     canBuyManager, buyManager,
     machineRate, computePower, tick, manualClick,
     addCoins, sellItem, toggleAutoSell, setAutoSellKeep, runAutoSell, itemInfo,
+    gridSize, entityFootprintCells, canPlaceAt, placeMachine, placePlant, moveEntity,
+    removeEntity, addConveyor, addPowerLine, removeConveyor, entityCenter, cellOccupiedExceptSelf,
+    CELL_M2,
     canResearch, isResearchVisible, doResearch,
     applyOfflineProgress, canPrestige, projectedNexus, prestige,
     machineCountTotal, plantCountTotal,

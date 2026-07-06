@@ -15,7 +15,7 @@
   }
 
   function buildMachineCards() {
-    const c = el('machines-container'); c.innerHTML = '';
+    const c = el('machines-container'); if (!c) return; c.innerHTML = '';
     D.machines.forEach((def) => {
       const card = document.createElement('div');
       card.className = 'mcard'; card.id = `card-${def.id}`;
@@ -46,7 +46,7 @@
   }
 
   function buildPlantCards() {
-    const c = el('plants-container'); c.innerHTML = '';
+    const c = el('plants-container'); if (!c) return; c.innerHTML = '';
     D.powerPlants.forEach((def) => {
       const card = document.createElement('div');
       card.className = 'pcard'; card.id = `pcard-${def.id}`;
@@ -147,10 +147,11 @@
     el('land-expand-cost').textContent = N.format(E.landExpandCost(state));
     el('land-expand-btn').classList.toggle('disabled', !E.canExpandLand(state));
 
-    // Makineler
+    // Makineler (eski panel kartları — grafik arayüzde yok; varsa güncelle)
     D.machines.forEach((def) => {
-      const m = state.machines[def.id];
       const card = el(`card-${def.id}`);
+      if (!card) return;
+      const m = state.machines[def.id];
       const unlocked = E.isMachineUnlocked(state, def.id);
       card.classList.toggle('locked', !unlocked);
       if (!unlocked) {
@@ -197,6 +198,7 @@
     // Santraller
     D.powerPlants.forEach((def) => {
       const pc = el(`pcard-${def.id}`);
+      if (!pc) return;
       const unlocked = E.isPlantUnlocked(state, def.id);
       pc.classList.toggle('locked', !unlocked);
       if (!unlocked) return;
@@ -324,6 +326,77 @@
       <div class="rs-box ${stopped.length?'bad':''}"><span>Sorunlu hat</span><b>${starved.length}</b></div>`;
   }
 
+  // ===== GRAFİK ARAYÜZ (canvas) yardımcıları =====
+  function buildPalette(state, E) {
+    const mList = el('fx-palette-machines'), pList = el('fx-palette-plants');
+    mList.innerHTML = ''; pList.innerHTML = '';
+    D.machines.forEach((def) => {
+      if (!E.isMachineUnlocked(state, def.id)) return;
+      const item = document.createElement('button');
+      item.className = 'fx-palette-item'; item.dataset.place = def.id; item.dataset.ptype = 'machine';
+      item.innerHTML = `<span class="pi-icon">${def.icon}</span>
+        <span class="pi-body"><span class="pi-name">${def.name}</span>
+        <span class="pi-cost">${N.format(E.buildCost(state, def.id))} 🪙 · ${def.footprint}m² · ${def.power}kW</span></span>`;
+      mList.appendChild(item);
+    });
+    D.powerPlants.forEach((def) => {
+      if (!E.isPlantUnlocked(state, def.id)) return;
+      const fuel = def.fuel ? D.items[def.fuel.item].icon : '☀️';
+      const item = document.createElement('button');
+      item.className = 'fx-palette-item'; item.dataset.place = def.id; item.dataset.ptype = 'plant';
+      item.innerHTML = `<span class="pi-icon">${def.icon}</span>
+        <span class="pi-body"><span class="pi-name">${def.name}</span>
+        <span class="pi-cost">${N.format(E.plantBuildCost(state, def.id))} 🪙 · +${def.output}kW · ${fuel}</span></span>`;
+      pList.appendChild(item);
+    });
+    if (!mList.children.length) mList.innerHTML = '<div class="fx-palette-empty">Makine yok — araştırma yap.</div>';
+    if (!pList.children.length) pList.innerHTML = '<div class="fx-palette-empty">Santral yok — araştırma yap.</div>';
+  }
+
+  function showInspector(state, E, entity) {
+    const box = el('fx-inspector');
+    if (!entity) { box.classList.add('hidden'); return; }
+    const def = entity.type === 'plant' ? E.pDef(entity.defId) : E.mDef(entity.defId);
+    if (entity.type === 'machine') {
+      const m = state.machines[entity.defId];
+      const eff = m.hasManager ? Math.round(m.eff * 100) : 0;
+      const recipe = Object.entries(def.recipe.in).map(([k,v])=>`${D.items[k].icon}${v>1?'×'+v:''}`).join(' ') || '—';
+      const out = Object.entries(def.recipe.out).map(([k,v])=>`${D.items[k].icon}${v>1?'×'+v:''}`).join(' ');
+      box.innerHTML = `
+        <div class="fxi-head"><span class="fxi-icon">${def.icon}</span>
+          <div><div class="fxi-name">${def.name}</div>
+          <div class="fxi-sub">${recipe} → ${out}</div></div>
+          <button class="x" id="fxi-close">✕</button></div>
+        <div class="fxi-stats">
+          <span>Durum: <b class="${m.hasManager?(eff>=95?'ok':'warn'):'dim'}">${!m.hasManager?'Manuel':eff>=95?'Tam hız':'Kısıtlı %'+eff}</b></span>
+        </div>
+        <div class="fxi-actions">
+          <button class="fxi-btn" data-fxi="run">▶ Çalıştır</button>
+          ${m.hasManager ? '<button class="fxi-btn owned" disabled>✓ Manager</button>'
+            : `<button class="fxi-btn" data-fxi="manager" ${E.canBuyManager(state,entity.defId)?'':'disabled'}>⚙️ Manager ${N.format(def.managerCost)}</button>`}
+          <button class="fxi-btn" data-fxi="info">ⓘ Bilgi</button>
+        </div>`;
+    } else {
+      const fuel = def.fuel ? `${D.items[def.fuel.item].icon} ${D.items[def.fuel.item].name}` : 'yakıtsız';
+      box.innerHTML = `
+        <div class="fxi-head"><span class="fxi-icon">${def.icon}</span>
+          <div><div class="fxi-name">${def.name}</div>
+          <div class="fxi-sub">+${def.output}kW · ${fuel}</div></div>
+          <button class="x" id="fxi-close">✕</button></div>
+        <div class="fxi-stats"><span>Bu santralden makinelere ⚡ Hat çekerek güç dağıt.</span></div>`;
+    }
+    box.dataset.entity = entity.id;
+    box.classList.remove('hidden');
+  }
+
+  function setToolbarMode(mode) {
+    document.querySelectorAll('.fx-tool[data-mode]').forEach((b) => b.classList.toggle('active', b.dataset.mode === mode));
+    const hints = { select:'Yapıya tıkla: seç · sürükle: taşı · boşluk sürükle: kaydır',
+      place:'Yerleştirmek için yüzeye tıkla · yeşil = uygun', conveyor:'Kaynak makineye tıkla, sonra hedefe: konveyör',
+      power:'Santrale tıkla, sonra makineye: elektrik hattı', delete:'Silmek için yapıya tıkla (yarı iade)' };
+    const h = el('fx-hint'); if (h) h.textContent = hints[mode] || '';
+  }
+
   function switchTab(tab) {
     document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
     document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
@@ -336,5 +409,6 @@
     el, buildMachineCards, buildPlantCards, buildInventory, buildResearch,
     render, pulse, spawnFloat, showModal, hideModal, renderAchievements, switchTab,
     showItemInfo, renderReport,
+    buildPalette, showInspector, setToolbarMode,
   };
 })(window);

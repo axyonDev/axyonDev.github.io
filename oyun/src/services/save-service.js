@@ -3,7 +3,7 @@
  */
 (function (global) {
   const KEY = 'axyon_idle_factory_v2';
-  const CURRENT_VERSION = 6;
+  const CURRENT_VERSION = 7;
   function save(state) {
     try { state.lastSeen = Date.now(); localStorage.setItem(KEY, JSON.stringify(state)); return true; }
     catch (e) { console.error('[Save]', e); return false; }

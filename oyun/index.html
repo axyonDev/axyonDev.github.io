@@ -63,7 +63,38 @@
 
   <div class="tab-content">
     <div class="tab-panel active" id="panel-factory">
-      <div id="machines-container" class="machines"></div>
+      <div class="factory-view">
+        <!-- Araç çubuğu -->
+        <div class="fx-toolbar">
+          <button class="fx-tool active" data-mode="select" title="Seç / taşı">✋ Seç</button>
+          <button class="fx-tool" data-mode="conveyor" title="Konveyör çek">🔗 Konveyör</button>
+          <button class="fx-tool" data-mode="power" title="Elektrik hattı çek">⚡ Hat</button>
+          <button class="fx-tool danger" data-mode="delete" title="Sil">🗑️ Sil</button>
+          <div class="fx-spacer"></div>
+          <button class="fx-tool" id="fx-build-toggle" title="Yapı paleti">🏗️ İnşa</button>
+          <button class="fx-zoom" id="fx-zoomin" title="Yakınlaş">+</button>
+          <button class="fx-zoom" id="fx-zoomout" title="Uzaklaş">−</button>
+          <button class="fx-zoom" id="fx-recenter" title="Ortala">⊙</button>
+        </div>
+        <!-- Canvas -->
+        <div class="fx-stage">
+          <canvas id="factory-canvas"></canvas>
+          <!-- Yapı paleti (açılır) -->
+          <div class="fx-palette hidden" id="fx-palette">
+            <div class="fx-palette-head">Yapı Seç <button class="x" id="fx-palette-close">✕</button></div>
+            <div class="fx-palette-tabs">
+              <button class="fx-pt active" data-ptab="machines">Makineler</button>
+              <button class="fx-pt" data-ptab="plants">Santraller</button>
+            </div>
+            <div class="fx-palette-list" id="fx-palette-machines"></div>
+            <div class="fx-palette-list hidden" id="fx-palette-plants"></div>
+          </div>
+          <!-- Seçili yapı bilgisi (alt) -->
+          <div class="fx-inspector hidden" id="fx-inspector"></div>
+          <!-- Mod ipucu -->
+          <div class="fx-hint" id="fx-hint"></div>
+        </div>
+      </div>
     </div>
     <div class="tab-panel" id="panel-report">
       <p class="panel-hint">Tüm çalışan hatların anlık durumu. Bir satıra tıkla → ilgili fabrikaya git. Kırmızı = durdu, sarı = girdi/güç kısıtlı.</p>
@@ -120,6 +151,7 @@
 <script src="src/core/quests.js"></script>
 <script src="src/services/save-service.js"></script>
 <script src="src/ui/toast.js"></script>
+<script src="src/canvas/factory-canvas.js"></script>
 <script src="src/ui/ui.js"></script>
 <script src="src/main.js"></script>
 <script>if('serviceWorker' in navigator && location.protocol!=='file:'){navigator.serviceWorker.register('sw.js').catch(()=>{});}</script>

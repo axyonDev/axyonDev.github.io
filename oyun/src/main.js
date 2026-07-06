@@ -20,6 +20,76 @@
   UI.buildMachineCards(); UI.buildPlantCards(); UI.buildInventory(); UI.buildResearch();
   UI.render(state, E);
 
+  // ===== GRAFİK FABRİKA (canvas) =====
+  const FC = window.Axyon.FactoryCanvas;
+  const canvasEl = UI.el('factory-canvas');
+  let selectedEntity = null;
+
+  function fcChange() { S.save(state); UI.buildPalette(state, E); postAction(); }
+  FC.refreshTheme();
+  FC.init(canvasEl, state, E, {
+    onChange: fcChange,
+    onSelect: (ent) => { selectedEntity = ent; UI.showInspector(state, E, ent); },
+    onPlaced: (defId) => { T.show(`🏗️ ${E.mDef(defId)?.name || E.pDef(defId)?.name} yerleştirildi`, 'success'); },
+    onPlaceFail: (defId, type) => {
+      const def = type === 'plant' ? E.pDef(defId) : E.mDef(defId);
+      const cost = type === 'plant' ? E.plantBuildCost(state, defId) : E.buildCost(state, defId);
+      if (state.coins < cost) T.show('💰 Yetersiz kredi', 'error');
+      else if (E.freeLand(state) < def.footprint) T.show('🗺️ Yetersiz arazi — genişlet', 'error');
+      else T.show('⛔ Buraya yerleştirilemez', 'error');
+    },
+    onPowerFail: () => T.show('⚡ Hat sadece santralden makineye çekilir', 'error'),
+    onModeChange: (m) => UI.setToolbarMode(m),
+  });
+  UI.buildPalette(state, E);
+  UI.setToolbarMode('select');
+
+  // canvas render döngüsü
+  function fcLoop() { if (UI.el('panel-factory').classList.contains('active')) FC.draw(); requestAnimationFrame(fcLoop); }
+  requestAnimationFrame(fcLoop);
+
+  // Araç çubuğu
+  document.querySelectorAll('.fx-tool[data-mode]').forEach((b) => b.addEventListener('click', () => {
+    FC.setMode(b.dataset.mode); UI.el('fx-palette').classList.add('hidden');
+  }));
+  UI.el('fx-build-toggle').addEventListener('click', () => {
+    UI.buildPalette(state, E); UI.el('fx-palette').classList.toggle('hidden');
+  });
+  UI.el('fx-palette-close').addEventListener('click', () => UI.el('fx-palette').classList.add('hidden'));
+  document.querySelectorAll('.fx-pt').forEach((b) => b.addEventListener('click', () => {
+    document.querySelectorAll('.fx-pt').forEach((x) => x.classList.remove('active'));
+    b.classList.add('active');
+    UI.el('fx-palette-machines').classList.toggle('hidden', b.dataset.ptab !== 'machines');
+    UI.el('fx-palette-plants').classList.toggle('hidden', b.dataset.ptab !== 'plants');
+  }));
+  UI.el('fx-palette').addEventListener('click', (evt) => {
+    const item = evt.target.closest('[data-place]');
+    if (!item) return;
+    FC.setMode('place', item.dataset.place, item.dataset.ptype);
+    UI.el('fx-palette').classList.add('hidden');
+    T.show(`📍 Yerleştirmek için yüzeye tıkla`, 'info');
+  });
+  UI.el('fx-zoomin').addEventListener('click', () => FC.zoomBy(1.2));
+  UI.el('fx-zoomout').addEventListener('click', () => FC.zoomBy(1/1.2));
+  UI.el('fx-recenter').addEventListener('click', () => FC.recenter());
+
+  // Inspector aksiyonları
+  UI.el('fx-inspector').addEventListener('click', (evt) => {
+    if (evt.target.id === 'fxi-close') { UI.el('fx-inspector').classList.add('hidden'); selectedEntity = null; return; }
+    const btn = evt.target.closest('[data-fxi]'); if (!btn || !selectedEntity) return;
+    const act = btn.dataset.fxi, defId = selectedEntity.defId;
+    if (act === 'run') {
+      const g = E.manualClick(state, defId);
+      if (g > 0) T.show(`+${N.format(g)} ${D.items[Object.keys(E.mDef(defId).recipe.out)[0]].icon}`, 'success');
+      else T.show('⚠️ Girdi yok veya depo dolu', 'error');
+    } else if (act === 'manager') {
+      if (E.buyManager(state, defId)) { T.show('⚙️ Manager alındı', 'success'); S.save(state); }
+    } else if (act === 'info') {
+      const out = Object.keys(E.mDef(defId).recipe.out)[0]; UI.showItemInfo(state, E, out);
+    }
+    UI.showInspector(state, E, selectedEntity); UI.render(state, E);
+  });
+
   // Sekmeler
   document.querySelectorAll('.tab-btn').forEach(b => b.addEventListener('click', () => {
     UI.switchTab(b.dataset.tab);
@@ -58,35 +128,28 @@
     S.save(state);
   });
 
-  // Makineler
-  UI.el('machines-container').addEventListener('click', (evt) => {
-    const btn = evt.target.closest('button[data-action]');
-    if (!btn || btn.classList.contains('disabled')) return;
-    const a = btn.dataset.action, id = btn.dataset.machine;
-    if (a === 'click') {
-      const g = E.manualClick(state, id);
-      if (g > 0) { const out=Object.keys(E.mDef(id).recipe.out)[0]; const r=btn.getBoundingClientRect();
-        UI.spawnFloat(`+${N.format(g)} ${D.items[out].icon}`, r.left+r.width/2+(Math.random()*30-15), r.top); UI.pulse(id); }
-      else if (state.machines[id].count === 0) T.show('⚠️ Önce bu makineyi inşa et', 'error');
-      else T.show('⚠️ Girdi yok veya depo dolu', 'error');
-    } else if (a === 'build') {
-      if (E.buildMachine(state, id)) { S.save(state); }
-      else if (E.freeLand(state) < E.mDef(id).footprint) T.show('🗺️ Yetersiz arazi — Arazi sekmesinden genişlet', 'error');
-    } else if (a === 'manager') {
-      if (E.buyManager(state, id)) { T.show('⚙️ Manager alındı — otomatik üretim', 'success'); S.save(state); }
-    }
-    postAction();
-  });
-
-  // Santraller
-  UI.el('plants-container').addEventListener('click', (evt) => {
+  // Santraller (güç sekmesinden hızlı kurulum → haritada boş bir hücreye yerleştir)
+  const plantsC = UI.el('plants-container');
+  if (plantsC) plantsC.addEventListener('click', (evt) => {
     const btn = evt.target.closest('button[data-action="buildplant"]');
     if (!btn || btn.classList.contains('disabled')) return;
     const id = btn.dataset.plant;
-    if (E.buildPlant(state, id)) { T.show(`⚡ ${E.pDef(id).name} kuruldu`, 'success'); S.save(state); }
+    const spot = findFreeCell(id, 'plant');
+    if (!spot) { T.show('🗺️ Haritada boş yer yok — arazi genişlet', 'error'); return; }
+    if (E.placePlant(state, id, spot.x, spot.y)) { T.show(`⚡ ${E.pDef(id).name} kuruldu`, 'success'); S.save(state); UI.buildPalette(state, E); }
     else if (E.freeLand(state) < E.pDef(id).footprint) T.show('🗺️ Yetersiz arazi', 'error');
+    else T.show('💰 Yetersiz kredi', 'error');
     postAction();
   });
+
+  // Boş hücre bulucu (otomatik yerleştirme için)
+  function findFreeCell(defId, type) {
+    const side = E.gridSize(state);
+    for (let y = 0; y < side; y++) for (let x = 0; x < side; x++) {
+      if (E.canPlaceAt(state, defId, type, x, y)) return { x, y };
+    }
+    return null;
+  }
 
   // Arazi genişlet
   UI.el('land-expand-btn').addEventListener('click', () => {
@@ -115,6 +178,7 @@
     if (!E.canPrestige(state)) return;
     if (!confirm('Nexus sıfırlama: kredi, envanter, tüm makineler, güç, arazi ve araştırma sıfırlanır. Kalıcı Nexus bonusu kazanırsın. Devam?')) return;
     const g = E.prestige(state); S.save(state);
+    FC.setState(state); UI.buildPalette(state, E); UI.el('fx-inspector').classList.add('hidden'); FC.recenter();
     UI.render(state, E);
     UI.el('prestige-result').innerHTML = `<strong>+${g} Nexus 🌟</strong> kazandın. Kalıcı üretim çarpanı: x${E.globalMult(state).toFixed(2)}.`;
     UI.showModal('prestige-modal');
@@ -131,7 +195,10 @@
     if (!r.ok) { T.show('❌ '+r.error, 'error'); return; }
     if (!confirm('Mevcut kaydın üzerine yazılacak. Emin misin?')) return;
     state = r.state; S.save(state); applyTheme(state.settings.theme);
-    UI.buildMachineCards(); UI.buildPlantCards(); UI.buildInventory(); UI.buildResearch(); UI.render(state,E);
+    if (!state.grid) state.grid = { entities: {}, conveyors: [], powerLines: [], nextId: 1 };
+    UI.buildMachineCards(); UI.buildPlantCards(); UI.buildInventory(); UI.buildResearch();
+    FC.setState(state); UI.buildPalette(state, E); UI.el('fx-inspector').classList.add('hidden');
+    UI.render(state,E);
     UI.hideModal('settings-modal'); T.show('✅ Yüklendi', 'success');
   });
   UI.el('do-reset').addEventListener('click', () => { if (confirm('TÜM ilerleme silinecek. Emin misin?')) { S.reset(); location.reload(); } });
