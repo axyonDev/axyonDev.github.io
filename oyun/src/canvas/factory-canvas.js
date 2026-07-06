@@ -175,11 +175,11 @@
     const p = localPos(ev);
     const before = screenToWorld(p.x, p.y);
     const factor = ev.deltaY < 0 ? 1.12 : 1 / 1.12;
-    cam.zoom = Math.max(0.35, Math.min(2.4, cam.zoom * factor));
+    cam.zoom = Math.max(0.08, Math.min(2.8, cam.zoom * factor));
     const after = screenToWorld(p.x, p.y);
     cam.x += before.x - after.x; cam.y += before.y - after.y;
   }
-  function zoomBy(f) { cam.zoom = Math.max(0.35, Math.min(2.4, cam.zoom * f)); }
+  function zoomBy(f) { cam.zoom = Math.max(0.08, Math.min(2.8, cam.zoom * f)); }
   function recenter() { centerCamera(E.gridSize(state)); }
 
   // ===== Çizim =====
@@ -220,12 +220,36 @@
     drawLinkPreview();
 
     ctx.restore();
+    drawMinimap(w, h);
+  }
+
+  function drawMinimap(w, h) {
+    const size = Math.min(150, Math.max(96, w * 0.16));
+    const x = w - size - 12, y = 12, side = E.gridSize(state);
+    ctx.save();
+    ctx.fillStyle = theme.bg; ctx.globalAlpha = 0.9;
+    roundRect(x, y, size, size, 10); ctx.fill();
+    ctx.globalAlpha = 1; ctx.strokeStyle = theme.grid; ctx.lineWidth = 1; ctx.stroke();
+    const ss = window.Axyon.Data.map.sectorSize, sps = E.sectorsPerSide();
+    const unit = size / sps;
+    E.openSectorList(state).forEach(({sx, sy}) => {
+      ctx.fillStyle = theme.surface; ctx.fillRect(x + sx * unit, y + sy * unit, Math.ceil(unit), Math.ceil(unit));
+    });
+    Object.values(state.grid.entities).forEach(e => {
+      ctx.fillStyle = e.type === 'plant' ? theme.power : theme.accent;
+      ctx.fillRect(x + (e.x / side) * size, y + (e.y / side) * size, 2, 2);
+    });
+    const vw = (w / cam.zoom) / (side * cell) * size, vh = (h / cam.zoom) / (side * cell) * size;
+    const vx = x + (cam.x / (side * cell)) * size, vy = y + (cam.y / (side * cell)) * size;
+    ctx.strokeStyle = theme.accent2; ctx.lineWidth = 1.5; ctx.strokeRect(vx, vy, vw, vh);
+    ctx.restore();
   }
 
   // Açık sektörler aydınlık, kapalı sektörler sisli/kilitli
   function drawSectors(side) {
     const M = window.Axyon.Data.map;
     const sps = Math.floor(M.size / M.sectorSize), ss = M.sectorSize;
+    const openableSet = new Set(E.openableSectors(state).map(o => `${o.sx},${o.sy}`));
     for (let sy = 0; sy < sps; sy++) for (let sx = 0; sx < sps; sx++) {
       const open = E.isSectorOpen(state, sx, sy);
       const px = sx * ss * cell, py = sy * ss * cell, pw = ss * cell;
@@ -238,7 +262,7 @@
         ctx.fillRect(px, py, pw, pw);
         ctx.globalAlpha = 1;
         // açılabilir mi? kilit ikonu
-        const openable = E.openableSectors(state).some((o) => o.sx === sx && o.sy === sy);
+        const openable = openableSet.has(`${sx},${sy}`);
         ctx.fillStyle = theme.dim;
         ctx.font = `${cell * 0.9}px sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
         ctx.globalAlpha = openable ? 0.5 : 0.22;
@@ -246,7 +270,7 @@
         ctx.globalAlpha = 1;
       }
       // sektör sınırı
-      ctx.strokeStyle = open ? theme.grid : (E.openableSectors(state).some((o)=>o.sx===sx&&o.sy===sy) ? theme.accent : theme.grid);
+      ctx.strokeStyle = open ? theme.grid : (openableSet.has(`${sx},${sy}`) ? theme.accent : theme.grid);
       ctx.globalAlpha = open ? 0.4 : 0.6; ctx.lineWidth = 1.5;
       ctx.strokeRect(px, py, pw, pw); ctx.globalAlpha = 1;
     }

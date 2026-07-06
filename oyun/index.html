@@ -4,169 +4,101 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
 <meta name="theme-color" content="#0f1115" />
-<title>Axyon Idle Factory</title>
+<title>Axyon Idle Factory: Frontier</title>
 <link rel="manifest" href="manifest.json" />
 <link rel="stylesheet" href="css/style.css" />
 </head>
 <body>
 <div class="app">
-
   <header class="topbar">
-    <div class="brand"><span class="brand-icon">🏭</span>
-      <div><div class="brand-name">Axyon Idle Factory</div><div class="brand-sub">v2.0 · KESTROS KOLONİSİ</div></div></div>
-    <div class="topbar-actions">
-      <button id="btn-achievements" class="icon-btn" title="Başarımlar">🏆</button>
-      <button id="btn-settings" class="icon-btn" title="Ayarlar">⚙️</button>
-    </div>
+    <div class="brand"><span class="brand-icon">🏭</span><div><div class="brand-name">Axyon Idle Factory: Frontier</div><div class="brand-sub">v4.0 · KESTROS İMPARATORLUĞU</div></div></div>
+    <div class="topbar-actions"><button id="btn-achievements" class="icon-btn" title="Başarımlar">🏆</button><button id="btn-settings" class="icon-btn" title="Ayarlar">⚙️</button></div>
   </header>
 
-  <!-- Kaynak + güç + arazi üst panel -->
   <section class="hud">
-    <div class="hud-coin">
-      <span class="coin-val"><span id="coin-display">0</span> 🪙</span>
+    <div class="hud-coin"><span class="coin-val"><span id="coin-display">0</span> 🪙</span>
       <div class="hud-chips">
         <span class="hchip">Toplam <b id="total-earned">0</b></span>
-        <span class="hchip">Nexus <b id="nexus-display">0</b> 🌟</span>
-        <span class="hchip">Çarpan <b id="multiplier-display">x1.00</b></span>
-        <span class="hchip hchip-score" id="score-chip" title="Skor · En yüksek">🏅 <b id="score-display">0</b> <small>/ <span id="topscore-display">0</span></small></span>
+        <span class="hchip">Üretim <b id="multiplier-display">x1.00</b></span>
+        <span class="hchip danger-chip">Tehdit <b id="threat-display">0.0</b> ☠️</span>
+        <span class="hchip">Filo <b id="fleet-display">0</b> 🚀</span>
+        <span class="hchip hchip-score">🏅 <b id="score-display">0</b> <small>/ <span id="topscore-display">0</span></small></span>
       </div>
     </div>
     <div class="hud-meters">
-      <div class="meter">
-        <div class="meter-top"><span>⚡ Güç</span><span class="stat-status ok" id="power-status">yeterli</span></div>
-        <div class="bar"><div class="bar-fill power" id="power-bar"></div></div>
-        <div class="meter-sub"><span id="power-supply">0</span> / <span id="power-demand">0</span> kW</div>
-      </div>
-      <div class="meter">
-        <div class="meter-top"><span>🧭 Keşif</span>
-          <button class="mini-btn" id="land-expand-btn" title="Kapalı bir bölgeye tıklayarak da açabilirsin">Bölge Aç · <span id="land-expand-cost">0</span>🪙</button></div>
-        <div class="bar"><div class="bar-fill land" id="land-bar"></div></div>
-        <div class="meter-sub"><span id="land-used">0</span> açık / <span id="land-total">0</span> bölge</div>
-      </div>
+      <div class="meter"><div class="meter-top"><span>⚡ Güç</span><span class="stat-status ok" id="power-status">yeterli</span></div><div class="bar"><div class="bar-fill power" id="power-bar"></div></div><div class="meter-sub"><span id="power-supply">0</span> / <span id="power-demand">0</span> kW</div></div>
+      <div class="meter"><div class="meter-top"><span>🧭 Gezegen</span><button class="mini-btn" id="land-expand-btn">Bölge Aç · <span id="land-expand-cost">0</span>🪙</button></div><div class="bar"><div class="bar-fill land" id="land-bar"></div></div><div class="meter-sub"><span id="land-used">0</span> açık / <span id="land-total">0</span> bölge · 300×300</div></div>
     </div>
   </section>
 
-  <section class="quest-box">
-    <div class="quest-head"><span class="quest-tag">GÖREV</span>
-      <span class="quest-desc" id="quest-desc">—</span>
-      <span class="quest-progress-text" id="quest-progress-text"></span></div>
-    <div class="bar"><div class="bar-fill quest" id="quest-bar"></div></div>
-  </section>
+  <section class="quest-box"><div class="quest-head"><span class="quest-tag">GÖREV</span><span class="quest-desc" id="quest-desc">—</span><span class="quest-progress-text" id="quest-progress-text"></span></div><div class="bar"><div class="bar-fill quest" id="quest-bar"></div></div></section>
 
-  <!-- Sekmeler -->
   <nav class="tabs">
     <button class="tab-btn active" id="tab-factory" data-tab="factory">🏭 Fabrika</button>
     <button class="tab-btn" id="tab-report" data-tab="report">📊 Rapor</button>
     <button class="tab-btn" id="tab-power" data-tab="power">⚡ Güç</button>
-    <button class="tab-btn" id="tab-research" data-tab="research">🔬 Araştırma</button>
-    <button class="tab-btn" id="tab-storage" data-tab="storage">📦 Depo</button>
+    <button class="tab-btn" id="tab-research" data-tab="research">🔬 Teknoloji</button>
+    <button class="tab-btn" id="tab-storage" data-tab="storage">📦 Depo & Pazar</button>
+    <button class="tab-btn galaxy-tab" id="tab-galaxy" data-tab="galaxy">🌌 Galaksi</button>
   </nav>
 
   <div class="tab-content">
     <div class="tab-panel active" id="panel-factory">
       <div class="factory-view">
-        <!-- Araç çubuğu -->
         <div class="fx-toolbar">
-          <button class="fx-tool active" data-mode="select" title="Seç / taşı">✋ Seç</button>
-          <button class="fx-tool" data-mode="conveyor" title="Konveyör çek">🔗 Konveyör</button>
-          <button class="fx-tool" data-mode="power" title="Elektrik hattı çek">⚡ Hat</button>
-          <button class="fx-tool danger" data-mode="delete" title="Sil">🗑️ Sil</button>
-          <div class="fx-spacer"></div>
-          <button class="fx-tool" id="fx-build-toggle" title="Yapı paleti">🏗️ İnşa</button>
-          <button class="fx-zoom" id="fx-zoomin" title="Yakınlaş">+</button>
-          <button class="fx-zoom" id="fx-zoomout" title="Uzaklaş">−</button>
-          <button class="fx-zoom" id="fx-recenter" title="Ortala">⊙</button>
+          <button class="fx-tool active" data-mode="select">✋ Seç</button><button class="fx-tool" data-mode="conveyor">🔗 Konveyör</button><button class="fx-tool" data-mode="power">⚡ Hat</button><button class="fx-tool danger" data-mode="delete">🗑️ Sil</button>
+          <div class="fx-spacer"></div><button class="fx-tool" id="fx-build-toggle">🏗️ İnşa</button><button class="fx-zoom" id="fx-zoomin">+</button><button class="fx-zoom" id="fx-zoomout">−</button><button class="fx-zoom" id="fx-recenter">⊙</button>
         </div>
-        <!-- Canvas -->
-        <div class="fx-stage">
-          <canvas id="factory-canvas"></canvas>
-          <!-- Yapı paleti (açılır) -->
-          <div class="fx-palette hidden" id="fx-palette">
-            <div class="fx-palette-head">Yapı Seç <button class="x" id="fx-palette-close">✕</button></div>
-            <div class="fx-palette-tabs">
-              <button class="fx-pt active" data-ptab="machines">Makineler</button>
-              <button class="fx-pt" data-ptab="plants">Santraller</button>
-            </div>
-            <div class="fx-palette-list" id="fx-palette-machines"></div>
-            <div class="fx-palette-list hidden" id="fx-palette-plants"></div>
-          </div>
-          <!-- Seçili yapı bilgisi (alt) -->
-          <div class="fx-inspector hidden" id="fx-inspector"></div>
-          <!-- Mod ipucu -->
-          <div class="fx-hint" id="fx-hint"></div>
+        <div class="fx-stage"><canvas id="factory-canvas"></canvas>
+          <div class="fx-palette hidden" id="fx-palette"><div class="fx-palette-head">Yapı Seç <button class="x" id="fx-palette-close">✕</button></div><div class="fx-palette-tabs"><button class="fx-pt active" data-ptab="machines">Makineler</button><button class="fx-pt" data-ptab="plants">Santraller</button></div><div class="fx-palette-list" id="fx-palette-machines"></div><div class="fx-palette-list hidden" id="fx-palette-plants"></div></div>
+          <div class="fx-inspector hidden" id="fx-inspector"></div><div class="fx-hint" id="fx-hint"></div>
         </div>
       </div>
     </div>
-    <div class="tab-panel" id="panel-report">
-      <p class="panel-hint">Tüm çalışan hatların anlık durumu. Bir satıra tıkla → ilgili fabrikaya git. Kırmızı = durdu, sarı = girdi/güç kısıtlı.</p>
-      <div id="report-summary" class="report-summary"></div>
-      <div id="report-list" class="report-list"></div>
-    </div>
-    <div class="tab-panel" id="panel-power">
-      <p class="panel-hint">Otomatik makineler güç çeker. Güç yetmezse tüm üretim kısılır. Yakıtlı santraller depodan yakıt tüketir.</p>
-      <div id="plants-container" class="plants"></div>
-    </div>
+
+    <div class="tab-panel" id="panel-report"><p class="panel-hint">Üretim hatları, bina seviyeleri ve darboğazlar. Satırdan yapı sınıfının durumunu inceleyebilirsin.</p><div id="report-summary" class="report-summary"></div><div id="report-list" class="report-list"></div></div>
+
+    <div class="tab-panel" id="panel-power"><p class="panel-hint">Santraller de Mk I–V yükselir. Üst seviyeler daha çok güç üretir fakat yakıt tüketimi de artar.</p><div id="plants-container" class="plants"></div></div>
+
     <div class="tab-panel" id="panel-research">
-      <p class="panel-hint">Laboratuvarlar veri çekirdeği (🔴🟢🔵) üretir. Çekirdekleri harcayarak yeni makine, santral ve teknolojilerin kilidini aç.</p>
-      <div id="research-list" class="research"></div>
+      <p class="panel-hint">Alfa → Beta → Gama → Delta → Omega zinciri kalıcıdır; ilerleme sıfırlanmaz. Ana teknoloji tamamlandıktan sonra sonsuz araştırmalar devam eder.</p>
+      <h3 class="section-title">Ana Teknoloji Ağı</h3><div id="research-list" class="research"></div>
+      <h3 class="section-title">Sınırsız Araştırmalar</h3><div id="repeat-research-list" class="research repeat-research"></div>
     </div>
+
     <div class="tab-panel" id="panel-storage">
-      <p class="panel-hint">☑ ile ürün seç, üstteki çubuktan toplu sat. Her satırda: <b>OTO</b> = otomatik sat + <b>%</b> elde tut oranı, hızlı sat butonları. ⤢ depoyu büyütür. ▲ artıyor / ▼ azalıyor.</p>
-      <div class="bulk-bar">
-        <label class="bulk-selall"><input type="checkbox" id="bulk-selall" /> Tümü</label>
-        <span class="bulk-label" id="bulk-count">0 seçili</span>
-        <div class="bulk-actions">
-          <span class="bulk-grp">Sat:</span>
-          <button class="bulk-btn" data-bulksell="0.25">%25</button>
-          <button class="bulk-btn" data-bulksell="0.5">%50</button>
-          <button class="bulk-btn" data-bulksell="0.75">%75</button>
-          <button class="bulk-btn danger" data-bulksell="1">Tümü</button>
-          <button class="bulk-btn oto" id="bulk-oto">OTO aç/kapa</button>
-        </div>
-      </div>
+      <p class="panel-hint">Manuel satış yerel alıcıya %85 fiyattan yapılır. Pazar Uydusu tam fiyattan, belirli kota ve sefer süresiyle toplu satış yapar.</p>
+      <section class="market-card">
+        <div class="market-head"><div><span class="market-kicker">YÖRÜNGE TİCARETİ</span><h3>Pazar Uydusu <span id="market-level">Mk I</span></h3></div><button id="market-master" class="btn-setting">AUTO KAPALI</button></div>
+        <div class="market-stats"><span>Kota <b id="market-capacity">0</b></span><span>Sefer <b id="market-cooldown">0sn</b></span><span>Son satış <b id="market-last">0</b>🪙</span><span>Sonraki <b id="market-next">—</b></span></div>
+        <div class="market-controls"><label>Elde tut:</label><button class="keep-global" data-globalkeep="0">%0</button><button class="keep-global" data-globalkeep="25">%25</button><button class="keep-global active" data-globalkeep="50">%50</button><button class="keep-global" data-globalkeep="75">%75</button><button class="keep-global" data-globalkeep="100">%100</button><button id="market-all-on" class="bulk-btn oto">Tüm ürünler açık</button><button id="market-upgrade" class="bulk-btn">Uyduyu geliştir</button></div>
+      </section>
+      <div class="bulk-bar"><label class="bulk-selall"><input type="checkbox" id="bulk-selall" /> Tümü</label><span class="bulk-label" id="bulk-count">0 seçili</span><div class="bulk-actions"><span class="bulk-grp">Yerel sat:</span><button class="bulk-btn" data-bulksell="0.25">%25</button><button class="bulk-btn" data-bulksell="0.5">%50</button><button class="bulk-btn" data-bulksell="0.75">%75</button><button class="bulk-btn danger" data-bulksell="1">Tümü</button></div></div>
       <div id="inventory-list" class="inv-list"></div>
+    </div>
+
+    <div class="tab-panel" id="panel-galaxy">
+      <div class="galaxy-hero"><div><span class="market-kicker">KESTROS KOMUTANLIĞI</span><h2>Galaktik Cephe</h2><p>Fabrikanın ürettiği gemi, yakıt, mühimmat ve savunmayla rakip kolonilere saldır; yaklaşan uzaylı baskınlarını püskürt.</p></div><div class="raid-clock"><span>Sonraki baskın</span><b id="raid-timer">—</b></div></div>
+      <div class="galaxy-grid">
+        <section class="space-card"><div class="space-head"><h3>🔭 Yıldız Haritası</h3><button id="scan-system" class="btn-setting">Sistem Tara</button></div><div id="scan-cost" class="space-sub"></div><div id="target-list" class="target-list"></div></section>
+        <section class="space-card"><div class="space-head"><h3>🚀 Yörünge Tersanesi</h3></div><div id="shipyard-list" class="shipyard-list"></div><div id="ship-queue" class="queue-list"></div></section>
+        <section class="space-card"><div class="space-head"><h3>🛡️ Gezegen Savunması</h3><span id="defense-power" class="badge">0 güç</span></div><div id="defense-list" class="shipyard-list"></div></section>
+        <section class="space-card"><div class="space-head"><h3>🛰️ Aktif Görevler</h3></div><div id="mission-list" class="mission-list"></div></section>
+      </div>
+      <section class="space-card reports-card"><div class="space-head"><h3>📡 Savaş ve İstihbarat Raporları</h3></div><div id="galaxy-reports" class="galaxy-reports"></div></section>
     </div>
   </div>
 
-  <section class="prestige">
-    <div class="prestige-info"><div class="prestige-tag">NEXUS PRESTİGE</div>
-      <div class="prestige-progress" id="prestige-progress">—</div>
-      <div class="bar"><div class="bar-fill prestige-fill" id="prestige-bar"></div></div></div>
-    <button id="prestige-btn" class="btn-prestige disabled"><span>Nexus Sıfırla</span></button>
-  </section>
-
-  <footer class="foot">Otomatik kayıt · Manuel çalıştır güç gerektirmez · Manager = otomatik + güç tüketir</footer>
+  <footer class="foot">Kalıcı imparatorluk · Otomatik kayıt · Fabrika → Filo → Fetih → Yeni teknoloji</footer>
 </div>
 
 <div id="iteminfo-modal" class="modal hidden"><div class="modal-card"><div class="modal-head"><h2 id="iteminfo-title">—</h2><button class="x" data-close="iteminfo-modal">✕</button></div><div id="iteminfo-body" class="iteminfo-body"></div></div></div>
-
-<div id="offline-modal" class="modal hidden"><div class="modal-card"><h2>Hoş geldin! 👋</h2><p id="offline-text"></p><button class="btn-modal" data-close="offline-modal">Topla</button></div></div>
-<div id="prestige-modal" class="modal hidden"><div class="modal-card"><h2>Nexus Sıfırlandı 🌟</h2><p id="prestige-result"></p><button class="btn-modal" data-close="prestige-modal">Devam</button></div></div>
+<div id="fleet-modal" class="modal hidden"><div class="modal-card wide"><div class="modal-head"><h2 id="fleet-title">Filo Gönder</h2><button class="x" data-close="fleet-modal">✕</button></div><div id="fleet-body"></div><button id="fleet-send" class="btn-modal">Saldırı Filosunu Gönder</button></div></div>
+<div id="offline-modal" class="modal hidden"><div class="modal-card"><h2>Komutan geri döndü 👋</h2><p id="offline-text"></p><button class="btn-modal" data-close="offline-modal">Devam</button></div></div>
 <div id="ach-modal" class="modal hidden"><div class="modal-card wide"><div class="modal-head"><h2>Başarımlar 🏆</h2><button class="x" data-close="ach-modal">✕</button></div><div id="ach-grid" class="ach-grid"></div></div></div>
-<div id="settings-modal" class="modal hidden"><div class="modal-card wide">
-  <div class="modal-head"><h2>Ayarlar ⚙️</h2><button class="x" data-close="settings-modal">✕</button></div>
-  <div class="settings-section"><button id="theme-toggle" class="btn-setting">🌙 Koyu tema</button></div>
-  <div class="settings-section"><label class="setting-label">Kaydı dışa aktar</label>
-    <textarea id="export-code" class="code-area" readonly placeholder="Dışa Aktar'a bas..."></textarea>
-    <button id="do-export" class="btn-setting">Dışa Aktar</button></div>
-  <div class="settings-section"><label class="setting-label">Kaydı içe aktar</label>
-    <textarea id="import-code" class="code-area" placeholder="Kod yapıştır..."></textarea>
-    <button id="do-import" class="btn-setting">İçe Aktar</button></div>
-  <div class="settings-section"><button id="do-reset" class="btn-danger">Tüm İlerlemeyi Sıfırla</button></div>
-</div></div>
+<div id="settings-modal" class="modal hidden"><div class="modal-card wide"><div class="modal-head"><h2>Ayarlar ⚙️</h2><button class="x" data-close="settings-modal">✕</button></div><div class="settings-section"><button id="theme-toggle" class="btn-setting">🌙 Koyu tema</button></div><div class="settings-section"><label class="setting-label">Kaydı dışa aktar</label><textarea id="export-code" class="code-area" readonly></textarea><button id="do-export" class="btn-setting">Dışa Aktar</button></div><div class="settings-section"><label class="setting-label">Kaydı içe aktar</label><textarea id="import-code" class="code-area"></textarea><button id="do-import" class="btn-setting">İçe Aktar</button></div><div class="settings-section"><button id="do-reset" class="btn-danger">Tüm İlerlemeyi Sıfırla</button></div></div></div>
+<div id="toast-layer" class="toast-layer"></div><div id="float-layer" class="float-layer"></div>
 
-<div id="toast-layer" class="toast-layer"></div>
-<div id="float-layer" class="float-layer"></div>
-
-<script src="src/core/numbers.js"></script>
-<script src="data/config.js"></script>
-<script src="src/core/economy.js"></script>
-<script src="src/core/quests.js"></script>
-<script src="src/services/save-service.js"></script>
-<script src="src/ui/toast.js"></script>
-<script src="src/canvas/factory-canvas.js"></script>
-<script src="src/ui/ui.js"></script>
-<script src="src/main.js"></script>
-<script>if('serviceWorker' in navigator && location.protocol!=='file:'){navigator.serviceWorker.register('sw.js').catch(()=>{});}</script>
-</body>
-</html>
+<script src="src/core/numbers.js"></script><script src="data/config.js"></script><script src="src/core/economy.js"></script><script src="src/core/quests.js"></script><script src="src/services/save-service.js"></script><script src="src/ui/toast.js"></script><script src="src/canvas/factory-canvas.js"></script><script src="src/ui/ui.js"></script><script src="src/main.js"></script>
+<script>if('serviceWorker' in navigator&&location.protocol!=='file:'){navigator.serviceWorker.register('sw.js').catch(()=>{});}</script>
+</body></html>

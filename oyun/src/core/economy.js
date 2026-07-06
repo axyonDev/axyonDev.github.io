@@ -1,711 +1,438 @@
 /**
- * Axyon.Economy — çekirdek ekonomi. DOM bilmez.
- *
- * Kısıt katmanları (hepsi runMachine içinde sırayla kontrol edilir):
- *   1) Makine sayısı (count) > 0 mı?
- *   2) GÜÇ: otomatik makineler kW çeker; arz < talep ise hepsi kısılır (brownout).
- *   3) GİRDİ: reçete girdisi envanterde var mı? (darboğaz)
- *   4) DEPO: çıktının deposu dolu mu? doluysa üretim durur.
- * Ayrıca ARAZI (m²): makine/santral inşası yer kaplar, arazi bitince inşa edilemez.
+ * Axyon.Economy v4 — DOM'dan bağımsız oyun çekirdeği.
+ * Kalıcı fabrika, Mk I–V yükseltme, kotalı pazar, filo ve PvE savaşları.
  */
 (function (global) {
   const N = global.Axyon.Numbers;
   const D = global.Axyon.Data;
+  const SAVE_VERSION = 12;
+  const CELL_M2 = 4;
+
+  const mDef = id => D.machines.find(m => m.id === id);
+  const pDef = id => D.powerPlants.find(p => p.id === id);
+  const shipDef = id => D.ships.find(x => x.id === id);
+  const defenseDef = id => D.defenses.find(x => x.id === id);
+  const clamp = (v,a,b) => Math.max(a,Math.min(b,v));
+  const copy = o => JSON.parse(JSON.stringify(o));
+
+  function blankItemMap(value) {
+    const out = {};
+    Object.keys(D.items).forEach(k => out[k] = typeof value === 'function' ? value(k) : value);
+    return out;
+  }
 
   function createInitialState() {
-    const machines = {};
-    D.machines.forEach((def) => { machines[def.id] = { count: 0, hasManager: false, eff: 0, milestoneMult: 1 }; });
-    const plants = {};
-    D.powerPlants.forEach((def) => { plants[def.id] = { count: 0 }; });
-    const inventory = {}, autoSell = {}, autoSellKeep = {}, storageLevel = {}, produced = {}, flow = {};
-    Object.keys(D.items).forEach((k) => { inventory[k] = 0; autoSell[k] = false; autoSellKeep[k] = 0; storageLevel[k] = 0; produced[k] = 0; flow[k] = 0; });
-
+    const machines = {}, plants = {}, machineLevels = {}, plantLevels = {};
+    D.machines.forEach(d => { machines[d.id] = {count:0,hasManager:false,eff:0,milestoneMult:1}; machineLevels[d.id]=1; });
+    D.powerPlants.forEach(d => { plants[d.id] = {count:0}; plantLevels[d.id]=1; });
+    const ships = {}, defenses = {};
+    D.ships.forEach(d => ships[d.id]=0);
+    D.defenses.forEach(d => defenses[d.id]=0);
+    const targets = D.galaxyTargets.map((t,i)=>Object.assign(copy(t),{discovered:false,defeated:false,colonized:false,recoveryAt:0,victories:0,scannedAt:0,index:i}));
+    const now = Date.now();
     const s = {
-      version: 8,
-      coins: 120, totalEarned: 0, runEarned: 0,
-      nexus: 0, prestigeCount: 0,
-      inventory, autoSell, autoSellKeep, storageLevel,
-      machines, plants,
-      researched: {},
-      sectorsOpened: 0,
-      questIndex: 0, achievements: {},
-      stats: { machinesBuilt: 0, plantsBuilt: 0, managersBought: 0, playTimeSec: 0, produced },
-      flow,
-      settings: { theme: 'dark' },
-      _power: { supply: 0, demand: 0, ratio: 1 },
-      // === MEKÂNSAL KATMAN ===
-      grid: {
-        entities: {},      // id -> { id, type, defId, x, y }
-        conveyors: [],     // { from, to }
-        powerLines: [],    // { from, to }
-        nextId: 1,
-      },
-      // === HARİTA & KEŞİF ===
-      map: {
-        openSectors: {},   // "sx,sy" -> true  (açık bölgeler)
-        nodes: {},         // "x,y" -> { type }  (kaynak yatakları; sadece açık sektörlerdekiler görünür)
-        nodeNextSeed: 1,
-      },
-      topScore: 0,
-      lastSeen: Date.now(),
+      version:SAVE_VERSION,
+      coins:180,totalEarned:0,runEarned:0,
+      inventory:blankItemMap(0),storageLevel:blankItemMap(0),flow:blankItemMap(0),
+      autoSell:blankItemMap(k=>!D.items[k].research && D.items[k].sell>0),
+      autoSellKeep:blankItemMap(50),
+      machines,plants,machineLevels,plantLevels,
+      researched:{},repeatResearch:{industrialEfficiency:0,marketLogistics:0,weaponSystems:0,shieldSystems:0,warpNavigation:0},
+      sectorsOpened:0,questIndex:0,achievements:{},
+      stats:{machinesBuilt:0,plantsBuilt:0,managersBought:0,playTimeSec:0,produced:blankItemMap(0),marketDispatches:0,battlesWon:0,battlesLost:0,systemsScanned:0,raidsWon:0,raidsLost:0,buildingUpgrades:0},
+      settings:{theme:'dark'},_power:{supply:0,demand:0,ratio:1},
+      grid:{entities:{},conveyors:[],powerLines:[],nextId:1},
+      map:{openSectors:{},nodes:{},nodeNextSeed:17},
+      market:{enabled:false,keepPct:50,level:1,nextDispatchAt:0,lastDispatchAt:0,lastRevenue:0,lastUnits:0,totalRevenue:0},
+      galaxy:{ships,defenses,targets,shipQueue:[],missions:[],reports:[],scanCooldownUntil:0,threat:0,nextRaidAt:now+D.economyConfig.raidBaseSec*1000,raidWarningShown:false,colonies:1},
+      topScore:0,lastSeen:now,
     };
     initMap(s);
     return s;
   }
 
-  // Merkez sektörleri aç ve başlangıç nodlarını yerleştir
-  function initMap(s) {
-    const M = D.map;
-    const sectorsPerSide = Math.floor(M.size / M.sectorSize);
-    const mid = Math.floor(sectorsPerSide / 2);
-    const r = M.startSectors;
-    // merkez r x r blok açık (mid-1 .. mid için 2x2)
-    for (let sy = mid - Math.floor(r/2); sy < mid - Math.floor(r/2) + r; sy++)
-      for (let sx = mid - Math.floor(r/2); sx < mid - Math.floor(r/2) + r; sx++)
-        openSectorInternal(s, sx, sy, true);
-    // başlangıç garantili nodları: her guaranteedStart türünden 2'şer, merkez açık alana dağıt
-    const startCells = openCells(s);
-    const guaranteed = Object.keys(D.resourceNodes).filter((k) => D.resourceNodes[k].guaranteedStart);
-    guaranteed.forEach((type) => {
-      placeNodeRandom(s, type, startCells);
-      placeNodeRandom(s, type, startCells);
+  function normalizeState(raw) {
+    if (!raw || typeof raw !== 'object') return createInitialState();
+    const base = createInitialState();
+    // Eski v8 kayıtlarında ekonomi korunur; 48x48 mekânsal düzen güvenli biçimde yeniden kurulur.
+    const oldVersion = Number(raw.version || 0);
+    const s = Object.assign({}, base, raw);
+    s.version = SAVE_VERSION;
+
+    // İç içe nesneleri her zaman taze varsayılanların üzerine kur. Böylece eksik/eski kayıtlar
+    // yeni makine, ürün veya filo türleri eklendiğinde undefined alan üretmez.
+    s.inventory = Object.assign({}, base.inventory, raw.inventory || {});
+    s.storageLevel = Object.assign({}, base.storageLevel, raw.storageLevel || {});
+    s.flow = Object.assign({}, base.flow, raw.flow || {});
+    s.autoSell = Object.assign({}, base.autoSell, raw.autoSell || {});
+    s.autoSellKeep = Object.assign({}, base.autoSellKeep, raw.autoSellKeep || {});
+
+    s.machines = {};
+    D.machines.forEach(d => {
+      s.machines[d.id] = Object.assign({}, base.machines[d.id], raw.machines && raw.machines[d.id] || {});
     });
-    // başlangıçta biraz da rastgele ek nod (çeşitlilik)
-    for (let i = 0; i < 3; i++) placeNodeRandom(s, guaranteed[Math.floor(rng(s) * guaranteed.length)], startCells);
-  }
+    s.plants = {};
+    D.powerPlants.forEach(d => {
+      s.plants[d.id] = Object.assign({}, base.plants[d.id], raw.plants && raw.plants[d.id] || {});
+    });
 
-  const mDef = (id) => D.machines.find((m) => m.id === id);
-  const pDef = (id) => D.powerPlants.find((p) => p.id === id);
+    s.machineLevels = Object.assign({}, base.machineLevels, raw.machineLevels || {});
+    s.plantLevels = Object.assign({}, base.plantLevels, raw.plantLevels || {});
+    s.researched = Object.assign({}, raw.researched || {});
+    s.repeatResearch = Object.assign({}, base.repeatResearch, raw.repeatResearch || {});
+    s.stats = Object.assign({}, base.stats, raw.stats || {});
+    s.stats.produced = Object.assign({}, base.stats.produced, raw.stats && raw.stats.produced || {});
+    s.settings = Object.assign({}, base.settings, raw.settings || {});
+    s.market = Object.assign({}, base.market, raw.market || {});
 
-  // ===== HARİTA / SEKTÖR =====
-  function mapSide(s) { return D.map.size; }
-  function sectorsPerSide() { return Math.floor(D.map.size / D.map.sectorSize); }
-  const sectorKey = (sx, sy) => `${sx},${sy}`;
-  function cellSector(x, y) { return { sx: Math.floor(x / D.map.sectorSize), sy: Math.floor(y / D.map.sectorSize) }; }
-  function isSectorOpen(s, sx, sy) { return !!s.map.openSectors[sectorKey(sx, sy)]; }
-  function isCellOpen(s, x, y) { const c = cellSector(x, y); return isSectorOpen(s, c.sx, c.sy); }
+    s.galaxy = Object.assign({}, base.galaxy, raw.galaxy || {});
+    s.galaxy.ships = Object.assign({}, base.galaxy.ships, raw.galaxy && raw.galaxy.ships || {});
+    s.galaxy.defenses = Object.assign({}, base.galaxy.defenses, raw.galaxy && raw.galaxy.defenses || {});
+    s.galaxy.targets = mergeTargets(raw.galaxy && raw.galaxy.targets);
+    s.galaxy.shipQueue = Array.isArray(s.galaxy.shipQueue) ? s.galaxy.shipQueue : [];
+    s.galaxy.missions = Array.isArray(s.galaxy.missions) ? s.galaxy.missions : [];
+    s.galaxy.reports = Array.isArray(s.galaxy.reports) ? s.galaxy.reports.slice(0,40) : [];
 
-  function openSectorInternal(s, sx, sy, silent) {
-    const sps = sectorsPerSide();
-    if (sx < 0 || sy < 0 || sx >= sps || sy >= sps) return false;
-    if (s.map.openSectors[sectorKey(sx, sy)]) return false;
-    s.map.openSectors[sectorKey(sx, sy)] = true;
-    if (!silent) generateSectorNodes(s, sx, sy);
-    return true;
-  }
+    const needsMapMigration = oldVersion < SAVE_VERSION || !raw.map || (D.map.size !== 48 && oldVersion <= 8);
+    if (needsMapMigration) {
+      s.grid = {entities:{},conveyors:[],powerLines:[],nextId:1};
+      s.map = {openSectors:{},nodes:{},nodeNextSeed:(raw.map && raw.map.nodeNextSeed || 17)+31};
+      s.sectorsOpened = 0;
+      initMap(s);
 
-  // Açık sektörlerin listesi + komşu (açılabilir) sektörler
-  function openSectorList(s) {
-    return Object.keys(s.map.openSectors).map((k) => { const [sx, sy] = k.split(',').map(Number); return { sx, sy }; });
-  }
-  function openableSectors(s) {
-    const sps = sectorsPerSide();
-    const set = {};
-    openSectorList(s).forEach(({ sx, sy }) => {
-      [[1,0],[-1,0],[0,1],[0,-1]].forEach(([dx, dy]) => {
-        const nx = sx + dx, ny = sy + dy;
-        if (nx >= 0 && ny >= 0 && nx < sps && ny < sps && !isSectorOpen(s, nx, ny)) set[sectorKey(nx, ny)] = { sx: nx, sy: ny };
+      // Eski görünmez bina sayaçlarını yeni 300x300 haritaya taşımak veri/yerleşim tutarsızlığı
+      // doğurur. Binalar sıfırlanır, yatırımın %65'i kredi olarak geri verilir.
+      let legacyRefund = 0;
+      D.machines.forEach(d => {
+        const machine = s.machines[d.id] || base.machines[d.id];
+        const count = Math.max(0, Number(machine.count || 0));
+        for (let i = 0; i < count; i++) legacyRefund += buildCostFromCount(d, i) * 0.65;
+        if (machine.hasManager) legacyRefund += d.managerCost * 0.65;
+        s.machines[d.id] = {count:0,hasManager:false,eff:0,milestoneMult:1};
       });
-    });
-    return Object.values(set);
-  }
-  function sectorOpenCost(s) {
-    return Math.ceil(D.map.openBaseCost * Math.pow(D.map.openGrowth, s.sectorsOpened));
-  }
-  function canOpenSector(s) {
-    return openableSectors(s).length > 0 && s.coins >= sectorOpenCost(s);
-  }
-  // Belirli bir sektörü aç (komşu ve açık değilse). Başarılıysa yeni nodları döndür.
-  function openSector(s, sx, sy) {
-    if (!canOpenSector(s)) return false;
-    const ok = openableSectors(s).some((o) => o.sx === sx && o.sy === sy);
-    if (!ok) return false;
-    s.coins = N.sub(s.coins, sectorOpenCost(s));
-    openSectorInternal(s, sx, sy, false);
-    s.sectorsOpened += 1;
-    return true;
+      D.powerPlants.forEach(d => {
+        const plant = s.plants[d.id] || base.plants[d.id];
+        const count = Math.max(0, Number(plant.count || 0));
+        for (let i = 0; i < count; i++) legacyRefund += plantCostFromCount(d, i) * 0.65;
+        s.plants[d.id] = {count:0};
+      });
+      s.coins = N.add(Number(s.coins || 0), Math.floor(legacyRefund));
+    } else {
+      s.grid = Object.assign({}, base.grid, raw.grid || {});
+      s.grid.entities = Object.assign({}, base.grid.entities, raw.grid && raw.grid.entities || {});
+      s.grid.conveyors = Array.isArray(s.grid.conveyors) ? s.grid.conveyors : [];
+      s.grid.powerLines = Array.isArray(s.grid.powerLines) ? s.grid.powerLines : [];
+      s.map = Object.assign({}, base.map, raw.map || {});
+      s.map.openSectors = Object.assign({}, base.map.openSectors, raw.map && raw.map.openSectors || {});
+      s.map.nodes = Object.assign({}, base.map.nodes, raw.map && raw.map.nodes || {});
+    }
+    if (!s.galaxy.nextRaidAt) s.galaxy.nextRaidAt = Date.now()+D.economyConfig.raidBaseSec*1000;
+    return s;
   }
 
-  // ===== KAYNAK NODLARI =====
-  const nodeKey = (x, y) => `${x},${y}`;
-  function nodeAt(s, x, y) { return s.map.nodes[nodeKey(x, y)] || null; }
-  function nodeVisible(s, x, y) { return isCellOpen(s, x, y) && !!nodeAt(s, x, y); }
-  // deterministik-yeter rastgele (nodeNextSeed sayacıyla; save'e yazıldığı için tutarlı)
-  function rng(s) {
-    // xorshift benzeri; seed state'te
-    let x = (s.map.nodeNextSeed = (s.map.nodeNextSeed * 1103515245 + 12345) & 0x7fffffff);
-    return (x % 100000) / 100000;
+  function mergeTargets(saved) {
+    const byId = {};
+    (saved || []).forEach(t => byId[t.id]=t);
+    return D.galaxyTargets.map((t,i)=>Object.assign(copy(t),{discovered:false,defeated:false,colonized:false,recoveryAt:0,victories:0,scannedAt:0,index:i},byId[t.id]||{}));
   }
-  function openCells(s) {
-    const cells = [];
-    openSectorList(s).forEach(({ sx, sy }) => {
-      for (let y = sy * D.map.sectorSize; y < (sy + 1) * D.map.sectorSize; y++)
-        for (let x = sx * D.map.sectorSize; x < (sx + 1) * D.map.sectorSize; x++)
-          cells.push({ x, y });
-    });
+
+  // ===== Harita =====
+  const sectorKey = (sx,sy)=>`${sx},${sy}`;
+  const nodeKey = (x,y)=>`${x},${y}`;
+  function sectorsPerSide(){ return Math.floor(D.map.size/D.map.sectorSize); }
+  function mapSide(){ return D.map.size; }
+  function gridSize(){ return D.map.size; }
+  function cellSector(x,y){ return {sx:Math.floor(x/D.map.sectorSize),sy:Math.floor(y/D.map.sectorSize)}; }
+  function isSectorOpen(s,sx,sy){ return !!s.map.openSectors[sectorKey(sx,sy)]; }
+  function isCellOpen(s,x,y){ const q=cellSector(x,y); return isSectorOpen(s,q.sx,q.sy); }
+  function openSectorList(s){ return Object.keys(s.map.openSectors).map(k=>{const [sx,sy]=k.split(',').map(Number);return {sx,sy};}); }
+  function openableSectors(s){
+    const max=sectorsPerSide(), out={};
+    openSectorList(s).forEach(({sx,sy})=>[[1,0],[-1,0],[0,1],[0,-1]].forEach(([dx,dy])=>{
+      const x=sx+dx,y=sy+dy,k=sectorKey(x,y);
+      if(x>=0&&y>=0&&x<max&&y<max&&!s.map.openSectors[k]) out[k]={sx:x,sy:y};
+    }));
+    return Object.values(out);
+  }
+  function openSectorInternal(s,sx,sy,silent){
+    const max=sectorsPerSide();
+    if(sx<0||sy<0||sx>=max||sy>=max||isSectorOpen(s,sx,sy)) return false;
+    s.map.openSectors[sectorKey(sx,sy)]=true;
+    if(!silent) generateSectorNodes(s,sx,sy);
+    return true;
+  }
+  function initMap(s){
+    const max=sectorsPerSide(), mid=Math.floor(max/2), r=D.map.startSectors;
+    const start=mid-Math.floor(r/2);
+    for(let sy=start;sy<start+r;sy++) for(let sx=start;sx<start+r;sx++) openSectorInternal(s,sx,sy,true);
+    const cells=openCells(s), guaranteed=Object.keys(D.resourceNodes).filter(k=>D.resourceNodes[k].guaranteedStart);
+    guaranteed.forEach(type=>{placeNodeRandom(s,type,cells);placeNodeRandom(s,type,cells);placeNodeRandom(s,type,cells);});
+    for(let i=0;i<5;i++) placeNodeRandom(s,guaranteed[Math.floor(rng(s)*guaranteed.length)],cells);
+  }
+  function rng(s){ let x=(s.map.nodeNextSeed=(s.map.nodeNextSeed*1103515245+12345)&0x7fffffff); return (x%100000)/100000; }
+  function openCells(s){
+    const cells=[],ss=D.map.sectorSize;
+    openSectorList(s).forEach(({sx,sy})=>{for(let y=sy*ss;y<(sy+1)*ss;y++)for(let x=sx*ss;x<(sx+1)*ss;x++)cells.push({x,y});});
     return cells;
   }
-  function placeNodeRandom(s, type, cellPool) {
-    // boş (nod yok, entity yok) hücre bul
-    const free = cellPool.filter((c) => !nodeAt(s, c.x, c.y) && !cellOccupied(s, c.x, c.y));
-    if (!free.length) return null;
-    const pick = free[Math.floor(rng(s) * free.length)];
-    s.map.nodes[nodeKey(pick.x, pick.y)] = { type };
-    return pick;
-  }
-  // Bir sektör açılınca içine rastgele nodlar serp (merkeze uzaklık = nadirlik kapısı)
-  function generateSectorNodes(s, sx, sy) {
-    const sps = sectorsPerSide();
-    const mid = Math.floor(sps / 2);
-    const dist = Math.max(Math.abs(sx - mid), Math.abs(sy - mid));
-    const cells = [];
-    for (let y = sy * D.map.sectorSize; y < (sy + 1) * D.map.sectorSize; y++)
-      for (let x = sx * D.map.sectorSize; x < (sx + 1) * D.map.sectorSize; x++)
-        cells.push({ x, y });
-    // 2-5 nod
-    const count = 2 + Math.floor(rng(s) * 4);
-    const types = Object.keys(D.resourceNodes).filter((t) => {
-      const minD = D.resourceNodes[t].minDistance || 0;
-      return dist >= minD;
-    });
-    for (let i = 0; i < count; i++) {
-      // nadirliğe göre ağırlıklı seçim (rarity düşük = yaygın)
-      const weighted = [];
-      types.forEach((t) => { const w = Math.max(1, 5 - D.resourceNodes[t].rarity); for (let j = 0; j < w; j++) weighted.push(t); });
-      const type = weighted[Math.floor(rng(s) * weighted.length)];
-      placeNodeRandom(s, type, cells);
+  function nodeAt(s,x,y){ return s.map.nodes[nodeKey(x,y)]||null; }
+  function nodeVisible(s,x,y){ return isCellOpen(s,x,y)&&!!nodeAt(s,x,y); }
+  function placeNodeRandom(s,type,cells){
+    for(let attempt=0;attempt<80;attempt++){
+      const p=cells[Math.floor(rng(s)*cells.length)];
+      if(p&&!nodeAt(s,p.x,p.y)&&!cellOccupied(s,p.x,p.y)){s.map.nodes[nodeKey(p.x,p.y)]={type};return p;}
     }
-  }
-  // Bir çıkarıcı makinenin gerektirdiği nod türü (recipe.in boşsa = çıkarıcı, out'u nod türü)
-  function extractorNodeType(defId) {
-    const def = mDef(defId);
-    if (!def || Object.keys(def.recipe.in).length > 0) return null; // çıkarıcı değil
-    return Object.keys(def.recipe.out)[0];
-  }
-  function isExtractor(defId) { return extractorNodeType(defId) !== null; }
-
-  // ===== MEKÂNSAL YERLEŞİM =====
-  const CELL_M2 = 4;
-  function gridSize(s) { return D.map.size; } // sabit büyük harita
-  function entityFootprintCells(defId, type) {
-    const def = type === 'plant' ? pDef(defId) : mDef(defId);
-    return Math.max(1, Math.round(Math.sqrt(def.footprint / CELL_M2)));
-  }
-  function cellOccupied(s, x, y, ignoreId) {
-    for (const id in s.grid.entities) {
-      if (id === ignoreId) continue;
-      const e = s.grid.entities[id];
-      const sz = entityFootprintCells(e.defId, e.type);
-      if (x >= e.x && x < e.x + sz && y >= e.y && y < e.y + sz) return true;
-    }
-    return false;
-  }
-  // Yerleştirme kuralları: harita içinde + tüm hücreler AÇIK sektörde + boş +
-  // ÇIKARICI ise footprint'in bir hücresinde eşleşen kaynak nodu olmalı (katı kural).
-  function canPlaceAt(s, defId, type, x, y) {
-    const sz = entityFootprintCells(defId, type);
-    const side = gridSize(s);
-    if (x < 0 || y < 0 || x + sz > side || y + sz > side) return false;
-    let coversNode = false;
-    const needNode = (type === 'machine') ? extractorNodeType(defId) : null;
-    for (let dx = 0; dx < sz; dx++) for (let dy = 0; dy < sz; dy++) {
-      const cx = x + dx, cy = y + dy;
-      if (!isCellOpen(s, cx, cy)) return false;        // kapalı bölgeye kurulamaz
-      if (cellOccupied(s, cx, cy)) return false;       // dolu
-      const nd = nodeAt(s, cx, cy);
-      if (needNode) { if (nd && nd.type === needNode) coversNode = true; }
-      else { if (nd) return false; }                    // çıkarıcı değilse nodun üstüne kurulamaz (nod boş kalsın)
-    }
-    if (needNode && !coversNode) return false;          // çıkarıcı ama uygun nod yok
-    return true;
-  }
-  // Bir çıkarıcı için, üstüne kurulabilecek boş (uygun tür + boş) nod var mı?
-  function hasFreeNodeFor(s, defId) {
-    const type = extractorNodeType(defId);
-    if (!type) return true;
-    for (const key in s.map.nodes) {
-      if (s.map.nodes[key].type !== type) continue;
-      const [x, y] = key.split(',').map(Number);
-      if (isCellOpen(s, x, y) && !cellOccupied(s, x, y)) return true;
-    }
-    return false;
-  }
-  // Yerleştir: ekonomik inşa (para+arazi+kilit) + grid'e ekle. Başarılıysa entity id döner.
-  function placeMachine(s, defId, x, y) {
-    if (!canPlaceAt(s, defId, 'machine', x, y)) return null;
-    if (!buildMachine(s, defId)) return null; // para/arazi/kilit kontrolü + count++
-    const id = 'e' + s.grid.nextId++;
-    s.grid.entities[id] = { id, type: 'machine', defId, x, y };
-    return id;
-  }
-  function placePlant(s, defId, x, y) {
-    if (!canPlaceAt(s, defId, 'plant', x, y)) return null;
-    if (!buildPlant(s, defId)) return null;
-    const id = 'e' + s.grid.nextId++;
-    s.grid.entities[id] = { id, type: 'plant', defId, x, y };
-    return id;
-  }
-  function moveEntity(s, entityId, x, y) {
-    const e = s.grid.entities[entityId];
-    if (!e) return false;
-    if (!canPlaceAt(s, e.defId, e.type, x, y) && !(x === e.x && y === e.y)) {
-      // hedef, kendi hücresi hariç doluysa taşıma
-      if (cellOccupiedExceptSelf(s, e, x, y)) return false;
-    }
-    e.x = x; e.y = y;
-    return true;
-  }
-  function cellOccupiedExceptSelf(s, e, x, y) {
-    const sz = entityFootprintCells(e.defId, e.type);
-    const side = gridSize(s);
-    if (x < 0 || y < 0 || x + sz > side || y + sz > side) return true;
-    for (let dx = 0; dx < sz; dx++) for (let dy = 0; dy < sz; dy++) {
-      if (cellOccupied(s, x + dx, y + dy, e.id)) return true;
-    }
-    return false;
-  }
-  // Sil: grid'den çıkar + count-- + bağlı hatları temizle + para İADESİ (yarısı)
-  function removeEntity(s, entityId) {
-    const e = s.grid.entities[entityId];
-    if (!e) return false;
-    if (e.type === 'machine') {
-      s.machines[e.defId].count = Math.max(0, s.machines[e.defId].count - 1);
-      if (s.machines[e.defId].count === 0) s.machines[e.defId].hasManager = false;
-    } else {
-      s.plants[e.defId].count = Math.max(0, s.plants[e.defId].count - 1);
-    }
-    delete s.grid.entities[entityId];
-    s.grid.conveyors = s.grid.conveyors.filter((c) => c.from !== entityId && c.to !== entityId);
-    s.grid.powerLines = s.grid.powerLines.filter((l) => l.from !== entityId && l.to !== entityId);
-    return true;
-  }
-  // Konveyör çek: iki makine arası (görsel akış; Yol A). Aynı çift varsa eklemez.
-  function addConveyor(s, fromId, toId) {
-    if (fromId === toId) return false;
-    const from = s.grid.entities[fromId], to = s.grid.entities[toId];
-    if (!from || !to) return false;
-    if (s.grid.conveyors.some((c) => c.from === fromId && c.to === toId)) return false;
-    s.grid.conveyors.push({ from: fromId, to: toId });
-    return true;
-  }
-  function addPowerLine(s, fromId, toId) {
-    const from = s.grid.entities[fromId], to = s.grid.entities[toId];
-    if (!from || !to) return false;
-    // hat sadece santral -> makine
-    if (from.type !== 'plant' || to.type !== 'machine') return false;
-    if (s.grid.powerLines.some((l) => l.from === fromId && l.to === toId)) return false;
-    s.grid.powerLines.push({ from: fromId, to: toId });
-    return true;
-  }
-  function removeConveyor(s, fromId, toId) {
-    s.grid.conveyors = s.grid.conveyors.filter((c) => !(c.from === fromId && c.to === toId));
-  }
-  function entityCenter(s, e) {
-    const sz = entityFootprintCells(e.defId, e.type);
-    return { cx: e.x + sz / 2, cy: e.y + sz / 2 };
-  }
-  // #1: Verilen hücre koordinatına (kesirli, dünya) en yakın konveyör/hattı sil.
-  // maxDist = hücre biriminde tolerans. Önce konveyör, sonra hat denenir.
-  function removeLineNear(s, wx, wy, maxDist) {
-    const tol = maxDist || 0.4;
-    let best = null, bestD = Infinity, bestKind = null;
-    const check = (arr, kind) => {
-      arr.forEach((l, i) => {
-        const a = s.grid.entities[l.from], b = s.grid.entities[l.to];
-        if (!a || !b) return;
-        const ca = entityCenter(s, a), cb = entityCenter(s, b);
-        const d = pointSegDist(wx, wy, ca.cx, ca.cy, cb.cx, cb.cy);
-        if (d < bestD) { bestD = d; best = i; bestKind = kind; }
-      });
-    };
-    check(s.grid.conveyors, 'conveyor');
-    check(s.grid.powerLines, 'power');
-    if (best === null || bestD > tol) return false;
-    if (bestKind === 'conveyor') s.grid.conveyors.splice(best, 1);
-    else s.grid.powerLines.splice(best, 1);
-    return true;
-  }
-  function pointSegDist(px, py, x1, y1, x2, y2) {
-    const dx = x2 - x1, dy = y2 - y1;
-    const len2 = dx * dx + dy * dy;
-    let t = len2 ? ((px - x1) * dx + (py - y1) * dy) / len2 : 0;
-    t = Math.max(0, Math.min(1, t));
-    const cx = x1 + t * dx, cy = y1 + t * dy;
-    return Math.hypot(px - cx, py - cy);
-  }
-
-  // #5: Bileşik skor — toplam kazanç + prestige + araştırma + keşif + üretim ölçeği.
-  function computeScore(s) {
-    const earn = Math.sqrt(Math.max(0, s.totalEarned)) * 4;
-    const nexusPts = s.nexus * 500;
-    const techPts = Object.keys(s.researched).length * 250;
-    const explorePts = s.sectorsOpened * 150;
-    const buildPts = machineCountTotal(s) * 20 + plantCountTotal(s) * 15;
-    return Math.floor(earn + nexusPts + techPts + explorePts + buildPts);
-  }
-  function updateTopScore(s) {
-    const sc = computeScore(s);
-    if (sc > (s.topScore || 0)) s.topScore = sc;
-    return s.topScore;
-  }
-  const globalMult = (s) => 1 + s.nexus * D.prestige.nexusBonusPerPoint;
-
-  // --- Araştırma / kilit ---
-  function isMachineUnlocked(s, id) {
-    const def = mDef(id);
-    return def.tech === null || !!s.researched[def.tech];
-  }
-  function isPlantUnlocked(s, id) {
-    const def = pDef(id);
-    return def.tech === null || !!s.researched[def.tech];
-  }
-
-  // --- Depolama ---
-  function storageCap(s, item) {
-    const base = D.items[item].cap;
-    return Math.floor(base * Math.pow(D.economyConfig.storageUpgradeMult, s.storageLevel[item] || 0));
-  }
-  function storageUpgradeCost(s, item) {
-    const cap = storageCap(s, item);
-    return Math.ceil(cap * D.economyConfig.storageUpgradeCostPer / 10) * 10;
-  }
-  function upgradeStorage(s, item) {
-    const cost = storageUpgradeCost(s, item);
-    if (s.coins < cost) return false;
-    s.coins = N.sub(s.coins, cost);
-    s.storageLevel[item] = (s.storageLevel[item] || 0) + 1;
-    return true;
-  }
-
-  // --- Arazi ---
-  // Harita istatistikleri (eski m² arazi yerine)
-  function totalCells(s) { return Object.keys(s.map.openSectors).length * D.map.sectorSize * D.map.sectorSize; }
-  function usedCells(s) {
-    let n = 0;
-    for (const id in s.grid.entities) { const e = s.grid.entities[id]; const sz = entityFootprintCells(e.defId, e.type); n += sz * sz; }
-    return n;
-  }
-  function freeCells(s) { return totalCells(s) - usedCells(s); }
-
-  // --- İnşa (makine) ---
-  function buildCost(s, id) {
-    const def = mDef(id);
-    return Math.ceil(def.buildCost * Math.pow(def.buildGrowth, s.machines[id].count));
-  }
-  function canBuild(s, id) {
-    const def = mDef(id);
-    return isMachineUnlocked(s, id) && s.coins >= buildCost(s, id);
-  }
-  function buildMachine(s, id) {
-    if (!canBuild(s, id)) return false;
-    s.coins = N.sub(s.coins, buildCost(s, id));
-    s.machines[id].count += 1;
-    s.stats.machinesBuilt += 1;
-    updateMilestone(s, id);
-    return true;
-  }
-  function updateMilestone(s, id) {
-    const c = s.machines[id].count;
-    let mult = 1;
-    for (const m of D.milestones) if (c >= m.count) mult = m.multiplier;
-    s.machines[id].milestoneMult = mult;
-  }
-  function nextMilestone(s, id) {
-    const c = s.machines[id].count;
-    for (const m of D.milestones) if (c < m.count) return m;
     return null;
   }
-
-  // --- İnşa (güç santrali) ---
-  function plantBuildCost(s, id) {
-    const def = pDef(id);
-    return Math.ceil(def.buildCost * Math.pow(def.buildGrowth, s.plants[id].count));
+  function generateSectorNodes(s,sx,sy){
+    const max=sectorsPerSide(),mid=Math.floor(max/2),dist=Math.max(Math.abs(sx-mid),Math.abs(sy-mid)),ss=D.map.sectorSize,cells=[];
+    for(let y=sy*ss;y<(sy+1)*ss;y++)for(let x=sx*ss;x<(sx+1)*ss;x++)cells.push({x,y});
+    const types=Object.keys(D.resourceNodes).filter(t=>dist>=(D.resourceNodes[t].minDistance||0));
+    const weighted=[];types.forEach(t=>{for(let i=0;i<Math.max(1,7-D.resourceNodes[t].rarity);i++)weighted.push(t);});
+    const count=5+Math.floor(rng(s)*7);
+    for(let i=0;i<count;i++) placeNodeRandom(s,weighted[Math.floor(rng(s)*weighted.length)],cells);
   }
-  function canBuildPlant(s, id) {
-    const def = pDef(id);
-    return isPlantUnlocked(s, id) && s.coins >= plantBuildCost(s, id);
-  }
-  function buildPlant(s, id) {
-    if (!canBuildPlant(s, id)) return false;
-    s.coins = N.sub(s.coins, plantBuildCost(s, id));
-    s.plants[id].count += 1;
-    s.stats.plantsBuilt += 1;
-    return true;
+  function sectorOpenCost(s){ return Math.ceil(D.map.openBaseCost*Math.pow(D.map.openGrowth,s.sectorsOpened)); }
+  function canOpenSector(s){ return openableSectors(s).length>0&&s.coins>=sectorOpenCost(s); }
+  function openSector(s,sx,sy){
+    if(!canOpenSector(s)||!openableSectors(s).some(o=>o.sx===sx&&o.sy===sy)) return false;
+    s.coins=N.sub(s.coins,sectorOpenCost(s));openSectorInternal(s,sx,sy,false);s.sectorsOpened++;return true;
   }
 
-  // --- Manager ---
-  function canBuyManager(s, id) {
-    const def = mDef(id);
-    return isMachineUnlocked(s, id) && s.machines[id].count > 0 && !s.machines[id].hasManager && s.coins >= def.managerCost;
+  // ===== Yerleşim =====
+  function extractorNodeType(defId){const d=mDef(defId);return d&&Object.keys(d.recipe.in).length===0?Object.keys(d.recipe.out)[0]:null;}
+  function isExtractor(id){return !!extractorNodeType(id);}
+  function entityFootprintCells(defId,type){const d=type==='plant'?pDef(defId):mDef(defId);return d?Math.max(1,Math.round(Math.sqrt(d.footprint/CELL_M2))):1;}
+  function cellOccupied(s,x,y,ignoreId){
+    for(const id in s.grid.entities){if(id===ignoreId)continue;const e=s.grid.entities[id],z=entityFootprintCells(e.defId,e.type);if(x>=e.x&&x<e.x+z&&y>=e.y&&y<e.y+z)return true;}return false;
   }
-  function buyManager(s, id) {
-    if (!canBuyManager(s, id)) return false;
-    s.coins = N.sub(s.coins, mDef(id).managerCost);
-    s.machines[id].hasManager = true;
-    s.stats.managersBought += 1;
-    return true;
-  }
-
-  // --- Üretim değeri ---
-  function machineRate(s, id) {
-    const def = mDef(id), m = s.machines[id];
-    return def.baseRate * m.count * m.milestoneMult * globalMult(s);
-  }
-
-  // Oto-sat: her ürün için "elde tut" = deponun autoSellKeep[item]% kadarı; üstü satılır.
-  // autoSellKeep[item] bir YÜZDE (0,25,50,75,100). 0 = hepsini sat, 100 = hiç satma.
-  function runAutoSell(s) {
-    for (const [item, on] of Object.entries(s.autoSell)) {
-      if (!on || D.items[item].research || D.items[item].sell <= 0) continue;
-      if (s.inventory[item] <= 0) continue;
-      const cap = storageCap(s, item);
-      const keepPct = clampPct(s.autoSellKeep[item]);
-      const keepByPct = cap * keepPct / 100;
-      const keep = Math.max(fuelReserve(s, item), keepByPct);
-      const sellable = Math.max(0, s.inventory[item] - keep);
-      if (sellable > 0) { addCoins(s, sellable * D.items[item].sell); s.inventory[item] -= sellable; }
+  function canPlaceAt(s,defId,type,x,y,ignoreId){
+    const d=type==='plant'?pDef(defId):mDef(defId);if(!d)return false;
+    const z=entityFootprintCells(defId,type),need=type==='machine'?extractorNodeType(defId):null;let covers=false;
+    if(x<0||y<0||x+z>D.map.size||y+z>D.map.size)return false;
+    for(let dx=0;dx<z;dx++)for(let dy=0;dy<z;dy++){
+      const cx=x+dx,cy=y+dy;if(!isCellOpen(s,cx,cy)||cellOccupied(s,cx,cy,ignoreId))return false;
+      const nd=nodeAt(s,cx,cy);if(need){if(nd&&nd.type===need)covers=true;}else if(nd)return false;
     }
+    return !need||covers;
   }
-  function clampPct(v) { v = Math.round((v || 0) / 25) * 25; return Math.max(0, Math.min(100, v)); }
-  function setAutoSellKeep(s, item, pct) { s.autoSellKeep[item] = clampPct(pct); }
-
-  // Manuel kısmi satış: envanterin fraction'ını (0..1) sat. Yakıt tamponu korunur.
-  function sellFraction(s, item, fraction) {
-    if (D.items[item].research || D.items[item].sell <= 0) return 0;
-    const have = s.inventory[item] || 0;
-    if (have <= 0) return 0;
-    const reserve = fuelReserve(s, item);
-    const avail = Math.max(0, have - reserve);
-    const amt = Math.min(avail, have * Math.max(0, Math.min(1, fraction)));
-    if (amt <= 0) return 0;
-    const gain = amt * D.items[item].sell;
-    s.inventory[item] -= amt; addCoins(s, gain);
-    return gain;
+  function hasFreeNodeFor(s,id){const t=extractorNodeType(id);if(!t)return true;for(const k in s.map.nodes){if(s.map.nodes[k].type!==t)continue;const [x,y]=k.split(',').map(Number);if(isCellOpen(s,x,y)&&!cellOccupied(s,x,y))return true;}return false;}
+  function placeMachine(s,id,x,y){if(!canPlaceAt(s,id,'machine',x,y)||!buildMachine(s,id))return null;const eid='e'+s.grid.nextId++;s.grid.entities[eid]={id:eid,type:'machine',defId:id,x,y};return eid;}
+  function placePlant(s,id,x,y){if(!canPlaceAt(s,id,'plant',x,y)||!buildPlant(s,id))return null;const eid='e'+s.grid.nextId++;s.grid.entities[eid]={id:eid,type:'plant',defId:id,x,y};return eid;}
+  function moveEntity(s,id,x,y){const e=s.grid.entities[id];if(!e||!canPlaceAt(s,e.defId,e.type,x,y,id))return false;e.x=x;e.y=y;return true;}
+  function cellOccupiedExceptSelf(s,e,x,y){return !canPlaceAt(s,e.defId,e.type,x,y,e.id);}
+  function removeEntity(s,id){
+    const e=s.grid.entities[id];if(!e)return false;
+    if(e.type==='machine'){const d=mDef(e.defId),m=s.machines[e.defId];if(m.count>0)m.count--;s.coins=N.add(s.coins,buildCostFromCount(d,Math.max(0,m.count))*.45);}
+    else{const d=pDef(e.defId),p=s.plants[e.defId];if(p.count>0)p.count--;s.coins=N.add(s.coins,plantCostFromCount(d,Math.max(0,p.count))*.45);}
+    delete s.grid.entities[id];s.grid.conveyors=s.grid.conveyors.filter(x=>x.from!==id&&x.to!==id);s.grid.powerLines=s.grid.powerLines.filter(x=>x.from!==id&&x.to!==id);return true;
   }
-
-  // Bir parça güç santrali yakıtıysa, çalışan santrallerin ~30sn'lik ihtiyacını döndürür.
-  function fuelReserve(s, item) {
-    let reserve = 0;
-    D.powerPlants.forEach((def) => {
-      if (def.fuel && def.fuel.item === item) {
-        reserve += s.plants[def.id].count * def.fuel.rate * 30;
-      }
-    });
-    return reserve;
+  function entityCenter(s,e){const z=entityFootprintCells(e.defId,e.type);return {cx:e.x+z/2,cy:e.y+z/2};}
+  function addConveyor(s,from,to){if(!s.grid.entities[from]||!s.grid.entities[to]||s.grid.conveyors.some(x=>x.from===from&&x.to===to))return false;s.grid.conveyors.push({from,to});return true;}
+  function addPowerLine(s,from,to){const a=s.grid.entities[from],b=s.grid.entities[to];if(!a||!b||a.type!=='plant'||b.type!=='machine'||s.grid.powerLines.some(x=>x.from===from&&x.to===to))return false;s.grid.powerLines.push({from,to});return true;}
+  function removeConveyor(s,from,to){const n=s.grid.conveyors.length;s.grid.conveyors=s.grid.conveyors.filter(x=>!(x.from===from&&x.to===to));return s.grid.conveyors.length<n;}
+  function pointSegDist(px,py,ax,ay,bx,by){const dx=bx-ax,dy=by-ay,l=dx*dx+dy*dy;if(!l)return Math.hypot(px-ax,py-ay);let t=((px-ax)*dx+(py-ay)*dy)/l;t=clamp(t,0,1);return Math.hypot(px-(ax+t*dx),py-(ay+t*dy));}
+  function removeLineNear(s,x,y,r){
+    for(const key of ['conveyors','powerLines']) for(let i=s.grid[key].length-1;i>=0;i--){const l=s.grid[key][i],a=s.grid.entities[l.from],b=s.grid.entities[l.to];if(!a||!b)continue;const ca=entityCenter(s,a),cb=entityCenter(s,b);if(pointSegDist(x,y,ca.cx,ca.cy,cb.cx,cb.cy)<=r){s.grid[key].splice(i,1);return true;}}return false;
   }
 
-  // --- Güç ---
-  function computePower(s, dt) {
-    // Arz: koloninin sabit taban gücü + santraller
-    let supply = D.economyConfig.basePower || 0;
-    D.powerPlants.forEach((def) => {
-      const cnt = s.plants[def.id].count;
-      if (cnt <= 0) return;
-      if (!def.fuel) { supply += def.output * cnt; return; }
-      const need = cnt * def.fuel.rate * dt;
-      const have = s.inventory[def.fuel.item] || 0;
-      const ratio = need > 0 ? Math.min(1, have / need) : 1;
-      s.inventory[def.fuel.item] = Math.max(0, have - need * ratio);
-      supply += def.output * cnt * ratio;
-    });
-    // Talep: otomatik makineler
-    let demand = 0;
-    D.machines.forEach((def) => {
-      const m = s.machines[def.id];
-      if (m.count > 0 && m.hasManager) demand += def.power * m.count;
-    });
-    const ratio = demand > 0 ? Math.min(1, supply / demand) : 1;
-    s._power = { supply, demand, ratio };
-    return ratio;
+  // ===== Ekonomi =====
+  function isMachineUnlocked(s,id){const d=mDef(id);return !!d&&(!d.tech||!!s.researched[d.tech]);}
+  function isPlantUnlocked(s,id){const d=pDef(id);return !!d&&(!d.tech||!!s.researched[d.tech]);}
+  function buildCostFromCount(d,count){return Math.ceil(d.buildCost*Math.pow(d.buildGrowth,count));}
+  function plantCostFromCount(d,count){return Math.ceil(d.buildCost*Math.pow(d.buildGrowth,count));}
+  function buildCost(s,id){const d=mDef(id);return buildCostFromCount(d,s.machines[id].count);}
+  function plantBuildCost(s,id){const d=pDef(id);return plantCostFromCount(d,s.plants[id].count);}
+  function totalCells(s){return openSectorList(s).length*D.map.sectorSize*D.map.sectorSize;}
+  function usedCells(s){let n=0;Object.values(s.grid.entities).forEach(e=>{const z=entityFootprintCells(e.defId,e.type);n+=z*z;});return n;}
+  function freeCells(s){return Math.max(0,totalCells(s)-usedCells(s));}
+  function canBuild(s,id){const d=mDef(id);return isMachineUnlocked(s,id)&&s.coins>=buildCost(s,id)&&(!isExtractor(id)||hasFreeNodeFor(s,id));}
+  function buildMachine(s,id){if(!canBuild(s,id))return false;const c=buildCost(s,id);s.coins=N.sub(s.coins,c);s.machines[id].count++;s.stats.machinesBuilt++;updateMilestone(s,id);return true;}
+  function canBuildPlant(s,id){return isPlantUnlocked(s,id)&&s.coins>=plantBuildCost(s,id);}
+  function buildPlant(s,id){if(!canBuildPlant(s,id))return false;const c=plantBuildCost(s,id);s.coins=N.sub(s.coins,c);s.plants[id].count++;s.stats.plantsBuilt++;return true;}
+  function nextMilestone(s,id){const c=s.machines[id].count;return D.milestones.find(x=>x.count>c)||null;}
+  function updateMilestone(s,id){let mult=1;D.milestones.forEach(x=>{if(s.machines[id].count>=x.count)mult=x.multiplier;});s.machines[id].milestoneMult=mult;}
+  function canBuyManager(s,id){const d=mDef(id),m=s.machines[id];return m.count>0&&!m.hasManager&&s.coins>=d.managerCost;}
+  function buyManager(s,id){if(!canBuyManager(s,id))return false;s.coins=N.sub(s.coins,mDef(id).managerCost);s.machines[id].hasManager=true;s.stats.managersBought++;return true;}
+  function globalMult(s){return 1+(s.repeatResearch.industrialEfficiency||0)*.05+Math.max(0,(s.galaxy.colonies||1)-1)*.04;}
+  function machineLevel(s,id){return clamp(Number(s.machineLevels[id]||1),1,5);}
+  function plantLevel(s,id){return clamp(Number(s.plantLevels[id]||1),1,5);}
+  function machineRate(s,id){const d=mDef(id),m=s.machines[id],lm=D.levelMultipliers[machineLevel(s,id)-1]||1;return d.baseRate*m.count*(m.milestoneMult||1)*lm*globalMult(s);}
+  function machinePowerDemand(s,id){const d=mDef(id),m=s.machines[id],lv=machineLevel(s,id);return m.hasManager?d.power*m.count*(1+.24*(lv-1)):0;}
+  function plantOutput(s,id){const d=pDef(id),p=s.plants[id],lm=D.plantMultipliers[plantLevel(s,id)-1]||1;return d.output*p.count*lm;}
+  function storageCap(s,item){return D.items[item].cap*Math.pow(D.economyConfig.storageUpgradeMult,s.storageLevel[item]||0);}
+  function storageUpgradeCost(s,item){return Math.ceil(D.items[item].cap*D.economyConfig.storageUpgradeCostPer*Math.pow(1.7,s.storageLevel[item]||0));}
+  function upgradeStorage(s,item){const c=storageUpgradeCost(s,item);if(s.coins<c)return false;s.coins=N.sub(s.coins,c);s.storageLevel[item]=(s.storageLevel[item]||0)+1;return true;}
+
+  function upgradeCost(def,level,type){
+    const target=level+1, items={};let coins=Math.ceil(def.buildCost*Math.pow(target,3.15)*8);
+    if(target===2){items.gear=25;items.circuit=12;}
+    if(target===3){items.machinery=18;items.betaCore=30;}
+    if(target===4){items.titaniumPlate=35;items.deltaCore=40;}
+    if(target===5){items.energyCrystal=60;items.omegaCore=55;items.machinery=70;}
+    if(type==='plant') coins=Math.ceil(coins*1.25);
+    return {coins,items};
+  }
+  function canUpgradeClass(s,id,type){
+    const def=type==='plant'?pDef(id):mDef(id),current=type==='plant'?plantLevel(s,id):machineLevel(s,id),cnt=type==='plant'?s.plants[id].count:s.machines[id].count;
+    if(!def||cnt<1||current>=5||!s.researched[D.levelTech[current+1]])return false;
+    const c=upgradeCost(def,current,type);return s.coins>=c.coins&&Object.entries(c.items).every(([k,v])=>(s.inventory[k]||0)>=v);
+  }
+  function doUpgradeClass(s,id,type){
+    if(!canUpgradeClass(s,id,type))return false;const current=type==='plant'?plantLevel(s,id):machineLevel(s,id),def=type==='plant'?pDef(id):mDef(id),c=upgradeCost(def,current,type);
+    s.coins=N.sub(s.coins,c.coins);Object.entries(c.items).forEach(([k,v])=>s.inventory[k]-=v);
+    if(type==='plant')s.plantLevels[id]=current+1;else s.machineLevels[id]=current+1;s.stats.buildingUpgrades++;return true;
   }
 
-  // --- Bir makineyi çalıştır ---
-  function runMachine(s, id, seconds, powerRatio) {
-    const def = mDef(id), m = s.machines[id];
-    if (m.count <= 0) { m.eff = 0; return; }
-    let desired = machineRate(s, id) * seconds * powerRatio;
-    if (desired <= 0) { m.eff = 0; return; }
+  function computePower(s,dt){
+    let supply=D.economyConfig.basePower;
+    D.powerPlants.forEach(d=>{const cnt=s.plants[d.id].count;if(!cnt)return;let ratio=1;if(d.fuel){const need=cnt*d.fuel.rate*dt*(1+.12*(plantLevel(s,d.id)-1)),have=s.inventory[d.fuel.item]||0;ratio=need>0?Math.min(1,have/need):1;s.inventory[d.fuel.item]=Math.max(0,have-need*ratio);}supply+=plantOutput(s,d.id)*ratio;});
+    let demand=0;D.machines.forEach(d=>demand+=machinePowerDemand(s,d.id));const ratio=demand?Math.min(1,supply/demand):1;s._power={supply,demand,ratio};return ratio;
+  }
+  function runMachine(s,id,seconds,powerRatio){
+    const d=mDef(id),m=s.machines[id];if(!d||m.count<=0){if(m)m.eff=0;return;}
+    let desired=machineRate(s,id)*seconds*powerRatio;if(desired<=0){m.eff=0;return;}
+    let actual=desired;
+    Object.entries(d.recipe.in).forEach(([k,v])=>actual=Math.min(actual,(s.inventory[k]||0)/v));
+    Object.entries(d.recipe.out).forEach(([k,v])=>actual=Math.min(actual,Math.max(0,storageCap(s,k)-(s.inventory[k]||0))/v));
+    actual=Math.max(0,Math.min(desired,actual));m.eff=desired?actual/desired:0;if(!actual)return;
+    Object.entries(d.recipe.in).forEach(([k,v])=>s.inventory[k]=Math.max(0,(s.inventory[k]||0)-actual*v));
+    Object.entries(d.recipe.out).forEach(([k,v])=>{s.inventory[k]=Math.min(storageCap(s,k),(s.inventory[k]||0)+actual*v);s.stats.produced[k]=(s.stats.produced[k]||0)+actual*v;});
+  }
+  function manualClick(s,id){const d=mDef(id);if(!d||s.machines[id].count<1)return 0;const out=Object.keys(d.recipe.out)[0],before=s.inventory[out]||0;runMachine(s,id,D.economyConfig.manualBurstSeconds,1);return (s.inventory[out]||0)-before;}
+  function addCoins(s,amount){s.coins=N.add(s.coins,amount);s.totalEarned=N.add(s.totalEarned,amount);s.runEarned=N.add(s.runEarned,amount);}
 
-    // girdi darboğazı
-    let maxCycles = desired;
-    for (const [item, need] of Object.entries(def.recipe.in)) {
-      maxCycles = Math.min(maxCycles, (s.inventory[item] || 0) / need);
+  // ===== Pazar =====
+  function clampPct(v){return clamp(Math.round(Number(v||0)/25)*25,0,100);}
+  function setAutoSellKeep(s,item,pct){if(D.items[item])s.autoSellKeep[item]=clampPct(pct);}
+  function setGlobalMarketKeep(s,pct){pct=clampPct(pct);s.market.keepPct=pct;Object.keys(D.items).forEach(k=>{if(!D.items[k].research&&D.items[k].sell>0)s.autoSellKeep[k]=pct;});}
+  function toggleAutoSell(s,item){if(D.items[item]&&!D.items[item].research&&D.items[item].sell>0)s.autoSell[item]=!s.autoSell[item];}
+  function setAllAutoSell(s,on){Object.keys(D.items).forEach(k=>{if(!D.items[k].research&&D.items[k].sell>0)s.autoSell[k]=!!on;});}
+  function fuelReserve(s,item){let r=0;D.powerPlants.forEach(d=>{if(d.fuel&&d.fuel.item===item)r+=s.plants[d.id].count*d.fuel.rate*45;});if(item==='starFuel')r+=fleetFuelReserve(s);return r;}
+  function fleetFuelReserve(s){let n=0;D.ships.forEach(d=>n+=(s.galaxy.ships[d.id]||0)*d.fuel);return n*2;}
+  function sellFraction(s,item,fraction){
+    const it=D.items[item];if(!it||it.research||it.sell<=0)return 0;const have=s.inventory[item]||0,reserve=fuelReserve(s,item),avail=Math.max(0,have-reserve),amt=Math.min(avail,have*clamp(fraction,0,1));if(amt<=0)return 0;
+    const gain=amt*it.sell*D.market.manualPriceFactor;s.inventory[item]-=amt;addCoins(s,gain);return gain;
+  }
+  function sellItem(s,item){return sellFraction(s,item,1);}
+  function marketCapacity(s){return D.market.baseCapacity*Math.pow(D.market.capacityGrowth,(s.market.level||1)-1)*(1+(s.repeatResearch.marketLogistics||0)*.1);}
+  function marketCooldownSec(s){return Math.max(15,D.market.baseCooldownSec*Math.pow(D.market.cooldownStep,(s.market.level||1)-1)*Math.pow(.97,s.repeatResearch.marketLogistics||0));}
+  function marketUpgradeCost(s){const lv=s.market.level||1;return {coins:Math.ceil(5000*Math.pow(4,lv-1)),items:lv===1?{circuit:40,betaCore:20}:lv===2?{processor:25,gammaCore:30}:lv===3?{titaniumPlate:25,deltaCore:30}:{energyCrystal:35,omegaCore:25}};}
+  function canUpgradeMarket(s){if(!s.researched.marketSatellite||s.market.level>=D.market.maxLevel)return false;const c=marketUpgradeCost(s);return s.coins>=c.coins&&Object.entries(c.items).every(([k,v])=>(s.inventory[k]||0)>=v);}
+  function upgradeMarket(s){if(!canUpgradeMarket(s))return false;const c=marketUpgradeCost(s);s.coins-=c.coins;Object.entries(c.items).forEach(([k,v])=>s.inventory[k]-=v);s.market.level++;return true;}
+  function runMarket(s,now){
+    if(!s.researched.marketSatellite||!s.market.enabled)return 0;
+    if(!s.market.nextDispatchAt){s.market.nextDispatchAt=now+marketCooldownSec(s)*1000;return 0;}
+    if(now<s.market.nextDispatchAt)return 0;
+    let remain=marketCapacity(s),units=0,revenue=0;
+    const ids=Object.keys(D.items).filter(k=>!D.items[k].research&&D.items[k].sell>0&&s.autoSell[k]).sort((a,b)=>D.items[b].tier-D.items[a].tier);
+    ids.forEach(k=>{if(remain<=0)return;const have=s.inventory[k]||0,reserve=fuelReserve(s,k),keep=Math.max(reserve,storageCap(s,k)*(s.autoSellKeep[k]||0)/100),avail=Math.max(0,have-keep),amt=Math.min(avail,remain);if(amt>0){s.inventory[k]-=amt;remain-=amt;units+=amt;revenue+=amt*D.items[k].sell;}});
+    if(revenue>0){addCoins(s,revenue);s.stats.marketDispatches++;s.market.totalRevenue+=revenue;}
+    s.market.lastRevenue=revenue;s.market.lastUnits=units;s.market.lastDispatchAt=now;s.market.nextDispatchAt=now+marketCooldownSec(s)*1000;return revenue;
+  }
+  function runAutoSell(s){return runMarket(s,Date.now());}
+
+  // ===== Araştırma =====
+  function isResearchVisible(s,id){const t=D.research.find(x=>x.id===id);return !!t&&t.prereq.every(p=>s.researched[p]);}
+  function canResearch(s,id){const t=D.research.find(x=>x.id===id);return !!t&&!s.researched[id]&&t.prereq.every(p=>s.researched[p])&&Object.entries(t.cost).every(([k,v])=>(s.inventory[k]||0)>=v);}
+  function doResearch(s,id){if(!canResearch(s,id))return false;const t=D.research.find(x=>x.id===id);Object.entries(t.cost).forEach(([k,v])=>s.inventory[k]-=v);s.researched[id]=true;return true;}
+  function repeatCost(s,id){const r=D.repeatableResearch.find(x=>x.id===id),lv=s.repeatResearch[id]||0,out={};if(!r)return null;Object.entries(r.base).forEach(([k,v])=>out[k]=Math.ceil(v*Math.pow(r.growth,lv)));return out;}
+  function canRepeatResearch(s,id){if(!s.researched.omegaScience)return false;const c=repeatCost(s,id);return !!c&&Object.entries(c).every(([k,v])=>(s.inventory[k]||0)>=v);}
+  function doRepeatResearch(s,id){if(!canRepeatResearch(s,id))return false;const c=repeatCost(s,id);Object.entries(c).forEach(([k,v])=>s.inventory[k]-=v);s.repeatResearch[id]=(s.repeatResearch[id]||0)+1;return true;}
+
+  // ===== Filo / Galaksi =====
+  function targetById(s,id){return s.galaxy.targets.find(t=>t.id===id);}
+  function scanCost(s){const i=s.galaxy.targets.filter(t=>t.discovered).length;return {coins:Math.ceil(2500*Math.pow(1.9,i)),processor:Math.ceil(5*Math.pow(1.35,i))};}
+  function canScan(s){const c=scanCost(s);return !!s.researched.scanner&&Date.now()>=s.galaxy.scanCooldownUntil&&s.galaxy.targets.some(t=>!t.discovered)&&s.coins>=c.coins&&(s.inventory.processor||0)>=c.processor;}
+  function scanNextTarget(s){if(!canScan(s))return null;const c=scanCost(s),t=s.galaxy.targets.find(x=>!x.discovered);s.coins-=c.coins;s.inventory.processor-=c.processor;t.discovered=true;t.scannedAt=Date.now();s.galaxy.scanCooldownUntil=Date.now()+20000;s.stats.systemsScanned++;addReport(s,'scan',`🔭 ${t.name} keşfedildi`,`${t.type} · Mesafe ${t.distance} · Tehdit ${t.threat}`);return t;}
+
+  function colonyCost(s,targetId){
+    const t=targetById(s,targetId),n=Math.max(1,s.galaxy.colonies||1);
+    return t?{coins:Math.ceil(70000*Math.pow(1.85,n-1)*t.distance),items:{titaniumPlate:20+10*n,machinery:15+8*n,starFuel:20+10*n}}:null;
+  }
+  function canColonize(s,targetId){
+    const t=targetById(s,targetId),c=colonyCost(s,targetId);
+    return !!t&&t.defeated&&!t.colonized&&!!s.researched.colonization&&s.coins>=c.coins&&Object.entries(c.items).every(([k,v])=>(s.inventory[k]||0)>=v);
+  }
+  function colonizeTarget(s,targetId){
+    if(!canColonize(s,targetId))return false;const t=targetById(s,targetId),c=colonyCost(s,targetId);s.coins-=c.coins;Object.entries(c.items).forEach(([k,v])=>s.inventory[k]-=v);t.colonized=true;s.galaxy.colonies=(s.galaxy.colonies||1)+1;s.galaxy.threat+=t.threat*.35;addReport(s,'colony',`🪐 ${t.name} kolonileştirildi`,`İmparatorluk üretimine kalıcı +%4 katkı sağlıyor.`);return true;
+  }
+
+  function canBuildShip(s,id,count){const d=shipDef(id);count=Math.max(1,Math.floor(count||1));return !!d&&(!d.tech||s.researched[d.tech])&&Object.entries(d.cost).every(([k,v])=>(s.inventory[k]||0)>=v*count);}
+  function queueShip(s,id,count){count=clamp(Math.floor(count||1),1,99);if(!canBuildShip(s,id,count))return false;const d=shipDef(id);Object.entries(d.cost).forEach(([k,v])=>s.inventory[k]-=v*count);const last=s.galaxy.shipQueue[s.galaxy.shipQueue.length-1],start=Math.max(Date.now(),last?last.finishAt:0),speed=1+(s.repeatResearch.industrialEfficiency||0)*.02;s.galaxy.shipQueue.push({id:'sq'+Date.now()+Math.random(),shipId:id,count,finishAt:start+d.buildSec*count*1000/speed});return true;}
+  function canBuildDefense(s,id,count){const d=defenseDef(id);count=Math.max(1,Math.floor(count||1));return !!d&&(!d.tech||s.researched[d.tech])&&Object.entries(d.cost).every(([k,v])=>(s.inventory[k]||0)>=v*count);}
+  function buildDefense(s,id,count){count=clamp(Math.floor(count||1),1,99);if(!canBuildDefense(s,id,count))return false;const d=defenseDef(id);Object.entries(d.cost).forEach(([k,v])=>s.inventory[k]-=v*count);s.galaxy.defenses[id]=(s.galaxy.defenses[id]||0)+count;return true;}
+  function fleetStats(selection,s){let attack=0,hull=0,cargo=0,speed=99,fuel=0,total=0;D.ships.forEach(d=>{const n=Math.max(0,Math.floor(selection[d.id]||0));if(!n)return;total+=n;attack+=n*d.attack;hull+=n*d.hull;cargo+=n*d.cargo;speed=Math.min(speed,d.speed);fuel+=n*d.fuel;});return {attack,hull,cargo,speed:speed===99?0:speed,fuel,total};}
+  function weaponMult(s){return (s.researched.plasmaWeapons?1.2:1)*(1+(s.repeatResearch.weaponSystems||0)*.07);}
+  function shieldMult(s){return (s.researched.phaseShields?1.2:1)*(1+(s.repeatResearch.shieldSystems||0)*.07);}
+  function travelSeconds(s,target,selection){const fs=fleetStats(selection,s),warp=1+(s.repeatResearch.warpNavigation||0)*.08+(s.researched.warpDrive?.25:0);return Math.max(12,target.distance*55/(Math.max(.25,fs.speed)*warp));}
+  function canSendFleet(s,targetId,selection){const t=targetById(s,targetId),fs=fleetStats(selection,s);if(!t||!t.discovered||t.defeated||!s.researched.fleetCommand||fs.total<1)return false;const available=D.ships.every(d=>(selection[d.id]||0)<=(s.galaxy.ships[d.id]||0));const fuel=fs.fuel*t.distance;return available&&(s.inventory.starFuel||0)>=fuel&&!s.galaxy.missions.some(m=>m.targetId===targetId&&m.status!=='done');}
+  function sendFleet(s,targetId,selection){
+    selection=Object.fromEntries(D.ships.map(d=>[d.id,Math.max(0,Math.floor(selection[d.id]||0))]));if(!canSendFleet(s,targetId,selection))return false;
+    const t=targetById(s,targetId),fs=fleetStats(selection,s),fuel=fs.fuel*t.distance;D.ships.forEach(d=>s.galaxy.ships[d.id]-=selection[d.id]||0);s.inventory.starFuel-=fuel;
+    const sec=travelSeconds(s,t,selection);s.galaxy.missions.push({id:'m'+Date.now()+Math.random(),targetId,status:'outbound',ships:selection,arrivalAt:Date.now()+sec*1000,returnAt:0,pendingLoot:null,battle:null});s.galaxy.threat+=t.threat*.6;addReport(s,'mission',`🚀 Filo ${t.name} hedefine çıktı`,`Varış süresi yaklaşık ${Math.ceil(sec)} saniye.`);return true;
+  }
+  function distributeSurvivors(selection,ratio){const out={};Object.entries(selection).forEach(([k,v])=>out[k]=Math.max(0,Math.floor(v*ratio)));return out;}
+  function resolveBattle(s,mission,now){
+    const t=targetById(s,mission.targetId),fs=fleetStats(mission.ships,s),roll=.9+Math.random()*.2,pAttack=fs.attack*weaponMult(s)*roll,pHull=fs.hull*shieldMult(s),ePower=t.strength*(.9+Math.random()*.2),enemyAttack=ePower*.62;
+    const won=pAttack>=ePower;const lossRatio=clamp(enemyAttack/Math.max(1,pHull),0,1);const surviveRatio=won?clamp(1-lossRatio*.68,.08,1):clamp(1-lossRatio,0,.65);mission.ships=distributeSurvivors(mission.ships,surviveRatio);mission.battle={won,pAttack,ePower,surviveRatio};
+    if(won){
+      t.defeated=true;t.victories=(t.victories||0)+1;t.recoveryAt=now+(180+t.threat*55)*1000;s.stats.battlesWon++;
+      const lootScale=1+(t.victories-1)*.12;mission.pendingLoot={};Object.entries(t.loot).forEach(([k,v])=>mission.pendingLoot[k]=Math.ceil(v*lootScale));
+      s.galaxy.threat+=t.threat;addReport(s,'win',`🏆 ${t.name} yenildi`,`Filo kaybı %${Math.round((1-surviveRatio)*100)}. Kolonileştirilmezse düşman yeniden örgütlenecek.`);
     }
-    // depo darboğazı (çıktı yeri var mı?)
-    for (const [item, amt] of Object.entries(def.recipe.out)) {
-      const room = storageCap(s, item) - (s.inventory[item] || 0);
-      maxCycles = Math.min(maxCycles, Math.max(0, room) / amt);
-    }
-    const actual = Math.max(0, Math.min(desired, maxCycles));
-    m.eff = desired > 0 ? actual / desired : 0;
-    if (actual <= 0) return;
-
-    for (const [item, need] of Object.entries(def.recipe.in)) {
-      s.inventory[item] = Math.max(0, (s.inventory[item] || 0) - actual * need);
-    }
-    for (const [item, amt] of Object.entries(def.recipe.out)) {
-      s.inventory[item] = Math.min(storageCap(s, item), (s.inventory[item] || 0) + actual * amt);
-      s.stats.produced[item] = (s.stats.produced[item] || 0) + actual * amt;
-    }
+    else{s.stats.battlesLost++;addReport(s,'loss',`☠️ ${t.name} saldırısı başarısız`,`Filo kaybı %${Math.round((1-surviveRatio)*100)}. Sağ kalanlar dönüyor.`);}
+    mission.status='returning';mission.returnAt=now+travelSeconds(s,t,mission.ships)*1000;
+  }
+  function deliverMission(s,m){D.ships.forEach(d=>s.galaxy.ships[d.id]=(s.galaxy.ships[d.id]||0)+(m.ships[d.id]||0));if(m.pendingLoot){Object.entries(m.pendingLoot).forEach(([k,v])=>{if(k==='coins')addCoins(s,v);else s.inventory[k]=Math.min(storageCap(s,k),(s.inventory[k]||0)+v);});}m.status='done';addReport(s,'return','🏠 Filo üsse döndü',m.pendingLoot?'Ganimet depoya aktarıldı.':'Sağ kalan gemiler hangara alındı.');}
+  function addReport(s,type,title,body){s.galaxy.reports.unshift({id:'r'+Date.now()+Math.random(),type,title,body,time:Date.now()});s.galaxy.reports=s.galaxy.reports.slice(0,40);}
+  function defenseStats(s){let attack=0,hull=0;D.defenses.forEach(d=>{const n=s.galaxy.defenses[d.id]||0;attack+=n*d.attack;hull+=n*d.hull;});return {attack:attack*weaponMult(s),hull:hull*shieldMult(s)};}
+  function resolveRaid(s,now){
+    const threat=Math.max(1,s.galaxy.threat),enemy=150+threat*120+s.stats.battlesWon*170,ds=defenseStats(s),ammoNeed=Math.ceil(enemy*.045),ammoRatio=Math.min(1,(s.inventory.ammunition||0)/Math.max(1,ammoNeed));s.inventory.ammunition=Math.max(0,(s.inventory.ammunition||0)-ammoNeed*ammoRatio);
+    const power=(ds.attack+ds.hull*.35)*(.35+.65*ammoRatio),won=power>=enemy;
+    if(won){const reward=Math.ceil(enemy*14);addCoins(s,reward);s.stats.raidsWon++;addReport(s,'raid-win','🛡️ Uzaylı saldırısı püskürtüldü',`Savunma hattı dayandı. +${Math.round(reward)} kredi.`);s.galaxy.threat=Math.max(0,s.galaxy.threat*.82);}
+    else{const severity=clamp((enemy-power)/enemy,.08,.28);let lostValue=0;Object.keys(D.items).forEach(k=>{const it=D.items[k];if(it.research)return;const loss=(s.inventory[k]||0)*severity;s.inventory[k]-=loss;lostValue+=loss*it.sell;});s.stats.raidsLost++;addReport(s,'raid-loss','🚨 Koloni savunması yarıldı',`Depoların yaklaşık %${Math.round(severity*100)} kadarı yağmalandı. Binalar korunarak devre dışı kalmadı.`);s.galaxy.threat+=1.5;}
+    s.galaxy.nextRaidAt=now+(D.economyConfig.raidBaseSec+Math.random()*240)*1000;s.galaxy.raidWarningShown=false;
+  }
+  function tickGalaxy(s,now){
+    while(s.galaxy.shipQueue.length&&s.galaxy.shipQueue[0].finishAt<=now){const q=s.galaxy.shipQueue.shift();s.galaxy.ships[q.shipId]=(s.galaxy.ships[q.shipId]||0)+q.count;addReport(s,'build',`${shipDef(q.shipId).icon} ${q.count} ${shipDef(q.shipId).name} tamamlandı`,'Gemiler hangara eklendi.');}
+    s.galaxy.targets.forEach(t=>{if(t.defeated&&!t.colonized&&t.recoveryAt&&t.recoveryAt<=now){t.defeated=false;t.recoveryAt=0;t.strength=Math.ceil(t.strength*1.18);addReport(s,'warning',`⚠️ ${t.name} yeniden örgütlendi`,`Yeni savunma gücü ${Math.ceil(t.strength)}. Her zaferden sonra daha güçlü döner.`);}});
+    s.galaxy.missions.forEach(m=>{if(m.status==='outbound'&&m.arrivalAt<=now)resolveBattle(s,m,now);else if(m.status==='returning'&&m.returnAt<=now)deliverMission(s,m);});
+    s.galaxy.missions=s.galaxy.missions.filter(m=>m.status!=='done').slice(-20);
+    if(!s.galaxy.raidWarningShown&&s.galaxy.nextRaidAt-now<=D.economyConfig.raidWarningSec*1000&&s.galaxy.nextRaidAt>now){s.galaxy.raidWarningShown=true;addReport(s,'warning','⚠️ Uzaylı imzası algılandı','Savunma hazırlığı için kısa süre kaldı.');}
+    if(now>=s.galaxy.nextRaidAt)resolveRaid(s,now);
   }
 
-  // --- Tick ---
-  function tick(s, dt) {
-    const before = {};
-    Object.keys(D.items).forEach((k) => { before[k] = s.inventory[k] || 0; });
-
-    const powerRatio = computePower(s, dt);
-    const ordered = [...D.machines].sort((a, b) => a.tier - b.tier);
-    ordered.forEach((def) => {
-      const m = s.machines[def.id];
-      if (m.count > 0 && m.hasManager) runMachine(s, def.id, dt, powerRatio);
-      else m.eff = 0;
-    });
-    runAutoSell(s);
-    // akış (net oran/sn)
-    if (dt > 0) {
-      Object.keys(D.items).forEach((k) => {
-        const delta = (s.inventory[k] || 0) - before[k];
-        // oto-sat sıfırladıysa akışı yanıltmasın diye üretilen sayacı da kullanabilirdik; net envanter değişimi yeterli gösterge
-        s.flow[k] = delta / dt;
-      });
-    }
-    s.stats.playTimeSec += dt;
-    updateTopScore(s);
-    return s;
+  // ===== Tick / offline =====
+  function tick(s,dt,now){now=now||Date.now();const before=blankItemMap(k=>s.inventory[k]||0),power=computePower(s,dt);[...D.machines].sort((a,b)=>a.tier-b.tier).forEach(d=>{const m=s.machines[d.id];if(m.count>0&&m.hasManager)runMachine(s,d.id,dt,power);else m.eff=0;});runMarket(s,now);tickGalaxy(s,now);Object.keys(D.items).forEach(k=>s.flow[k]=dt?((s.inventory[k]||0)-before[k])/dt:0);s.stats.playTimeSec+=dt;s.galaxy.threat=Math.max(s.galaxy.threat,s.sectorsOpened*.08+s.stats.battlesWon*.3);updateTopScore(s);return s;}
+  function applyOfflineProgress(s){
+    const now=Date.now(),start=Number(s.lastSeen||now),elapsed=Math.max(0,(now-start)/1000),usable=Math.min(elapsed,D.economyConfig.offlineCapSeconds),before=s.totalEarned;
+    // Oyuncu çevrimdışıyken ardışık baskınlarla depoları sessizce eritme. Vadesi gelen saldırı,
+    // oyuncu döndükten sonra hazırlanabileceği uyarı süresine ertelenir; üretim ve filo süreleri ilerler.
+    const simulatedEnd=start+usable*1000,raidDeferred=!!(s.galaxy&&s.galaxy.nextRaidAt&&s.galaxy.nextRaidAt<=simulatedEnd);
+    if(raidDeferred){s.galaxy.nextRaidAt=now+D.economyConfig.raidWarningSec*1000;s.galaxy.raidWarningShown=false;}
+    if(usable>0){const chunks=Math.min(120,Math.max(1,Math.ceil(usable/60))),step=usable/chunks,dt=step*D.economyConfig.offlineRate;for(let i=0;i<chunks;i++)tick(s,dt,start+(i+1)*step*1000);}
+    if(raidDeferred&&!s.galaxy.raidWarningShown){s.galaxy.raidWarningShown=true;addReport(s,'warning','⚠️ Çevrimdışı saldırı ertelendi','Savunma hazırlığı yapabilmen için uzaylı baskını geri dönüşünden sonraya ertelendi.');}
+    s.lastSeen=now;return {earned:s.totalEarned-before,usableSeconds:usable,wasCapped:elapsed>D.economyConfig.offlineCapSeconds,raidDeferred};
   }
 
-  function manualClick(s, id) {
-    const def = mDef(id), m = s.machines[id];
-    if (m.count <= 0) return 0;
-    const out = Object.keys(def.recipe.out)[0];
-    const before = s.inventory[out] || 0;
-    // manuel: güç gerekmez (powerRatio=1)
-    runMachine(s, id, D.economyConfig.manualBurstSeconds, 1);
-    return (s.inventory[out] || 0) - before;
-  }
-
-  function addCoins(s, amount) {
-    s.coins = N.add(s.coins, amount);
-    s.totalEarned = N.add(s.totalEarned, amount);
-    s.runEarned = N.add(s.runEarned, amount);
-  }
-  function sellItem(s, item) {
-    if (D.items[item].research || D.items[item].sell <= 0) return 0;
-    const amt = s.inventory[item] || 0;
-    if (amt <= 0) return 0;
-    const gain = amt * D.items[item].sell;
-    s.inventory[item] = 0;
-    addCoins(s, gain);
-    return gain;
-  }
-  function toggleAutoSell(s, item) { if (!D.items[item].research) s.autoSell[item] = !s.autoSell[item]; }
-
-  // --- Araştırma ---
-  function canResearch(s, id) {
-    if (s.researched[id]) return false;
-    const t = D.research.find((r) => r.id === id);
-    if (!t) return false;
-    if (!t.prereq.every((p) => s.researched[p])) return false;
-    return Object.entries(t.cost).every(([item, n]) => (s.inventory[item] || 0) >= n);
-  }
-  function isResearchVisible(s, id) {
-    const t = D.research.find((r) => r.id === id);
-    return t && t.prereq.every((p) => s.researched[p]);
-  }
-  function doResearch(s, id) {
-    if (!canResearch(s, id)) return false;
-    const t = D.research.find((r) => r.id === id);
-    Object.entries(t.cost).forEach(([item, n]) => { s.inventory[item] = Math.max(0, (s.inventory[item] || 0) - n); });
-    s.researched[id] = true;
-    return true;
-  }
-
-  // --- Offline ---
-  function applyOfflineProgress(s) {
-    const now = Date.now();
-    const elapsed = Math.max(0, (now - s.lastSeen) / 1000);
-    const usable = Math.min(elapsed, D.economyConfig.offlineCapSeconds);
-    const coinsBefore = s.totalEarned;
-    if (usable > 0) {
-      const eff = D.economyConfig.offlineRate;
-      const powerRatio = computePower(s, usable * eff);
-      const ordered = [...D.machines].sort((a, b) => a.tier - b.tier);
-      ordered.forEach((def) => {
-        const m = s.machines[def.id];
-        if (m.count > 0 && m.hasManager) runMachine(s, def.id, usable * eff, powerRatio);
-      });
-      runAutoSell(s);
-    }
-    s.lastSeen = now;
-    return { earned: s.totalEarned - coinsBefore, usableSeconds: usable, wasCapped: elapsed > D.economyConfig.offlineCapSeconds };
-  }
-
-  // --- Prestige ---
-  const calcNexus = (r) => Math.floor(Math.sqrt(r / D.prestige.nexusDivisor));
-  const canPrestige = (s) => s.runEarned >= D.prestige.runEarnedThreshold;
-  const projectedNexus = (s) => calcNexus(s.runEarned);
-  function prestige(s) {
-    if (!canPrestige(s)) return 0;
-    const g = calcNexus(s.runEarned);
-    s.nexus += g; s.prestigeCount += 1;
-    s.coins = 0; s.runEarned = 0;
-    Object.keys(s.inventory).forEach((k) => { s.inventory[k] = 0; });
-    Object.keys(s.storageLevel).forEach((k) => { s.storageLevel[k] = 0; });
-    D.machines.forEach((def) => { s.machines[def.id] = { count: 0, hasManager: false, eff: 0, milestoneMult: 1 }; });
-    D.powerPlants.forEach((def) => { s.plants[def.id] = { count: 0 }; });
-    s.researched = {};
-    s.sectorsOpened = 0;
-    s.grid = { entities: {}, conveyors: [], powerLines: [], nextId: 1 };
-    s.map = { openSectors: {}, nodes: {}, nodeNextSeed: (s.map.nodeNextSeed || 1) + 7 };
-    initMap(s);
-    return g;
-  }
-
-  function machineCountTotal(s) {
-    let n = 0; D.machines.forEach((d) => n += s.machines[d.id].count); return n;
-  }
-  function plantCountTotal(s) {
-    let n = 0; D.powerPlants.forEach((d) => n += s.plants[d.id].count); return n;
-  }
-
-  // #4: Bir materyalin bilgi kartı verisi — açıklama, kim üretir, kim tüketir, değer
-  function itemInfo(s, item) {
-    const it = D.items[item];
-    const producers = D.machines.filter((m) => m.recipe.out[item]).map((m) => m.name);
-    const consumers = D.machines.filter((m) => m.recipe.in[item]).map((m) => m.name);
-    const fuelFor = D.powerPlants.filter((p) => p.fuel && p.fuel.item === item).map((p) => p.name);
-    return {
-      id: item, name: it.name, icon: it.icon, tier: it.tier,
-      desc: it.desc || '', sell: it.sell, research: !!it.research,
-      producers, consumers, fuelFor,
-      amount: s ? (s.inventory[item] || 0) : 0,
-      cap: s ? storageCap(s, item) : it.cap,
-      flow: s ? (s.flow[item] || 0) : 0,
-    };
-  }
+  // ===== Bilgi / skor =====
+  function machineCountTotal(s){return D.machines.reduce((n,d)=>n+s.machines[d.id].count,0);}
+  function plantCountTotal(s){return D.powerPlants.reduce((n,d)=>n+s.plants[d.id].count,0);}
+  function computeScore(s){return Math.floor(s.totalEarned+Object.keys(s.researched).length*4500+s.sectorsOpened*2000+s.stats.battlesWon*40000+s.stats.buildingUpgrades*8000+machineCountTotal(s)*250);}
+  function updateTopScore(s){const x=computeScore(s);if(x>s.topScore)s.topScore=x;return x;}
+  function itemInfo(s,item){const it=D.items[item];return {id:item,name:it.name,icon:it.icon,tier:it.tier,desc:it.desc||'',sell:it.sell,research:!!it.research,producers:D.machines.filter(m=>m.recipe.out[item]).map(m=>m.name),consumers:D.machines.filter(m=>m.recipe.in[item]).map(m=>m.name),fuelFor:D.powerPlants.filter(p=>p.fuel&&p.fuel.item===item).map(p=>p.name),amount:s.inventory[item]||0,cap:storageCap(s,item),flow:s.flow[item]||0};}
 
   global.Axyon.Economy = {
-    createInitialState, mDef, pDef, globalMult,
-    isMachineUnlocked, isPlantUnlocked,
-    storageCap, storageUpgradeCost, upgradeStorage,
-    totalCells, usedCells, freeCells,
-    buildCost, canBuild, buildMachine, nextMilestone,
-    plantBuildCost, canBuildPlant, buildPlant,
-    canBuyManager, buyManager,
-    machineRate, computePower, tick, manualClick,
-    addCoins, sellItem, sellFraction, toggleAutoSell, setAutoSellKeep, runAutoSell, itemInfo,
-    gridSize, entityFootprintCells, canPlaceAt, placeMachine, placePlant, moveEntity,
-    removeEntity, addConveyor, addPowerLine, removeConveyor, removeLineNear, entityCenter, cellOccupiedExceptSelf,
-    CELL_M2,
-    // harita & keşif & nodlar
-    mapSide, sectorsPerSide, cellSector, isSectorOpen, isCellOpen, openSectorList, openableSectors,
-    sectorOpenCost, canOpenSector, openSector, nodeAt, nodeVisible, hasFreeNodeFor,
-    isExtractor, extractorNodeType,
-    // skor
-    computeScore, updateTopScore,
-    canResearch, isResearchVisible, doResearch,
-    applyOfflineProgress, canPrestige, projectedNexus, prestige,
-    machineCountTotal, plantCountTotal,
+    SAVE_VERSION,createInitialState,normalizeState,mDef,pDef,shipDef,defenseDef,globalMult,
+    isMachineUnlocked,isPlantUnlocked,storageCap,storageUpgradeCost,upgradeStorage,totalCells,usedCells,freeCells,
+    buildCost,canBuild,buildMachine,nextMilestone,plantBuildCost,canBuildPlant,buildPlant,canBuyManager,buyManager,
+    machineRate,machinePowerDemand,plantOutput,machineLevel,plantLevel,upgradeCost,canUpgradeClass,doUpgradeClass,
+    computePower,tick,manualClick,addCoins,sellItem,sellFraction,toggleAutoSell,setAutoSellKeep,setGlobalMarketKeep,setAllAutoSell,runAutoSell,
+    marketCapacity,marketCooldownSec,marketUpgradeCost,canUpgradeMarket,upgradeMarket,itemInfo,
+    gridSize,entityFootprintCells,canPlaceAt,placeMachine,placePlant,moveEntity,removeEntity,addConveyor,addPowerLine,removeConveyor,removeLineNear,entityCenter,cellOccupiedExceptSelf,CELL_M2,
+    mapSide,sectorsPerSide,cellSector,isSectorOpen,isCellOpen,openSectorList,openableSectors,sectorOpenCost,canOpenSector,openSector,nodeAt,nodeVisible,hasFreeNodeFor,isExtractor,extractorNodeType,
+    computeScore,updateTopScore,canResearch,isResearchVisible,doResearch,repeatCost,canRepeatResearch,doRepeatResearch,applyOfflineProgress,machineCountTotal,plantCountTotal,
+    targetById,scanCost,canScan,scanNextTarget,colonyCost,canColonize,colonizeTarget,canBuildShip,queueShip,canBuildDefense,buildDefense,fleetStats,canSendFleet,sendFleet,travelSeconds,defenseStats,weaponMult,shieldMult,
   };
 })(typeof window !== 'undefined' ? window : globalThis);

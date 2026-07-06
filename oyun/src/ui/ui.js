@@ -1,434 +1,109 @@
-/**
- * Axyon.UI — DOM render. Ekonomi hesabı yapmaz.
- * Makine kartları, güç paneli, arazi paneli, araştırma ağacı, envanter dinamik üretilir.
- */
-(function (global) {
-  const N = global.Axyon.Numbers, D = global.Axyon.Data;
-  const el = (id) => document.getElementById(id);
+/** Axyon.UI v4 — ekran üretimi ve salt görünüm yardımcıları. */
+(function(global){
+  const D=global.Axyon.Data,N=global.Axyon.Numbers;
+  const el=id=>document.getElementById(id);
+  const fmtCost=obj=>Object.entries(obj||{}).map(([k,v])=>`${D.items[k]?.icon||''}${N.format(v)}`).join(' ');
+  const roman=n=>['0','I','II','III','IV','V'][n]||n;
+  const escapeHtml=s=>String(s).replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
 
-  function recipeHtml(def) {
-    const ins = Object.entries(def.recipe.in).map(([k,v]) =>
-      `<span class="chip in" data-item="${k}">${D.items[k].icon}${v>1?'×'+v:''}<span class="flowmark" id="fm-${def.id}-${k}"></span></span>`).join('');
-    const outs = Object.entries(def.recipe.out).map(([k,v]) =>
-      `<span class="chip out">${D.items[k].icon}${v>1?'×'+v:''}</span>`).join('');
-    return `${ins}${ins?'<span class="arw">→</span>':''}${outs}`;
-  }
-
-  function buildMachineCards() {
-    const c = el('machines-container'); if (!c) return; c.innerHTML = '';
-    D.machines.forEach((def) => {
-      const card = document.createElement('div');
-      card.className = 'mcard'; card.id = `card-${def.id}`;
-      card.innerHTML = `
-        <div class="mc-head">
-          <div class="mc-icon">${def.icon}</div>
-          <div class="mc-title"><div class="mc-name">${def.name}</div>
-            <div class="mc-recipe">${recipeHtml(def)}</div></div>
-          <div class="mc-count"><span id="cnt-${def.id}">0</span><small>adet</small></div>
-        </div>
-        <div class="mc-effrow"><div class="eff-bar"><div class="eff-fill" id="eff-${def.id}"></div></div>
-          <span class="eff-label" id="efftxt-${def.id}"></span></div>
-        <div class="mc-info">
-          <span title="arazi">🗺️ <span id="land-${def.id}">0</span>m²</span>
-          <span title="güç">⚡ <span id="pw-${def.id}">0</span>kW</span>
-          <span id="ms-${def.id}" class="mc-ms"></span>
-        </div>
-        <div class="mc-actions">
-          <button class="btn-primary" data-action="click" data-machine="${def.id}">Çalıştır</button>
-          <div class="btn-row">
-            <button class="btn-sub" data-action="build" data-machine="${def.id}"><span>İnşa</span><span class="cost" id="bcost-${def.id}">0</span></button>
-            <button class="btn-sub" data-action="manager" data-machine="${def.id}" id="mgr-${def.id}">Manager</button>
-          </div>
-        </div>
-        <div class="lock-overlay"><div class="lock-icon">🔒</div><div class="lock-text" id="locktext-${def.id}">Araştırma gerekli</div></div>`;
-      c.appendChild(card);
-    });
-  }
-
-  function buildPlantCards() {
-    const c = el('plants-container'); if (!c) return; c.innerHTML = '';
-    D.powerPlants.forEach((def) => {
-      const card = document.createElement('div');
-      card.className = 'pcard'; card.id = `pcard-${def.id}`;
-      const fuel = def.fuel ? `${D.items[def.fuel.item].icon} yakıt` : 'yakıtsız';
-      card.innerHTML = `
-        <div class="pc-head"><span class="pc-icon">${def.icon}</span>
-          <div><div class="pc-name">${def.name}</div><div class="pc-sub">+${def.output}kW · ${fuel} · ${def.footprint}m²</div></div>
-          <div class="pc-count"><span id="pcnt-${def.id}">0</span></div></div>
-        <button class="btn-sub full" data-action="buildplant" data-plant="${def.id}"><span>Kur</span><span class="cost" id="pcost-${def.id}">0</span></button>
-        <div class="lock-overlay"><div class="lock-icon">🔒</div></div>`;
-      c.appendChild(card);
-    });
-  }
-
-  function buildInventory() {
-    const inv = el('inventory-list'); if (!inv) return; inv.innerHTML = '';
-    Object.entries(D.items).forEach(([id, item]) => {
-      const row = document.createElement('div');
-      row.className = 'inv-row'; row.id = `inv-${id}`;
-      const controls = item.research ? `<span class="inv-research">araştırma</span>`
-        : `<label class="inv-check"><input type="checkbox" data-check="${id}" id="check-${id}" /></label>
-           <button class="inv-auto" data-auto="${id}" id="auto-${id}" title="Otomatik sat">OTO</button>
-           <div class="keep-seg" id="keepseg-${id}" title="Elde tutulacak oran (deponun %'si)">
-             <button class="ks" data-keep="${id}" data-pct="0">0</button>
-             <button class="ks" data-keep="${id}" data-pct="25">25</button>
-             <button class="ks" data-keep="${id}" data-pct="50">50</button>
-             <button class="ks" data-keep="${id}" data-pct="75">75</button>
-             <button class="ks" data-keep="${id}" data-pct="100">100</button>
-           </div>
-           <div class="sell-quick">
-             <button class="sq" data-sellfrac="${id}" data-frac="0.5" title="Yarısını sat">½</button>
-             <button class="sq" data-sellfrac="${id}" data-frac="1" title="Hepsini sat">Sat</button>
-           </div>`;
-      row.innerHTML = `
-        <span class="inv-icon" data-info="${id}">${item.icon}</span>
-        <span class="inv-name" data-info="${id}">${item.name}</span>
-        <span class="inv-flow" id="invflow-${id}"></span>
-        <span class="inv-amt"><span id="invamt-${id}">0</span><small id="invcap-${id}">/0</small></span>
-        <button class="inv-info" data-info="${id}" title="Bilgi">ⓘ</button>
-        <button class="inv-up" data-stor="${id}" id="stor-${id}" title="Depoyu yükselt">⤢</button>
-        ${controls}`;
-      inv.appendChild(row);
-    });
-  }
-  // seçili (checkbox) ürünleri döndür
-  function selectedItems() {
-    return Object.keys(D.items).filter((id) => { const c = el(`check-${id}`); return c && c.checked; });
-  }
-
-  // #4: Materyal bilgi kartını doldur ve göster
-  function showItemInfo(state, E, item) {
-    const info = E.itemInfo(state, item);
-    const body = el('iteminfo-body');
-    const tierNames = ['Hammadde','Eritme','Bileşen','Gelişmiş','İleri'];
-    const rows = [];
-    rows.push(`<div class="ii-desc">${info.desc}</div>`);
-    rows.push(`<div class="ii-grid">
-      <div><span>Tier</span><b>${tierNames[info.tier] || info.tier}</b></div>
-      <div><span>Stok</span><b>${N.format(info.amount)} / ${N.format(info.cap)}</b></div>
-      <div><span>Değer</span><b>${info.research ? 'satılmaz' : N.format(info.sell)+' 🪙'}</b></div>
-      <div><span>Akış</span><b>${info.flow>0.05?'▲ artıyor':info.flow<-0.05?'▼ azalıyor':'■ sabit'}</b></div>
-    </div>`);
-    if (info.producers.length) rows.push(`<div class="ii-line"><span>🏭 Üreten:</span> ${info.producers.join(', ')}</div>`);
-    if (info.consumers.length) rows.push(`<div class="ii-line"><span>⬇️ Tüketen:</span> ${info.consumers.join(', ')}</div>`);
-    if (info.fuelFor.length) rows.push(`<div class="ii-line ii-fuel"><span>⚡ Yakıt:</span> ${info.fuelFor.join(', ')}</div>`);
-    if (!info.producers.length) rows.push(`<div class="ii-line ii-dim">Bu bir hammadde/çıkarılan kaynaktır.</div>`);
-    body.innerHTML = rows.join('');
-    el('iteminfo-title').innerHTML = `${info.icon} ${info.name}`;
-    el('iteminfo-modal').classList.remove('hidden');
-  }
-
-  function buildResearch() {
-    const c = el('research-list'); c.innerHTML = '';
-    D.research.forEach((t) => {
-      const node = document.createElement('div');
-      node.className = 'res-node'; node.id = `res-${t.id}`;
-      const cost = Object.entries(t.cost).map(([it,n]) => `${n} ${D.items[it].icon}`).join(' ');
-      node.innerHTML = `
-        <div class="res-head"><span class="res-icon">${t.icon}</span><span class="res-name">${t.name}</span>
-          <span class="res-cost">${cost}</span></div>
-        <div class="res-desc">${t.desc}</div>
-        <button class="btn-sub res-btn" data-research="${t.id}">Araştır</button>`;
-      c.appendChild(node);
-    });
-  }
-
-  function flowArrow(v) {
-    if (v > 0.05) return '<span class="up">▲</span>';
-    if (v < -0.05) return '<span class="down">▼</span>';
-    return '<span class="flat">■</span>';
-  }
-
-  function render(state, E) {
-    el('coin-display').textContent = N.format(state.coins);
-    el('total-earned').textContent = N.format(state.totalEarned);
-    el('nexus-display').textContent = N.format(state.nexus);
-    el('multiplier-display').textContent = `x${E.globalMult(state).toFixed(2)}`;
-    if (el('score-display')) el('score-display').textContent = N.format(E.computeScore(state));
-    if (el('topscore-display')) el('topscore-display').textContent = N.format(state.topScore || 0);
-
-    // Güç & arazi üst panel
-    const p = state._power;
-    el('power-supply').textContent = N.format(p.supply);
-    el('power-demand').textContent = N.format(p.demand);
-    const pOk = p.demand === 0 || p.supply >= p.demand;
-    el('power-status').textContent = pOk ? 'yeterli' : `%${Math.round(p.ratio*100)} (yetersiz!)`;
-    el('power-status').className = 'stat-status ' + (pOk ? 'ok' : 'bad');
-    el('power-bar').style.width = `${Math.min(100, p.demand>0 ? p.ratio*100 : 100)}%`;
-    el('power-bar').classList.toggle('bad', !pOk);
-
-    // Keşif / bölge (eski arazi m² yerine)
-    const openN = E.openSectorList(state).length;
-    const openable = E.openableSectors(state).length;
-    if (el('land-used')) el('land-used').textContent = openN;
-    if (el('land-total')) el('land-total').textContent = openN + openable;
-    if (el('land-bar')) el('land-bar').style.width = `${Math.min(100, (openN/(openN+openable||1))*100)}%`;
-    if (el('land-expand-cost')) el('land-expand-cost').textContent = openable > 0 ? N.format(E.sectorOpenCost(state)) : '—';
-    if (el('land-expand-btn')) el('land-expand-btn').classList.toggle('disabled', !E.canOpenSector(state));
-
-    // Makineler (eski panel kartları — grafik arayüzde yok; varsa güncelle)
-    D.machines.forEach((def) => {
-      const card = el(`card-${def.id}`);
-      if (!card) return;
-      const m = state.machines[def.id];
-      const unlocked = E.isMachineUnlocked(state, def.id);
-      card.classList.toggle('locked', !unlocked);
-      if (!unlocked) {
-        const t = D.research.find(r => r.id === def.tech);
-        el(`locktext-${def.id}`).textContent = t ? `${t.icon} ${t.name} gerekli` : 'Kilitli';
-        return;
-      }
-      el(`cnt-${def.id}`).textContent = m.count;
-      el(`land-${def.id}`).textContent = m.count * def.footprint;
-      el(`pw-${def.id}`).textContent = m.hasManager ? m.count * def.power : 0;
-
-      const eff = (m.count>0 && m.hasManager) ? m.eff : 0;
-      const ef = el(`eff-${def.id}`);
-      ef.style.width = `${Math.round(eff*100)}%`;
-      ef.classList.toggle('starved', m.count>0 && m.hasManager && eff < 0.95);
-      const et = el(`efftxt-${def.id}`);
-      if (m.count===0) et.textContent = 'inşa et';
-      else if (!m.hasManager) et.textContent = 'manuel';
-      else if (eff>=0.95) et.textContent = 'tam hız';
-      else if (eff>0) et.textContent = 'kısıtlı';
-      else et.textContent = 'durdu';
-
-      // girdi akış işaretleri
-      Object.keys(def.recipe.in).forEach((it) => {
-        const fm = el(`fm-${def.id}-${it}`);
-        if (fm) fm.innerHTML = flowArrow(state.flow[it] || 0);
-      });
-
-      const bc = el(`bcost-${def.id}`);
-      bc.textContent = N.format(E.buildCost(state, def.id));
-      const buildBtn = card.querySelector('[data-action="build"]');
-      if (buildBtn) { const canB = E.canBuild(state, def.id); buildBtn.classList.toggle('disabled', !canB); }
-
-      const mgr = el(`mgr-${def.id}`);
-      if (m.hasManager) { mgr.textContent = '✓ Oto'; mgr.classList.add('owned'); mgr.classList.remove('disabled'); }
-      else { mgr.textContent = `Mgr ${N.format(def.managerCost)}`; mgr.classList.toggle('disabled', !E.canBuyManager(state, def.id)); mgr.classList.remove('owned'); }
-
-      const nm = E.nextMilestone(state, def.id);
-      el(`ms-${def.id}`).textContent = nm ? `🎯 ${nm.count} adet → x${nm.multiplier}` : (m.count>0?'🎯 MAX':'');
-    });
-
-    // Santraller
-    D.powerPlants.forEach((def) => {
-      const pc = el(`pcard-${def.id}`);
-      if (!pc) return;
-      const unlocked = E.isPlantUnlocked(state, def.id);
-      pc.classList.toggle('locked', !unlocked);
-      if (!unlocked) return;
-      el(`pcnt-${def.id}`).textContent = state.plants[def.id].count;
-      el(`pcost-${def.id}`).textContent = N.format(E.plantBuildCost(state, def.id));
-      pc.querySelector('[data-action="buildplant"]').classList.toggle('disabled', !E.canBuildPlant(state, def.id));
-    });
-
-    // Envanter
-    Object.keys(D.items).forEach((id) => {
-      const amt = state.inventory[id] || 0, cap = E.storageCap(state, id);
-      el(`invamt-${id}`).textContent = N.format(amt);
-      el(`invcap-${id}`).textContent = '/' + N.format(cap);
-      el(`invflow-${id}`).innerHTML = flowArrow(state.flow[id] || 0);
-      const row = el(`inv-${id}`);
-      row.classList.toggle('full', amt >= cap - 0.01 && cap > 0);
-      const storBtn = el(`stor-${id}`);
-      if (storBtn) storBtn.title = `Depoyu yükselt (${N.format(E.storageUpgradeCost(state, id))} 🪙)`;
-      const auto = el(`auto-${id}`);
-      if (auto) auto.classList.toggle('on', !!state.autoSell[id]);
-      // %seçici: aktif oto-satsa göster, seçili yüzdeyi vurgula
-      const seg = el(`keepseg-${id}`);
-      if (seg) {
-        seg.classList.toggle('active', !!state.autoSell[id]);
-        const pct = state.autoSellKeep[id] || 0;
-        seg.querySelectorAll('.ks').forEach((b) => b.classList.toggle('sel', parseInt(b.dataset.pct, 10) === pct));
-      }
-    });
-    // toplu seçim sayacı
-    if (el('bulk-count')) {
-      const n = selectedItems().length;
-      el('bulk-count').textContent = `${n} seçili`;
-    }
-
-    // Araştırma
-    D.research.forEach((t) => {
-      const node = el(`res-${t.id}`);
-      const done = !!state.researched[t.id];
-      const visible = E.isResearchVisible(state, t.id);
-      node.classList.toggle('done', done);
-      node.classList.toggle('hidden-res', !visible && !done);
-      const btn = node.querySelector('.res-btn');
-      if (done) { btn.textContent = '✓ Tamamlandı'; btn.classList.add('owned'); btn.classList.add('disabled'); }
-      else { btn.textContent = 'Araştır'; btn.classList.toggle('disabled', !E.canResearch(state, t.id)); }
-    });
-
-    // Prestige
-    const canP = E.canPrestige(state), gain = E.projectedNexus(state);
-    const pb = el('prestige-btn');
-    pb.classList.toggle('disabled', !canP);
-    pb.querySelector('span').textContent = canP ? `Nexus Sıfırla  +${gain} 🌟` : 'Nexus Sıfırla';
-    el('prestige-bar').style.width = `${Math.min(100,(state.runEarned/D.prestige.runEarnedThreshold)*100)}%`;
-    el('prestige-progress').textContent = canP ? `Hazır! +${gain} Nexus`
-      : `${N.format(state.runEarned)} / ${N.format(D.prestige.runEarnedThreshold)} 🪙`;
-
-    renderQuest(state);
-  }
-
-  function renderQuest(state) {
-    const Q = global.Axyon.Quests, p = Q.questProgress(state);
-    if (!p) { el('quest-desc').textContent = 'Tüm görevler tamam 🎉'; el('quest-bar').style.width='100%'; el('quest-progress-text').textContent=''; return; }
-    el('quest-desc').textContent = p.quest.desc;
-    el('quest-bar').style.width = `${Math.min(100,(p.current/p.target)*100)}%`;
-    el('quest-progress-text').textContent = `${N.format(Math.min(p.current,p.target))} / ${N.format(p.target)}`;
-  }
-
-  function pulse(id) { const b = el(`eff-${id}`); if(b){b.classList.add('pulse'); setTimeout(()=>b.classList.remove('pulse'),150);} }
-  function spawnFloat(text,x,y){ const l=el('float-layer'); const n=document.createElement('div'); n.className='float-text'; n.textContent=text; n.style.left=x+'px'; n.style.top=y+'px'; l.appendChild(n); setTimeout(()=>n.remove(),900); }
-  const showModal = (id) => el(id).classList.remove('hidden');
-  const hideModal = (id) => el(id).classList.add('hidden');
-
-  function renderAchievements(state) {
-    const g = el('ach-grid'); g.innerHTML = '';
-    D.achievements.forEach((a) => {
-      const done = !!state.achievements[a.id];
-      const d = document.createElement('div');
-      d.className = `ach-item ${done?'done':''}`;
-      d.innerHTML = `<span class="ach-icon">${done?'🏆':'🔒'}</span><span>${a.desc}</span>`;
-      g.appendChild(d);
-    });
-  }
-
-  // #2: Fabrika rapor / istatistik paneli — çalışan tüm hatlar, üretim ve durum
-  function renderReport(state, E) {
-    const list = el('report-list'); if (!list) return;
-    const built = D.machines.filter((def) => state.machines[def.id].count > 0);
-    if (!built.length) {
-      list.innerHTML = '<div class="report-empty">Henüz makine inşa etmedin. Fabrika sekmesinden başla.</div>';
-      updateReportSummary(state, E);
-      return;
-    }
-    built.sort((a, b) => a.tier - b.tier);
-    list.innerHTML = built.map((def) => {
-      const m = state.machines[def.id];
-      const rate = E.machineRate(state, def.id);
-      const eff = (m.count > 0 && m.hasManager) ? m.eff : 0;
-      let statusCls, statusTxt;
-      if (!m.hasManager) { statusCls = 'manual'; statusTxt = 'Manuel'; }
-      else if (eff >= 0.95) { statusCls = 'ok'; statusTxt = 'Tam hız'; }
-      else if (eff > 0) { statusCls = 'warn'; statusTxt = 'Kısıtlı %' + Math.round(eff*100); }
-      else { statusCls = 'bad'; statusTxt = 'Durdu'; }
-      const out = Object.keys(def.recipe.out)[0];
-      const outVal = m.hasManager ? (rate * eff) : 0;
-      return `
-        <div class="report-row" data-goto="${def.id}">
-          <span class="rr-icon">${def.icon}</span>
-          <div class="rr-main">
-            <div class="rr-name">${def.name} <span class="rr-count">×${m.count}</span></div>
-            <div class="rr-sub">${D.items[out].icon} ${N.format(outVal)}/sn · ${m.count*def.footprint}m² · ${m.hasManager?m.count*def.power:0}kW</div>
-          </div>
-          <div class="rr-eff"><div class="rr-effbar"><div class="rr-efffill ${eff<0.95?'starved':''}" style="width:${Math.round(eff*100)}%"></div></div></div>
-          <span class="rr-status ${statusCls}">${statusTxt}</span>
-          <span class="rr-arrow">›</span>
-        </div>`;
+  function buildMachineCards(){}
+  function buildPlantCards(state,E){
+    const root=el('plants-container');if(!root)return;
+    root.innerHTML=D.powerPlants.map(d=>{
+      const p=state.plants[d.id],lv=E.plantLevel(state,d.id),locked=!E.isPlantUnlocked(state,d.id),cost=E.plantBuildCost(state,d.id),up=lv<5?E.upgradeCost(d,lv,'plant'):null;
+      return `<article class="plant-card ${locked?'locked':''}" id="plant-${d.id}"><div class="card-top"><span class="card-icon">${d.icon}</span><div><h3>${d.name} <small>Mk ${roman(lv)}</small></h3><p>${d.fuel?`${D.items[d.fuel.item].icon} yakıtlı`:'yakıtsız'} · +${N.format(E.plantOutput(state,d.id))} kW</p></div><b>×${p.count}</b></div>${locked?`<div class="locked-note">🔒 ${d.tech}</div>`:`<div class="card-actions"><button data-buildplant="${d.id}" class="btn-setting" ${E.canBuildPlant(state,d.id)?'':'disabled'}>Kur · ${N.format(cost)}🪙</button><button data-upgradeplant="${d.id}" class="btn-setting" ${E.canUpgradeClass(state,d.id,'plant')?'':'disabled'}>${lv>=5?'Mk V tamam':`Mk ${roman(lv+1)} · ${N.format(up.coins)}🪙 ${fmtCost(up.items)}`}</button></div>`}</article>`;
     }).join('');
-    updateReportSummary(state, E);
-  }
-  function updateReportSummary(state, E) {
-    const s = el('report-summary'); if (!s) return;
-    const built = D.machines.filter((d) => state.machines[d.id].count > 0);
-    const auto = built.filter((d) => state.machines[d.id].hasManager);
-    const starved = auto.filter((d) => state.machines[d.id].eff < 0.95);
-    const stopped = auto.filter((d) => state.machines[d.id].eff <= 0.001);
-    s.innerHTML = `
-      <div class="rs-box"><span>Hat türü</span><b>${built.length}</b></div>
-      <div class="rs-box"><span>Toplam makine</span><b>${E.machineCountTotal(state)}</b></div>
-      <div class="rs-box"><span>Otomatik</span><b>${auto.length}</b></div>
-      <div class="rs-box ${stopped.length?'bad':''}"><span>Sorunlu hat</span><b>${starved.length}</b></div>`;
   }
 
-  // ===== GRAFİK ARAYÜZ (canvas) yardımcıları =====
-  function buildPalette(state, E) {
-    const mList = el('fx-palette-machines'), pList = el('fx-palette-plants');
-    mList.innerHTML = ''; pList.innerHTML = '';
-    D.machines.forEach((def) => {
-      if (!E.isMachineUnlocked(state, def.id)) return;
-      const item = document.createElement('button');
-      item.className = 'fx-palette-item'; item.dataset.place = def.id; item.dataset.ptype = 'machine';
-      item.innerHTML = `<span class="pi-icon">${def.icon}</span>
-        <span class="pi-body"><span class="pi-name">${def.name}</span>
-        <span class="pi-cost">${N.format(E.buildCost(state, def.id))} 🪙 · ${def.footprint}m² · ${def.power}kW</span></span>`;
-      mList.appendChild(item);
-    });
-    D.powerPlants.forEach((def) => {
-      if (!E.isPlantUnlocked(state, def.id)) return;
-      const fuel = def.fuel ? D.items[def.fuel.item].icon : '☀️';
-      const item = document.createElement('button');
-      item.className = 'fx-palette-item'; item.dataset.place = def.id; item.dataset.ptype = 'plant';
-      item.innerHTML = `<span class="pi-icon">${def.icon}</span>
-        <span class="pi-body"><span class="pi-name">${def.name}</span>
-        <span class="pi-cost">${N.format(E.plantBuildCost(state, def.id))} 🪙 · +${def.output}kW · ${fuel}</span></span>`;
-      pList.appendChild(item);
-    });
-    if (!mList.children.length) mList.innerHTML = '<div class="fx-palette-empty">Makine yok — araştırma yap.</div>';
-    if (!pList.children.length) pList.innerHTML = '<div class="fx-palette-empty">Santral yok — araştırma yap.</div>';
+  function buildInventory(state,E){
+    const root=el('inventory-list');if(!root)return;
+    root.innerHTML=Object.entries(D.items).map(([id,it])=>{
+      const sellable=!it.research&&it.sell>0,cap=E.storageCap(state,id),pct=state.autoSellKeep[id]||0;
+      return `<div class="inv-row ${it.research?'research-item':''}" id="inv-${id}">
+        <label class="inv-check"><input type="checkbox" id="check-${id}" data-check="${id}" ${sellable?'':'disabled'}></label>
+        <button class="inv-info" data-info="${id}"><span class="inv-icon">${it.icon}</span><span><b>${it.name}</b><small>${it.research?'Araştırma verisi':`${it.sell}🪙 liste fiyatı`}</small></span></button>
+        <div class="inv-amount"><b id="amt-${id}">0</b><small>/<span id="cap-${id}">${N.format(cap)}</span> <span id="flow-${id}"></span></small></div>
+        ${sellable?`<button class="auto-toggle ${state.autoSell[id]?'on':''}" data-auto="${id}">${state.autoSell[id]?'UYDU ✓':'UYDU'}</button><div class="keep-set">${[0,25,50,75,100].map(v=>`<button data-keep="${id}" data-pct="${v}" class="${pct===v?'active':''}">${v}</button>`).join('')}</div><button class="quick-sell" data-sellfrac="${id}" data-frac=".5">%50 sat</button>`:'<span class="no-sell">Satılmaz</span>'}
+        <button class="storage-up" data-stor="${id}">⤢</button>
+      </div>`;
+    }).join('');
   }
 
-  function showInspector(state, E, entity) {
-    const box = el('fx-inspector');
-    if (!entity) { box.classList.add('hidden'); return; }
-    const def = entity.type === 'plant' ? E.pDef(entity.defId) : E.mDef(entity.defId);
-    if (entity.type === 'machine') {
-      const m = state.machines[entity.defId];
-      const eff = m.hasManager ? Math.round(m.eff * 100) : 0;
-      const recipe = Object.entries(def.recipe.in).map(([k,v])=>`${D.items[k].icon}${v>1?'×'+v:''}`).join(' ') || '—';
-      const out = Object.entries(def.recipe.out).map(([k,v])=>`${D.items[k].icon}${v>1?'×'+v:''}`).join(' ');
-      box.innerHTML = `
-        <div class="fxi-head"><span class="fxi-icon">${def.icon}</span>
-          <div><div class="fxi-name">${def.name}</div>
-          <div class="fxi-sub">${recipe} → ${out}</div></div>
-          <button class="x" id="fxi-close">✕</button></div>
-        <div class="fxi-stats">
-          <span>Durum: <b class="${m.hasManager?(eff>=95?'ok':'warn'):'dim'}">${!m.hasManager?'Manuel':eff>=95?'Tam hız':'Kısıtlı %'+eff}</b></span>
-        </div>
-        <div class="fxi-actions">
-          <button class="fxi-btn" data-fxi="run">▶ Çalıştır</button>
-          ${m.hasManager ? '<button class="fxi-btn owned" disabled>✓ Manager</button>'
-            : `<button class="fxi-btn" data-fxi="manager" ${E.canBuyManager(state,entity.defId)?'':'disabled'}>⚙️ Manager ${N.format(def.managerCost)}</button>`}
-          <button class="fxi-btn" data-fxi="info">ⓘ Bilgi</button>
-        </div>`;
-    } else {
-      const fuel = def.fuel ? `${D.items[def.fuel.item].icon} ${D.items[def.fuel.item].name}` : 'yakıtsız';
-      box.innerHTML = `
-        <div class="fxi-head"><span class="fxi-icon">${def.icon}</span>
-          <div><div class="fxi-name">${def.name}</div>
-          <div class="fxi-sub">+${def.output}kW · ${fuel}</div></div>
-          <button class="x" id="fxi-close">✕</button></div>
-        <div class="fxi-stats"><span>Bu santralden makinelere ⚡ Hat çekerek güç dağıt.</span></div>`;
-    }
-    box.dataset.entity = entity.id;
-    box.classList.remove('hidden');
+  function buildResearch(state,E){
+    const root=el('research-list');if(root)root.innerHTML=D.research.map(t=>`<article class="res-card" id="res-${t.id}"><div class="res-icon">${t.icon}</div><div class="res-body"><h3>${t.name}</h3><p>${t.desc}</p><div class="res-cost">${fmtCost(t.cost)}</div></div><button class="res-btn" data-research="${t.id}">Araştır</button></article>`).join('');
+    const rr=el('repeat-research-list');if(rr)rr.innerHTML=D.repeatableResearch.map(t=>`<article class="res-card repeat" id="repeat-${t.id}"><div class="res-icon">${t.icon}</div><div class="res-body"><h3>${t.name} <small>Sv. <span id="repeat-level-${t.id}">0</span></small></h3><p>${t.desc}</p><div class="res-cost" id="repeat-cost-${t.id}"></div></div><button class="res-btn" data-repeat="${t.id}">Geliştir</button></article>`).join('');
   }
 
-  function setToolbarMode(mode) {
-    document.querySelectorAll('.fx-tool[data-mode]').forEach((b) => b.classList.toggle('active', b.dataset.mode === mode));
-    const hints = { select:'Yapıya tıkla: seç · sürükle: taşı · boşluk sürükle: kaydır',
-      place:'Yerleştirmek için yüzeye tıkla · yeşil = uygun', conveyor:'Kaynak makineye tıkla, sonra hedefe: konveyör',
-      power:'Santrale tıkla, sonra makineye: elektrik hattı', delete:'Silmek için yapıya tıkla (yarı iade)' };
-    const h = el('fx-hint'); if (h) h.textContent = hints[mode] || '';
+  function selectedItems(){return [...document.querySelectorAll('[data-check]:checked')].map(x=>x.dataset.check);}
+
+  function render(state,E){
+    el('coin-display').textContent=N.format(state.coins);el('total-earned').textContent=N.format(state.totalEarned);el('multiplier-display').textContent='x'+E.globalMult(state).toFixed(2);el('threat-display').textContent=(state.galaxy.threat||0).toFixed(1);el('fleet-display').textContent=N.format(D.ships.reduce((n,d)=>n+(state.galaxy.ships[d.id]||0),0));
+    const score=E.computeScore(state);el('score-display').textContent=N.format(score);el('topscore-display').textContent=N.format(state.topScore||score);
+    const p=state._power||{supply:0,demand:0,ratio:1};el('power-supply').textContent=N.format(p.supply);el('power-demand').textContent=N.format(p.demand);el('power-bar').style.width=`${Math.min(100,p.demand?100*p.supply/p.demand:100)}%`;const ps=el('power-status');ps.textContent=p.ratio>=.99?'yeterli':p.ratio>0?'kısıtlı':'çöktü';ps.className='stat-status '+(p.ratio>=.99?'ok':p.ratio>.25?'warn':'bad');
+    const opened=E.openSectorList(state).length,total=E.sectorsPerSide()**2;el('land-used').textContent=opened;el('land-total').textContent=total;el('land-bar').style.width=`${opened/total*100}%`;el('land-expand-cost').textContent=N.format(E.sectorOpenCost(state));el('land-expand-btn').disabled=!E.canOpenSector(state);
+    Object.keys(D.items).forEach(id=>{const a=el(`amt-${id}`);if(!a)return;a.textContent=N.format(state.inventory[id]||0);el(`cap-${id}`).textContent=N.format(E.storageCap(state,id));const f=state.flow[id]||0,fe=el(`flow-${id}`);fe.textContent=Math.abs(f)<.01?'':`${f>0?'▲':'▼'}${N.format(Math.abs(f))}/sn`;fe.className=f>=0?'flow-up':'flow-down';const row=el(`inv-${id}`);row?.querySelector('[data-auto]')?.classList.toggle('on',!!state.autoSell[id]);if(row?.querySelector('[data-auto]'))row.querySelector('[data-auto]').textContent=state.autoSell[id]?'UYDU ✓':'UYDU';row?.querySelectorAll('[data-keep]').forEach(b=>b.classList.toggle('active',Number(b.dataset.pct)===(state.autoSellKeep[id]||0)));});
+    const sel=selectedItems();el('bulk-count').textContent=`${sel.length} seçili`;
+    renderMarket(state,E);renderResearchState(state,E);renderQuest(state);
+    if(el('panel-power')?.classList.contains('active'))buildPlantCards(state,E);
+    if(el('panel-report')?.classList.contains('active'))renderReport(state,E);
+    if(el('panel-galaxy')?.classList.contains('active'))renderGalaxy(state,E);
   }
 
-  function switchTab(tab) {
-    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
-    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-    el(`panel-${tab}`).classList.add('active');
-    el(`tab-${tab}`).classList.add('active');
+  function renderMarket(state,E){
+    el('market-level').textContent=`Mk ${roman(state.market.level||1)}`;el('market-capacity').textContent=N.format(E.marketCapacity(state));el('market-cooldown').textContent=N.formatTime(E.marketCooldownSec(state));el('market-last').textContent=N.format(state.market.lastRevenue||0);
+    const master=el('market-master'),unlocked=!!state.researched.marketSatellite;master.disabled=!unlocked;master.textContent=!unlocked?'🔒 ARAŞTIR':state.market.enabled?'AUTO AÇIK':'AUTO KAPALI';master.classList.toggle('active',unlocked&&state.market.enabled);
+    const next=state.market.nextDispatchAt?Math.max(0,(state.market.nextDispatchAt-Date.now())/1000):0;el('market-next').textContent=!unlocked?'Kilitli':state.market.enabled?N.formatTime(next):'Durduruldu';document.querySelectorAll('[data-globalkeep]').forEach(b=>b.classList.toggle('active',Number(b.dataset.globalkeep)===(state.market.keepPct||0)));
+    const up=el('market-upgrade');up.disabled=!E.canUpgradeMarket(state);if(state.market.level>=D.market.maxLevel)up.textContent='Uydu Mk V tamam';else{const c=E.marketUpgradeCost(state);up.textContent=`Uydu Mk ${roman(state.market.level+1)} · ${N.format(c.coins)}🪙 ${fmtCost(c.items)}`;}
   }
 
-  global.Axyon = global.Axyon || {};
-  global.Axyon.UI = {
-    el, buildMachineCards, buildPlantCards, buildInventory, buildResearch,
-    render, pulse, spawnFloat, showModal, hideModal, renderAchievements, switchTab,
-    showItemInfo, renderReport, selectedItems,
-    buildPalette, showInspector, setToolbarMode,
-  };
+  function renderResearchState(state,E){
+    D.research.forEach(t=>{const node=el(`res-${t.id}`);if(!node)return;const done=!!state.researched[t.id],visible=E.isResearchVisible(state,t.id);node.classList.toggle('done',done);node.classList.toggle('hidden-res',!visible&&!done);const b=node.querySelector('[data-research]');b.textContent=done?'✓ Tamamlandı':'Araştır';b.disabled=done||!E.canResearch(state,t.id);});
+    D.repeatableResearch.forEach(t=>{const node=el(`repeat-${t.id}`),cost=E.repeatCost(state,t.id);el(`repeat-level-${t.id}`).textContent=state.repeatResearch[t.id]||0;el(`repeat-cost-${t.id}`).textContent=fmtCost(cost);node.classList.toggle('hidden-res',!state.researched.omegaScience);node.querySelector('[data-repeat]').disabled=!E.canRepeatResearch(state,t.id);});
+  }
+  function renderQuest(state){const Q=global.Axyon.Quests,p=Q.questProgress(state);if(!p){el('quest-desc').textContent='Ana görevler tamam — imparatorluk büyümeye devam ediyor';el('quest-bar').style.width='100%';el('quest-progress-text').textContent='∞';return;}el('quest-desc').textContent=p.quest.desc;el('quest-bar').style.width=`${Math.min(100,p.current/p.target*100)}%`;el('quest-progress-text').textContent=`${N.format(Math.min(p.current,p.target))} / ${N.format(p.target)}`;}
+
+  function renderReport(state,E){
+    const built=D.machines.filter(d=>state.machines[d.id].count>0),root=el('report-list');
+    el('report-summary').innerHTML=`<div class="rs-box"><span>Hat türü</span><b>${built.length}</b></div><div class="rs-box"><span>Toplam makine</span><b>${E.machineCountTotal(state)}</b></div><div class="rs-box"><span>Yükseltme</span><b>${state.stats.buildingUpgrades||0}</b></div><div class="rs-box ${(state.galaxy.threat||0)>5?'bad':''}"><span>Tehdit</span><b>${(state.galaxy.threat||0).toFixed(1)}</b></div>`;
+    if(!built.length){root.innerHTML='<div class="report-empty">Henüz üretim hattı yok.</div>';return;}
+    root.innerHTML=built.sort((a,b)=>a.tier-b.tier).map(d=>{const m=state.machines[d.id],lv=E.machineLevel(state,d.id),rate=E.machineRate(state,d.id),eff=m.hasManager?m.eff:0,status=!m.hasManager?'Manuel':eff>=.95?'Tam hız':eff>0?`Kısıtlı %${Math.round(eff*100)}`:'Durdu',cls=!m.hasManager?'manual':eff>=.95?'ok':eff>0?'warn':'bad',out=Object.keys(d.recipe.out)[0];return `<div class="report-row"><span class="rr-icon">${d.icon}</span><div class="rr-main"><div class="rr-name">${d.name} <span class="rr-count">Mk ${roman(lv)} · ×${m.count}</span></div><div class="rr-sub">${D.items[out].icon} ${N.format(m.hasManager?rate*eff:0)}/sn · ${N.format(E.machinePowerDemand(state,d.id))}kW</div></div><span class="rr-status ${cls}">${status}</span></div>`;}).join('');
+  }
+
+  function buildPalette(state,E){
+    const m=el('fx-palette-machines'),p=el('fx-palette-plants');m.innerHTML='';p.innerHTML='';
+    D.machines.forEach(d=>{if(!E.isMachineUnlocked(state,d.id))return;const lv=E.machineLevel(state,d.id),b=document.createElement('button');b.className='fx-palette-item';b.dataset.place=d.id;b.dataset.ptype='machine';b.innerHTML=`<span class="pi-icon">${d.icon}</span><span class="pi-body"><span class="pi-name">${d.name} · Mk ${roman(lv)}</span><span class="pi-cost">${N.format(E.buildCost(state,d.id))}🪙 · ${d.footprint}m² · ${N.format(E.machinePowerDemand({...state,machines:{...state.machines,[d.id]:{...state.machines[d.id],count:1,hasManager:true}}},d.id))}kW</span></span>`;m.appendChild(b);});
+    D.powerPlants.forEach(d=>{if(!E.isPlantUnlocked(state,d.id))return;const b=document.createElement('button');b.className='fx-palette-item';b.dataset.place=d.id;b.dataset.ptype='plant';b.innerHTML=`<span class="pi-icon">${d.icon}</span><span class="pi-body"><span class="pi-name">${d.name} · Mk ${roman(E.plantLevel(state,d.id))}</span><span class="pi-cost">${N.format(E.plantBuildCost(state,d.id))}🪙 · +${N.format(d.output)}kW</span></span>`;p.appendChild(b);});
+  }
+
+  function showInspector(state,E,entity){
+    const box=el('fx-inspector');if(!entity){box.classList.add('hidden');return;}const d=entity.type==='plant'?E.pDef(entity.defId):E.mDef(entity.defId),lv=entity.type==='plant'?E.plantLevel(state,entity.defId):E.machineLevel(state,entity.defId),up=lv<5?E.upgradeCost(d,lv,entity.type):null;
+    if(entity.type==='machine'){
+      const m=state.machines[entity.defId],recipe=Object.entries(d.recipe.in).map(([k,v])=>`${D.items[k].icon}${v!==1?'×'+v:''}`).join(' ')||'Kaynak yatağı',out=Object.entries(d.recipe.out).map(([k,v])=>`${D.items[k].icon}${v!==1?'×'+v:''}`).join(' ');
+      box.innerHTML=`<div class="fxi-head"><span class="fxi-icon">${d.icon}</span><div><div class="fxi-name">${d.name} · Mk ${roman(lv)}</div><div class="fxi-sub">${recipe} → ${out}</div></div><button class="x" id="fxi-close">✕</button></div><div class="fxi-stats"><span>Sınıf adedi <b>${m.count}</b></span><span>Üretim <b>${N.format(E.machineRate(state,d.id))}/sn</b></span></div><div class="fxi-actions"><button class="fxi-btn" data-fxi="run">▶ Çalıştır</button>${m.hasManager?'<button class="fxi-btn owned" disabled>✓ Otomatik</button>':`<button class="fxi-btn" data-fxi="manager" ${E.canBuyManager(state,d.id)?'':'disabled'}>⚙️ Otomasyon ${N.format(d.managerCost)}🪙</button>`}<button class="fxi-btn" data-fxi="upgrade" ${E.canUpgradeClass(state,d.id,'machine')?'':'disabled'}>${lv>=5?'Mk V tamam':`⬆ Mk ${roman(lv+1)} · ${N.format(up.coins)}🪙 ${fmtCost(up.items)}`}</button><button class="fxi-btn" data-fxi="info">ⓘ Bilgi</button></div>`;
+    }else box.innerHTML=`<div class="fxi-head"><span class="fxi-icon">${d.icon}</span><div><div class="fxi-name">${d.name} · Mk ${roman(lv)}</div><div class="fxi-sub">+${N.format(E.plantOutput(state,d.id))} kW</div></div><button class="x" id="fxi-close">✕</button></div><div class="fxi-actions"><button class="fxi-btn" data-fxi="upgrade" ${E.canUpgradeClass(state,d.id,'plant')?'':'disabled'}>${lv>=5?'Mk V tamam':`⬆ Mk ${roman(lv+1)} · ${N.format(up.coins)}🪙 ${fmtCost(up.items)}`}</button></div>`;
+    box.dataset.entity=entity.id;box.classList.remove('hidden');
+  }
+
+  function showItemInfo(state,E,id){const x=E.itemInfo(state,id);el('iteminfo-title').textContent=`${x.icon} ${x.name}`;el('iteminfo-body').innerHTML=`<p>${escapeHtml(x.desc)}</p><div class="info-grid"><span>Stok <b>${N.format(x.amount)} / ${N.format(x.cap)}</b></span><span>Liste değeri <b>${x.research?'Satılmaz':x.sell+'🪙'}</b></span><span>Üreten <b>${x.producers.join(', ')||'—'}</b></span><span>Kullanan <b>${[...x.consumers,...x.fuelFor].join(', ')||'—'}</b></span></div>`;showModal('iteminfo-modal');}
+
+  function renderGalaxy(state,E){
+    const now=Date.now(),raid=Math.max(0,(state.galaxy.nextRaidAt-now)/1000);el('raid-timer').textContent=N.formatTime(raid);const sc=E.scanCost(state);el('scan-cost').textContent=state.researched.scanner?`Maliyet: ${N.format(sc.coins)}🪙 + ${sc.processor} ${D.items.processor.icon}`:'Yıldız Tarayıcı araştırması gerekli';el('scan-system').disabled=!E.canScan(state);
+    const targets=state.galaxy.targets.filter(t=>t.discovered);el('target-list').innerHTML=targets.length?targets.map(t=>`<article class="target-card ${t.defeated?'defeated':''}"><div><b>${t.defeated?'✅':'☠️'} ${t.name}</b><small>${t.type} · ${t.distance} LY · Güç ${N.format(t.strength)}${t.defeated&&!t.colonized&&t.recoveryAt?` · Toparlanma ${N.formatTime(Math.max(0,(t.recoveryAt-now)/1000))}`:''}</small></div>${t.colonized?'<span class="badge">Koloni</span>':t.defeated?`<button data-colonize="${t.id}" class="btn-setting" ${E.canColonize(state,t.id)?'':'disabled'}>Kolonileştir</button>`:`<button data-attack="${t.id}" class="btn-setting" ${state.researched.fleetCommand?'':'disabled'}>Saldır</button>`}</article>`).join(''):'<div class="report-empty">Henüz sistem keşfedilmedi.</div>';
+    el('shipyard-list').innerHTML=D.ships.map(d=>{const locked=d.tech&&!state.researched[d.tech];return `<div class="ship-row ${locked?'locked':''}"><span class="ship-icon">${d.icon}</span><div><b>${d.name}</b><small>Hangar: ${state.galaxy.ships[d.id]||0} · Saldırı ${d.attack} · Gövde ${d.hull}<br>${fmtCost(d.cost)}</small></div><input id="ship-count-${d.id}" type="number" min="1" max="99" value="1"><button data-buildship="${d.id}" ${locked||!E.canBuildShip(state,d.id,1)?'disabled':''}>Üret</button></div>`;}).join('');
+    el('ship-queue').innerHTML=state.galaxy.shipQueue.length?state.galaxy.shipQueue.map(q=>`<div class="queue-row">${E.shipDef(q.shipId).icon} ${q.count} ${E.shipDef(q.shipId).name}<b>${N.formatTime(Math.max(0,(q.finishAt-now)/1000))}</b></div>`).join(''):'<small>Üretim kuyruğu boş.</small>';
+    const ds=E.defenseStats(state);el('defense-power').textContent=N.format(ds.attack+ds.hull*.35)+' güç';el('defense-list').innerHTML=D.defenses.map(d=>{const locked=d.tech&&!state.researched[d.tech];return `<div class="ship-row ${locked?'locked':''}"><span class="ship-icon">${d.icon}</span><div><b>${d.name}</b><small>Kurulu: ${state.galaxy.defenses[d.id]||0} · ${fmtCost(d.cost)}</small></div><input id="def-count-${d.id}" type="number" min="1" max="99" value="1"><button data-builddef="${d.id}" ${locked||!E.canBuildDefense(state,d.id,1)?'disabled':''}>Kur</button></div>`;}).join('');
+    el('mission-list').innerHTML=state.galaxy.missions.length?state.galaxy.missions.map(m=>{const t=E.targetById(state,m.targetId),end=m.status==='outbound'?m.arrivalAt:m.returnAt;return `<div class="mission-row"><span>${m.status==='outbound'?'⚔️':'↩️'} ${t?.name||m.targetId}</span><b>${m.status==='outbound'?'Varış':'Dönüş'} ${N.formatTime(Math.max(0,(end-now)/1000))}</b></div>`;}).join(''):'<div class="report-empty">Aktif görev yok.</div>';
+    el('galaxy-reports').innerHTML=state.galaxy.reports.length?state.galaxy.reports.map(r=>`<article class="galaxy-report ${r.type}"><div><b>${escapeHtml(r.title)}</b><small>${new Date(r.time).toLocaleTimeString('tr-TR',{hour:'2-digit',minute:'2-digit'})}</small></div><p>${escapeHtml(r.body)}</p></article>`).join(''):'<div class="report-empty">Henüz rapor yok.</div>';
+  }
+
+  function renderFleetModal(state,E,target){el('fleet-title').textContent=`⚔️ ${target.name} — Güç ${N.format(target.strength)}`;el('fleet-body').innerHTML=`<p class="panel-hint">Gidiş-dönüş yakıtı sefer başında ayrılır. Sonuç varışta hesaplanır.</p><div class="fleet-select">${D.ships.map(d=>`<label><span>${d.icon} ${d.name} <small>mevcut ${state.galaxy.ships[d.id]||0}</small></span><input data-fleetship="${d.id}" type="number" min="0" max="${state.galaxy.ships[d.id]||0}" value="0"></label>`).join('')}</div><div id="fleet-preview" class="fleet-preview">Gemi seçilmedi.</div>`;el('fleet-modal').dataset.target=target.id;showModal('fleet-modal');}
+  function fleetSelection(){const out={};document.querySelectorAll('[data-fleetship]').forEach(i=>out[i.dataset.fleetship]=Math.max(0,Math.floor(Number(i.value)||0)));return out;}
+
+  function renderAchievements(state){el('ach-grid').innerHTML=D.achievements.map(a=>`<div class="ach-item ${state.achievements[a.id]?'done':''}"><span>${state.achievements[a.id]?'🏆':'🔒'}</span><span>${a.desc}</span></div>`).join('');}
+  function setToolbarMode(mode){document.querySelectorAll('.fx-tool[data-mode]').forEach(b=>b.classList.toggle('active',b.dataset.mode===mode));const hints={select:'Yapıya tıkla: seç · sürükle: taşı · boşluk sürükle: kaydır',place:'Yerleştirmek için açık yüzeye tıkla',conveyor:'Kaynak yapı → hedef yapı',power:'Santral → makine',delete:'Yapı veya bağlantıya tıkla: sil'};el('fx-hint').textContent=hints[mode]||'';}
+  function switchTab(tab){document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));el(`panel-${tab}`).classList.add('active');el(`tab-${tab}`).classList.add('active');}
+  function pulse(){}function spawnFloat(text,x,y){const n=document.createElement('div');n.className='float-text';n.textContent=text;n.style.left=x+'px';n.style.top=y+'px';el('float-layer').appendChild(n);setTimeout(()=>n.remove(),900);}
+  const showModal=id=>el(id).classList.remove('hidden'),hideModal=id=>el(id).classList.add('hidden');
+
+  global.Axyon=global.Axyon||{};global.Axyon.UI={el,buildMachineCards,buildPlantCards,buildInventory,buildResearch,render,renderMarket,renderGalaxy,renderFleetModal,fleetSelection,selectedItems,pulse,spawnFloat,showModal,hideModal,renderAchievements,switchTab,showItemInfo,renderReport,buildPalette,showInspector,setToolbarMode};
 })(window);
