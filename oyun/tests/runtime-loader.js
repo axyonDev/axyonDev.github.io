@@ -17,7 +17,9 @@ const CORE_SCRIPTS=[
   'src/core/economy.js',
   'src/core/u2-first-orbit-runtime.js',
   'src/core/u3-planetary-bastions-runtime.js',
-  'src/core/quests.js'
+  'src/core/quests.js',
+  'src/core/domain-command.js',
+  'src/core/server-time.js'
 ];
 function memoryStorage(){
   const store=new Map();

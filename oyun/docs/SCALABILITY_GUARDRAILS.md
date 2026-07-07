@@ -4,7 +4,7 @@
 
 ## Bugünkü durum
 
-v4.5.0-u4 hâlâ tarayıcıda/local-first çalışan oynanabilir prototiptir. Bu paket çok oyunculu backend içermez ve mevcut local save hiçbir zaman gelecekteki ortak evrende otorite kabul edilmeyecektir.
+v4.5.1-u4.1 hâlâ tarayıcıda/local-first çalışan oynanabilir prototiptir. Bu paket çok oyunculu backend içermez ve mevcut local save hiçbir zaman gelecekteki ortak evrende otorite kabul edilmeyecektir.
 
 ## Değişmez mimari kararlar
 
@@ -26,17 +26,22 @@ v4.5.0-u4 hâlâ tarayıcıda/local-first çalışan oynanabilir prototiptir. Bu
 
 ## Geçiş kapıları
 
-### U4 — mevcut durum
+### U4/U4.1 — mevcut durum
 
 Tamamlanan:
 - IndexedDB ana kayıt kasası ve localStorage uyumluluk aynası.
 - Checksum, monoton revizyon, sınırlı yedek, rollback ve tombstone silme güvenliği.
 - U3.1 kayıtlarının kayıpsız aktarımı ve fallback davranışı.
+- UI/storage bağımsız domain command envelope ve handler registry.
+- Duplicate, replay, payload conflict ve stale revision koruması.
+- Kontrollü offline outbox, batch ve fingerprint doğrulamalı server ACK sözleşmesi.
+- Sunucu zamanı örnekleme ve lazy elapsed resolver arayüzü.
 
-Sıradaki U4 işleri:
-- Domain kurallarının localStorage/DOM bağımlılığından ayrılması.
-- İdempotent işlem kimliği ve event kayıt formatının tanımlanması.
-- Sunucuya gönderilebilir offline komut kuyruğu sözleşmesi.
+Sıradaki işler:
+- Gerçek API Gateway + yetkili profil/state servisi.
+- Sunucuda `(actor_id, command_id)` unique constraint ve state+receipt+event-outbox tek transaction.
+- Ayrı sekme/cihaz farklı komutları için server CAS/reconciliation.
+- Canvas ve kalan düşük seviye ekonomi eylemlerinin command katmanına taşınması.
 - Gerçek origin ve gerçek cihaz IndexedDB kabul testi.
 
 ### Sunucu prototipi

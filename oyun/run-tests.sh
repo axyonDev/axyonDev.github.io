@@ -13,3 +13,5 @@ node tests/u3-background-save-brand.js
 node tests/u3-1-save-recovery-accessibility.js
 node tests/u3-capacity-defense.js
 node tests/u4-indexeddb-durability.js
+node tests/u4-1-idempotent-commands.js
+node tests/u4-1-server-time.js

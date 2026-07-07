@@ -1,5 +1,21 @@
 # AXYON: Orbital Ascendancy — Changelog
 
+## 4.5.1-u4.1 — Command Authority & Server-Ready Domain Foundation
+
+- UI/storage bağımsız idempotent domain command zarfı ve handler registry eklendi.
+- Komutlar actor, source, monoton sequence, command ID, canonical payload fingerprint, issuedAt ve expected revision taşır.
+- Aynı komut tekrar/eşzamanlı/reload replay durumunda handler çalıştırılmadan önceki makbuz döner.
+- Aynı sıra/kimlikle farklı payload çakışması, stale revision, actor mismatch, eski replay ve zaman anomalileri güvenli biçimde reddedilir.
+- Kaynak başına son 128 makbuz tutulur; high-water işareti retention dışındaki eski komutların yeniden uygulanmasını engeller.
+- Pazar, kuruluş sözleşmesi, araştırma, sistem tarama, tersane, savunma, casusluk, kolonileştirme, filo, bakım ve U3 altyapı işlemleri komut çekirdeğine bağlandı.
+- Gelecek sunucu adaptörü için 256 öğelik kontrollü offline outbox, batch, fingerprint doğrulamalı ACK ve duplicate ACK sözleşmesi eklendi.
+- Outbox dolduğunda değerli komut uygulanmadan `outbox_full` döner; local-only UI outbox modunu kullanmaz.
+- Sunucu reddi sonrası `needsReconcile` işareti ve server revision/time metadata eklendi.
+- Sunucu saat örnekleme, monoton yetkili zaman ve çift ödeme yapmayan lazy elapsed resolver eklendi.
+- Domain command ve server ACK JSON Schema sözleşmeleri ile U4.1 mimari belgesi eklendi.
+- Yeni testler gerçek gemi komutunda dedup/replay/conflict/stale/concurrency, outbox/ACK/backpressure ve server-time idempotency senaryolarını kapsar.
+- Gerçek Chromium U4.1 testi command bridge, v16 makbuz kalıcılığı, ayarlar durumu ve 390 px mobil taşmayı doğrular.
+
 ## 4.5.0-u4 — Data Vault & Durability Foundation
 
 - IndexedDB tabanlı dayanıklı ana kayıt kasası eklendi; localStorage uyumluluk aynası/fallback olarak korundu.
