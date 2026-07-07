@@ -1,4 +1,4 @@
-/** AXYON: Orbital Ascendancy v4.4 U3 feature gates. */
+/** AXYON: Orbital Ascendancy v4.4.1 U3.1 feature gates. */
 (function(global){
   global.Axyon=global.Axyon||{};
   global.Axyon.FeatureFlags=Object.freeze({
@@ -10,6 +10,6 @@
     V44_COHORT_DEFENSE_ENABLED:true,
     V44_PLANETARY_CAPACITY_ENABLED:true,
     V44_BACKGROUND_RESUME_ENABLED:true,
-    release:'4.4.0-u3'
+    release:'4.4.1-u3.1'
   });
 })(typeof window!=='undefined'?window:globalThis);

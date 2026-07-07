@@ -18,14 +18,14 @@ for(const token of ["visibilitychange","document.visibilityState==='hidden'","ap
 const storage=memoryStorage();const saveCtx=loadRuntime({Date:FakeDate,localStorage:storage,saveService:true});
 const initial=saveCtx.Axyon.Economy.createInitialState();assert(saveCtx.Axyon.SaveService.createProfile('Test Komutanı',initial).ok);
 const originalSet=storage.setItem.bind(storage);let fail=false;storage.setItem=(k,v)=>{if(fail&&String(k).includes('axyon_frontier_save_'))throw new Error('QuotaExceededError test');return originalSet(k,v);};
-fail=true;assert.strictEqual(saveCtx.Axyon.SaveService.save(initial),false,'save failure returned success');assert(saveCtx.Axyon.SaveService.diagnostics().blockingError,'save failure was not surfaced in diagnostics');assert(main.includes('axyon:save-error')&&main.includes('save-warning'),'save failure has no visible UI bridge');
+fail=true;{const oldError=console.error;console.error=()=>{};try{assert.strictEqual(saveCtx.Axyon.SaveService.save(initial),false,'save failure returned success');}finally{console.error=oldError;}}assert(saveCtx.Axyon.SaveService.diagnostics().blockingError,'save failure was not surfaced in diagnostics');assert(main.includes('axyon:save-error')&&main.includes('save-warning'),'save failure has no visible UI bridge');
 
 // U3 save round-trip preserves cohorts and infrastructure.
 fail=false;saveCtx.Axyon.SaveService.clearBlockingError();initial.planetary.defenseCohorts.ballisticTurret=1234;initial.galaxy.defenses.ballisticTurret=1234;initial.planetary.assets.coolingHub=3;assert(saveCtx.Axyon.SaveService.save(initial));const loaded=saveCtx.Axyon.SaveService.load();assert.strictEqual(loaded.planetary.defenseCohorts.ballisticTurret,1234);assert.strictEqual(loaded.planetary.assets.coolingHub,3);
 
 // Touch and brand contracts.
 const canvas=fs.readFileSync(path.join(root,'src/canvas/factory-canvas.js'),'utf8');for(const token of ['activePointers = new Map()','function beginPinch','function updatePinch','activePointers.size>=2','function viewBounds','function drawGrid(side,v)','FactoryCanvas.getCamera'])assert(canvas.includes(token),`pinch contract missing: ${token}`);
-const manifest=JSON.parse(fs.readFileSync(path.join(root,'manifest.json'),'utf8'));assert.strictEqual(manifest.name,'AXYON: Orbital Ascendancy — Planetary Bastions');assert.strictEqual(manifest.version,'4.4.0-u3');
+const manifest=JSON.parse(fs.readFileSync(path.join(root,'manifest.json'),'utf8'));assert.strictEqual(manifest.name,'AXYON: Orbital Ascendancy — Planetary Bastions');assert.strictEqual(manifest.version,'4.4.1-u3.1');
 const index=fs.readFileSync(path.join(root,'index.html'),'utf8');assert(index.includes('viewport-fit=cover'));assert(index.includes('AXYON: Orbital Ascendancy'));assert(index.includes('data-tab="infrastructure"'));assert(index.includes('aria-selected'));
 const css=fs.readFileSync(path.join(root,'css/style.css'),'utf8');assert(css.includes('safe-area-inset-top')&&css.includes('prefers-reduced-motion'));
 console.log('PASS u3-background-save-brand: idempotent 10-minute resume, visible save failure, U3 persistence, pinch and Orbital Ascendancy metadata');

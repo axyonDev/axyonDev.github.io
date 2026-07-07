@@ -220,7 +220,7 @@
   });
 
   global.Axyon.Data = {
-    game:{title:'AXYON: Orbital Ascendancy',version:'4.4.0-u3',world:'Kestros İmparatorluğu'},
+    game:{title:'AXYON: Orbital Ascendancy',version:'4.4.1-u3.1',world:'Kestros İmparatorluğu'},
     resource:{id:'coin',name:'Kredi',symbol:'🪙'},
     items, machines, powerPlants, research, eraOrder, eraLabels,
     levelMultipliers:[1,1.75,3,5,8],

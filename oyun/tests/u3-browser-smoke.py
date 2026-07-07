@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Real Chromium smoke tests for AXYON: Orbital Ascendancy U3.
+"""Real Chromium smoke tests for AXYON: Orbital Ascendancy U3.1 hotfix.
 Direct localhost/file navigation may be blocked in restricted runners, so this harness loads
 real project HTML/CSS/JS into Chromium with an in-memory localStorage implementation.
 """
@@ -82,7 +82,7 @@ def main():
         result["capacityCards"] = page.locator("#capacity-grid .capacity-card").count()
         result["desktopScrollWidth"] = page.evaluate("document.documentElement.scrollWidth")
         result["desktopInnerWidth"] = page.evaluate("window.innerWidth")
-        page.screenshot(path=str(REPORTS / "U3_DESKTOP_INFRASTRUCTURE_FINAL.png"), full_page=True)
+        page.screenshot(path=str(REPORTS / "U3_1_DESKTOP_INFRASTRUCTURE_FINAL.png"), full_page=True)
 
         # Real pointer-event pinch test on the visible factory canvas.
         page.click('[data-tab="factory"]')
@@ -146,6 +146,30 @@ def main():
         if save_warning["ok"] or not save_warning["visible"]:
             raise AssertionError(f"Save warning bridge failed: {save_warning}")
 
+        # U3.1 manual recovery closes the warning without a page reload.
+        page.click("#save-warning-retry")
+        page.wait_for_timeout(60)
+        recovery = page.evaluate(
+            """(()=>({visible:!document.getElementById('save-warning').classList.contains('hidden'),blocking:window.__axyon.S.diagnostics().blockingError,raw:!!window.__axyon.S.rawActiveSave()}))()"""
+        )
+        result["saveRecovery"] = recovery
+        if recovery["visible"] or recovery["blocking"] is not None or not recovery["raw"]:
+            raise AssertionError(f"Save recovery failed: {recovery}")
+
+        # ARIA state and 44px touch targets are real computed DOM properties.
+        aria_before = page.locator("#ticker-toggle").get_attribute("aria-expanded")
+        page.click("#ticker-toggle")
+        aria_after = page.locator("#ticker-toggle").get_attribute("aria-expanded")
+        touch_targets = page.evaluate(
+            """(()=>{const icon=document.querySelector('.icon-btn')?.getBoundingClientRect(),zoom=document.querySelector('.fx-zoom')?.getBoundingClientRect();return{icon:{w:icon?.width||0,h:icon?.height||0},zoom:{w:zoom?.width||0,h:zoom?.height||0}}})()"""
+        )
+        result["tickerAria"] = {"before": aria_before, "after": aria_after}
+        result["touchTargets"] = touch_targets
+        if aria_before != "false" or aria_after != "true":
+            raise AssertionError(f"Ticker ARIA state failed: {aria_before}->{aria_after}")
+        if min(touch_targets["icon"].values()) < 44 or min(touch_targets["zoom"].values()) < 44:
+            raise AssertionError(f"Touch target below 44px: {touch_targets}")
+
         # 1,000 entity viewport-culling draw smoke.
         perf = page.evaluate(
             """
@@ -181,7 +205,7 @@ def main():
         result["mobileScrollWidth"] = page.evaluate("document.documentElement.scrollWidth")
         result["mobileInnerWidth"] = page.evaluate("window.innerWidth")
         result["mobileTouchAction"] = page.locator("#factory-canvas").evaluate("e=>getComputedStyle(e).touchAction")
-        page.screenshot(path=str(REPORTS / "U3_MOBILE_INFRASTRUCTURE_FINAL.png"), full_page=True)
+        page.screenshot(path=str(REPORTS / "U3_1_MOBILE_INFRASTRUCTURE_FINAL.png"), full_page=True)
         if result["mobileScrollWidth"] > result["mobileInnerWidth"]:
             raise AssertionError("Mobile horizontal overflow")
 
@@ -194,7 +218,7 @@ def main():
         result["codexInfrastructureCards"] = codex.locator("#codex-infrastructure .codex-card").count()
         result["codexValidation"] = codex.locator("#codex-validation").inner_text()
         codex.locator("#infrastructure").scroll_into_view_if_needed()
-        codex.screenshot(path=str(REPORTS / "U3_ENCYCLOPEDIA_INFRASTRUCTURE.png"), full_page=True)
+        codex.screenshot(path=str(REPORTS / "U3_1_ENCYCLOPEDIA_INFRASTRUCTURE.png"), full_page=True)
         result["codexErrors"] = codex_errors
         if codex_errors or "Veri ağı doğrulandı" not in result["codexValidation"]:
             raise AssertionError(f"Codex regression: {codex_errors} {result['codexValidation']}")
@@ -209,7 +233,7 @@ def main():
             raise AssertionError(f"Browser errors: page={errors}, console={unexpected_console}")
         browser.close()
 
-    (REPORTS / "U3_BROWSER_SMOKE_FINAL.json").write_text(json.dumps(result, ensure_ascii=False, indent=2), encoding="utf-8")
+    (REPORTS / "U3_1_BROWSER_SMOKE_FINAL.json").write_text(json.dumps(result, ensure_ascii=False, indent=2), encoding="utf-8")
     print(json.dumps(result, ensure_ascii=False, indent=2))
 
 if __name__ == "__main__":

@@ -1,4 +1,4 @@
-const CACHE = 'axyon-orbital-ascendancy-v4-4-u3';
+const CACHE = 'axyon-orbital-ascendancy-v4-4-1-u3-1';
 const ASSETS = ['./','./index.html','./encyclopedia.html','./CHANGELOG.md','./css/style.css','./css/encyclopedia.css','./manifest.json','./assets/icon-192.png','./assets/icon-512.png',
   './data/feature-flags.js','./vendor/break_eternity/break_eternity.min.js','./src/core/economy-number.js','./src/core/lossless-json.js','./src/services/save-migrator-v16.js',
   './data/canonical/game-data.v4.4.final.js','./data/canonical/game-data.v4.4.final.json','./data/canonical/save-state-v16.schema.json','./src/core/canonical-data-loader.js',

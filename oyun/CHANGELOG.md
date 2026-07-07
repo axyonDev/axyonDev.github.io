@@ -1,5 +1,18 @@
 # AXYON: Orbital Ascendancy — Changelog
 
+## 4.4.1-u3.1 — Save Recovery & Accessibility Hotfix
+
+- Geçici `save` yazma hataları artık oturum boyunca kalıcı kilit oluşturmaz.
+- İlk hata görünür uyarı üretir; otomatik kayıt 30 saniyelik kontrollü beklemeden sonra tekrar dener.
+- Uyarı paneline **Tekrar Dene** ve **Kaydı Dışa Aktar** eylemleri eklendi.
+- Başarılı kurtarma `axyon:save-success` ile uyarıyı kapatır ve kullanıcıya güvenli kayıt bildirimi verir.
+- `migration`, `load` ve `legacy` türü yapısal hatalar retry ile temizlenemez.
+- Import akışı geçici save kilidini kontrollü biçimde temizleyip yeni kaydı zorunlu yazma denemesine sokar.
+- Fabrika zoom butonları 44×44 px, üst ikon butonları 44×44 px yapıldı.
+- Canlı Cephe açılır alanına `aria-expanded` ve `aria-controls` eklendi; durum DOM ile senkron tutulur.
+- Geçici hata kurtarma, cooldown, kalıcı hata koruması, dokunma hedefi ve ARIA regresyon testleri eklendi.
+- Oyun içeriği, ekonomi dengesi, save şeması v16 ve U3 Planetary Bastions runtime değişmedi.
+
 ## 4.4.0-u3 — Planetary Bastions
 
 - Oyun adı **AXYON: Orbital Ascendancy** olarak değiştirildi; manifest, başlık, onboarding, ansiklopedi ve cache kimliği güncellendi.
