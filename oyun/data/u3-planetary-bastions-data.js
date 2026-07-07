@@ -1,9 +1,9 @@
-/** AXYON: Orbital Ascendancy v4.4.1 U3.1 — Planetary Bastions hotfix data overlay. */
+/** AXYON: Orbital Ascendancy v4.5.0 U4 — Planetary Bastions hotfix data overlay. */
 (function(global){
   'use strict';
   const A=global.Axyon=global.Axyon||{},D=A.Data,C=A.Canonical?.data;
   if(!D||!C)throw new Error('U3 data overlay requires live Data and frozen Canonical data');
-  D.game={title:'AXYON: Orbital Ascendancy',version:'4.4.1-u3.1',world:'Kestros İmparatorluğu',subtitle:'Planetary Bastions'};
+  D.game={title:'AXYON: Orbital Ascendancy',version:'4.5.0-u4',world:'Kestros İmparatorluğu',subtitle:'Planetary Bastions'};
   const icons={emergencyBarrier:'🧱',ballisticTurret:'🔫',laserPoint:'🔆',missilePod:'🚀',interceptorDrone:'🤖',plasmaTurret:'☄️',planetaryShieldCore:'🛡️',orbitalCannon:'🛰️'};
   const legacy=(D.defenses||[]).map(x=>Object.assign({},x,{legacy:true,hidden:true}));
   const canonicalDefenses=(C.defenses||[]).map(x=>({

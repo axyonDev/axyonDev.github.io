@@ -6,7 +6,7 @@ const D=ctx.Axyon.Data,C=ctx.Axyon.Canonical,E=ctx.Axyon.Economy;
 const assert=(x,m)=>{if(!x)throw new Error(m);};
 const items=new Set(Object.keys(D.items)),techs=new Set(D.research.map(x=>x.id)),machines=new Set(D.machines.map(x=>x.id));
 
-assert(D.game.version==='4.4.1-u3.1','game version mismatch');assert(D.game.title==='AXYON: Orbital Ascendancy','product title mismatch');
+assert(D.game.version==='4.5.0-u4','game version mismatch');assert(D.game.title==='AXYON: Orbital Ascendancy','product title mismatch');
 assert(C&&C.version==='4.4.0','canonical data not loaded');
 assert(C.counts.items===52&&C.counts.machines===50&&C.counts.technologies===52&&C.counts.repeatableTechnologies===12,'canonical counts mismatch');
 assert(C.counts.ships===10&&C.counts.satellites===3&&C.counts.defenses===8&&C.counts.planetTypes===4,'canonical strategic counts mismatch');

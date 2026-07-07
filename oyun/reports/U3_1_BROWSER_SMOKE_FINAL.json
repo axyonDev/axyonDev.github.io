@@ -1,7 +1,7 @@
 {
-  "title": "AXYON: Orbital Ascendancy — Planetary Bastions",
+  "title": "AXYON: Orbital Ascendancy — Data Vault",
   "brand": "AXYON: Orbital Ascendancy",
-  "version": "v4.4.1 U3.1 · SAVE RECOVERY",
+  "version": "v4.5.0 U4 · DATA VAULT",
   "capacityCards": 8,
   "desktopScrollWidth": 1440,
   "desktopInnerWidth": 1440,
@@ -18,7 +18,7 @@
     "first": {
       "visible": true,
       "text": "10dk 0sn arka plan/çevrimdışı ilerleme işlendi. Üretim, araştırma, pazar, tersane, tamir ve filo görevleri güncellendi.",
-      "lastSeen": 1783425087095
+      "lastSeen": 1783427751461
     },
     "secondVisible": false,
     "earnedAfterSecond": "0",
@@ -49,8 +49,8 @@
     }
   },
   "viewportPerformance": {
-    "ms": 117.5999999998603,
-    "perFrame": 0.9799999999988358,
+    "ms": 110,
+    "perFrame": 0.9166666666666666,
     "bounds": {
       "minX": 138,
       "minY": 143,

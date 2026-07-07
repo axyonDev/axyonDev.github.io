@@ -1,5 +1,21 @@
 # AXYON: Orbital Ascendancy — Changelog
 
+## 4.5.0-u4 — Data Vault & Durability Foundation
+
+- IndexedDB tabanlı dayanıklı ana kayıt kasası eklendi; localStorage uyumluluk aynası/fallback olarak korundu.
+- U3.1 profil, aktif profil ve v16 save anahtarları ilk U4 açılışında kayıpsız olarak kasaya aktarılır.
+- Kritik kayıtlar checksum, monoton revizyon, güncelleme zamanı ve kaynak bilgisi taşır.
+- Açılış uzlaştırması sağlam/yeni kopyayı seçerek diğer katmanı otomatik onarır.
+- İki aktif kopya bozuksa en yeni geçerli IndexedDB yedeğine otomatik rollback yapılır.
+- Her kritik anahtar için yedek retention sınırı 5 nesildir.
+- Stale veya eşzamanlı aynı revizyonlu farklı yazılar, IndexedDB transaction içinde daha yüksek revizyona yükseltilir.
+- Profil ve tüm veri silmeleri revizyonlu tombstone kullanır; yarım kalan silme işleminde eski kayıt geri dirilmez.
+- IndexedDB asenkron hataları görünür save uyarısına bağlandı; localStorage aynası en yeni ilerlemeyi korur ve retry ile kasa tamamlanır.
+- IndexedDB açılamazsa oyun localStorage fallback ile başlar ve backend durumu Ayarlar ekranında görünür.
+- Service Worker, manifest, sürüm kimliği ve test zinciri U4 veri kasasıyla güncellendi.
+- Yeni U4 testleri: legacy import, dual-write, mirror repair, rollback, retention, stale revision, retry, tombstone ve Chromium fallback.
+- Oyun durumu şeması v16, U3 Planetary Bastions ve U3.1 save recovery davranışları korunmuştur.
+
 ## 4.4.1-u3.1 — Save Recovery & Accessibility Hotfix
 
 - Geçici `save` yazma hataları artık oturum boyunca kalıcı kilit oluşturmaz.

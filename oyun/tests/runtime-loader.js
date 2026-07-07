@@ -7,6 +7,7 @@ const CORE_SCRIPTS=[
   'src/core/economy-number.js',
   'src/core/lossless-json.js',
   'src/services/save-migrator-v16.js',
+  'src/services/storage-vault.js',
   'data/canonical/game-data.v4.4.final.js',
   'src/core/canonical-data-loader.js',
   'src/core/numbers.js',
@@ -37,6 +38,7 @@ function loadRuntime(options={}){
     Math:options.Math||Math,
     setTimeout,clearTimeout,
     localStorage:options.localStorage,
+    indexedDB:options.indexedDB,
     btoa:s=>Buffer.from(s,'binary').toString('base64'),
     atob:s=>Buffer.from(s,'base64').toString('binary'),
     alert:()=>{}
@@ -45,7 +47,10 @@ function loadRuntime(options={}){
   vm.createContext(ctx);
   const scripts=[...CORE_SCRIPTS];
   if(options.saveService)scripts.push('src/services/save-service.js');
-  for(const file of scripts)vm.runInContext(fs.readFileSync(path.join(root,file),'utf8'),ctx,{filename:file});
+  for(const file of scripts){
+    vm.runInContext(fs.readFileSync(path.join(root,file),'utf8'),ctx,{filename:file});
+    if(file==='src/services/storage-vault.js'&&options.storageBackend)ctx.Axyon.StorageVault.configure(options.storageBackend);
+  }
   return ctx;
 }
 function decimalToString(ctx,value){return ctx.Axyon.EconomyNumber.toStorage(value);}

@@ -1,0 +1,161 @@
+{
+  "title": "AXYON: Orbital Ascendancy — Data Vault",
+  "version": "v4.5.0 U4 · DATA VAULT",
+  "storageStatusText": "IndexedDB ana kasa · localStorage uyumluluk aynası",
+  "initialDiagnostics": {
+    "schema": 16,
+    "enabled": true,
+    "suspended": false,
+    "blockingError": null,
+    "lastMigration": null,
+    "lastSuccessfulSaveAt": 1783427758907,
+    "lastDurableSaveAt": 1783427758910,
+    "lastSaveErrorAt": 0,
+    "nextSaveRetryAt": 0,
+    "retryCooldownMs": 30000,
+    "prepared": true,
+    "storageMode": "indexeddb-primary",
+    "vaultReady": true,
+    "vaultDurable": true,
+    "pendingVaultOps": 0,
+    "lastVaultError": null,
+    "lastVaultCommitAt": 1783427758909,
+    "lastReconcile": {
+      "startedAt": 1783427758549,
+      "mode": "indexeddb-primary",
+      "imported": 0,
+      "hydrated": 0,
+      "repaired": 0,
+      "rolledBack": 0,
+      "unchanged": 0,
+      "issues": [],
+      "finishedAt": 1783427758549
+    },
+    "mirrorRecords": 3,
+    "vault": {
+      "database": "axyon_orbital_ascendancy",
+      "version": 1,
+      "mode": "memory",
+      "durable": true,
+      "lastError": null,
+      "maxBackupsPerKey": 5
+    },
+    "profile": {
+      "id": "cmd_mramu9si_ia21eij",
+      "name": "U4 Browser",
+      "empireName": "U4 Browser İmparatorluğu",
+      "createdAt": 1783427758866,
+      "lastPlayedAt": 1783427758907,
+      "version": 2,
+      "saveSchema": 16,
+      "storage": "indexeddb-vault",
+      "gameVersion": "4.5.0-u4",
+      "product": "AXYON: Orbital Ascendancy"
+    },
+    "canonicalVersion": "4.4.0",
+    "economyEngine": "break_eternity.js@2.1.3",
+    "runtimeMode": "decimal-native-u2",
+    "firstOrbit": true,
+    "product": "AXYON: Orbital Ascendancy"
+  },
+  "durableSave": {
+    "accepted": true,
+    "flush": {
+      "ok": true,
+      "pending": 0,
+      "mode": "indexeddb-primary"
+    },
+    "credits": "90001",
+    "revision": 3,
+    "pending": 0
+  },
+  "vaultFailure": {
+    "accepted": true,
+    "blocking": {
+      "type": "save",
+      "layer": "indexeddb",
+      "message": "memory vault put failure",
+      "key": "axyon_frontier_save_cmd_mramu9si_ia21eij",
+      "at": 1783427759039,
+      "retryAt": 1783427789039
+    },
+    "localCredits": "90002",
+    "warning": true
+  },
+  "vaultRecovery": {
+    "blocking": null,
+    "credits": "90002",
+    "warning": false
+  },
+  "fallbackDiagnostics": {
+    "schema": 16,
+    "enabled": true,
+    "suspended": false,
+    "blockingError": null,
+    "lastMigration": null,
+    "lastSuccessfulSaveAt": 1783427760201,
+    "lastDurableSaveAt": 0,
+    "lastSaveErrorAt": 0,
+    "nextSaveRetryAt": 0,
+    "retryCooldownMs": 30000,
+    "prepared": true,
+    "storageMode": "localstorage-fallback",
+    "vaultReady": false,
+    "vaultDurable": false,
+    "pendingVaultOps": 0,
+    "lastVaultError": null,
+    "lastVaultCommitAt": 0,
+    "lastReconcile": {
+      "startedAt": 1783427759963,
+      "mode": "localstorage-fallback",
+      "imported": 0,
+      "hydrated": 0,
+      "repaired": 0,
+      "rolledBack": 0,
+      "unchanged": 0,
+      "issues": [
+        "Failed to execute 'open' on 'IDBFactory': access to the Indexed Database API is denied in this context."
+      ]
+    },
+    "mirrorRecords": 3,
+    "vault": {
+      "database": "axyon_orbital_ascendancy",
+      "version": 1,
+      "mode": "unavailable",
+      "durable": false,
+      "lastError": "Failed to execute 'open' on 'IDBFactory': access to the Indexed Database API is denied in this context.",
+      "maxBackupsPerKey": 5
+    },
+    "profile": {
+      "id": "cmd_mramuas6_ryvjaac",
+      "name": "Fallback Browser",
+      "empireName": "Fallback Browser İmparatorluğu",
+      "createdAt": 1783427760150,
+      "lastPlayedAt": 1783427760201,
+      "version": 2,
+      "saveSchema": 16,
+      "storage": "indexeddb-vault",
+      "gameVersion": "4.5.0-u4",
+      "product": "AXYON: Orbital Ascendancy"
+    },
+    "canonicalVersion": "4.4.0",
+    "economyEngine": "break_eternity.js@2.1.3",
+    "runtimeMode": "decimal-native-u2",
+    "firstOrbit": true,
+    "product": "AXYON: Orbital Ascendancy"
+  },
+  "fallbackStatusText": "localStorage fallback · Failed to execute 'open' on 'IDBFactory': access to the Indexed Database API is denied in this context.",
+  "fallbackSave": {
+    "accepted": true,
+    "raw": true
+  },
+  "fallbackOverflow": {
+    "scroll": 390,
+    "inner": 390
+  },
+  "pageErrors": [],
+  "consoleErrors": [
+    "[IndexedDB Vault] Error: memory vault put failure\n    at Object.putRecord (/mnt/data/axyon_u4_work/src/services/storage-vault.js:175:61)\n    at Object.putRecord (/mnt/data/axyon_u4_work/src/services/storage-vault.js:233:75)"
+  ],
+  "unexpectedConsoleErrors": []
+}

@@ -7,7 +7,7 @@ const unlock=s=>{fillEconomy(ctx,s,'1e18');D.research.forEach(t=>s.researched[t.
 
 const s=E.createInitialState();
 assert.strictEqual(D.game.title,'AXYON: Orbital Ascendancy');
-assert.strictEqual(D.game.version,'4.4.1-u3.1');
+assert.strictEqual(D.game.version,'4.5.0-u4');
 assert(s.planetary&&s.planetary.complexes&&s.planetary.defenseCohorts,'planetary runtime state missing');
 let cap=E.capacityStatus(s);
 for(const k of ['surface','planet','orbitalMass','orbitalSlots','command','heat','maintenance','power'])assert(cap[k]&&Number.isFinite(cap[k].used)&&Number.isFinite(cap[k].max),`capacity axis missing ${k}`);

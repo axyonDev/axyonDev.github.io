@@ -12,6 +12,7 @@ node tests\dom-contract.js || goto :fail
 node tests\u3-background-save-brand.js || goto :fail
 node tests\u3-1-save-recovery-accessibility.js || goto :fail
 node tests\u3-capacity-defense.js || goto :fail
+node tests\u4-indexeddb-durability.js || goto :fail
 echo.
 echo ALL TESTS PASSED
 pause

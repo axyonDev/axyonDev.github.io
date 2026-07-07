@@ -1,7 +1,7 @@
 {
-  "name": "AXYON: Orbital Ascendancy — Planetary Bastions",
+  "name": "AXYON: Orbital Ascendancy — Data Vault",
   "short_name": "AXYON OA",
-  "description": "Üretim, otomasyon, ilk yörünge, gezegen kapasitesi, yörünge lojistiği ve milyon ölçekli cohort savunmalarını birleştiren uzay sanayi simülasyonu.",
+  "description": "IndexedDB veri kasası, kayıpsız yerel geçiş, üretim, otomasyon, yörünge lojistiği ve milyon ölçekli cohort savunmaları birleştiren uzay sanayi simülasyonu.",
   "start_url": "./index.html",
   "display": "standalone",
   "orientation": "any",
@@ -11,5 +11,5 @@
     {"src":"assets/icon-192.png","sizes":"192x192","type":"image/png","purpose":"any maskable"},
     {"src":"assets/icon-512.png","sizes":"512x512","type":"image/png","purpose":"any maskable"}
   ],
-  "version": "4.4.1-u3.1"
+  "version": "4.5.0-u4"
 }

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Real Chromium smoke tests for AXYON: Orbital Ascendancy U3.1 hotfix.
+"""Real Chromium smoke tests for AXYON: Orbital Ascendancy U4 hotfix.
 Direct localhost/file navigation may be blocked in restricted runners, so this harness loads
 real project HTML/CSS/JS into Chromium with an in-memory localStorage implementation.
 """
@@ -146,7 +146,7 @@ def main():
         if save_warning["ok"] or not save_warning["visible"]:
             raise AssertionError(f"Save warning bridge failed: {save_warning}")
 
-        # U3.1 manual recovery closes the warning without a page reload.
+        # U4 manual recovery closes the warning without a page reload.
         page.click("#save-warning-retry")
         page.wait_for_timeout(60)
         recovery = page.evaluate(

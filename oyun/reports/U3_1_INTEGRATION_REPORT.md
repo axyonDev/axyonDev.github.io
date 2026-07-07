@@ -1,7 +1,7 @@
-# AXYON: Orbital Ascendancy v4.4.1 U3.1
+# AXYON: Orbital Ascendancy v4.5.0 U4
 ## Save Recovery & Accessibility Hotfix — Entegrasyon ve Kabul Raporu
 
-**Sürüm:** `4.4.1-u3.1`  
+**Sürüm:** `4.5.0-u4`  
 **Save şeması:** `v16`  
 **Taban:** `4.4.0-u3 Planetary Bastions`  
 **Durum:** Kabul edildi — U4 öncesi hotfix kapısı geçti
@@ -12,7 +12,7 @@
 
 U3 bağımsız incelemesinde bulunan geçici kayıt hatası sonrası oturum boyu autosave kilidi kapatılmıştır. Oyun içeriği, ekonomi dengesi, save şeması ve Planetary Bastions runtime değiştirilmemiştir.
 
-U3.1 ile:
+U4 ile:
 
 - Geçici `save` hataları 30 saniyelik kontrollü cooldown sonrasında otomatik olarak yeniden denenir.
 - Kullanıcı kırmızı uyarı panelindeki **Tekrar Dene** düğmesiyle sayfa yenilemeden anında yeniden yazma deneyebilir.
@@ -75,7 +75,7 @@ Toplam **11 test paketi** geçti:
 - Canonical veri ve araştırma DAG doğrulaması
 - DOM/PWA/offline cache sözleşmeleri
 - Arka plan ilerlemesi, görünür kayıt hatası ve marka
-- U3.1 manuel/otomatik save recovery ve erişilebilirlik
+- U4 manuel/otomatik save recovery ve erişilebilirlik
 - Çok eksenli kapasite ve 1.000.000 birim cohort
 
 Son cohort ölçümü:
@@ -122,7 +122,7 @@ Proje hedefi artık paket içinde `docs/SCALABILITY_GUARDRAILS.md` ile kayıtlı
 - Cohort/aggregate büyük sayı modeli
 - Anti-cheat ve istemci verisine güvensizlik
 
-Mevcut U3.1 paket local-first prototiptir; çok oyunculu backend hazır olduğu iddia edilmemektedir.
+Mevcut U4 paket local-first prototiptir; çok oyunculu backend hazır olduğu iddia edilmemektedir.
 
 ---
 
@@ -138,7 +138,7 @@ Mevcut U3.1 paket local-first prototiptir; çok oyunculu backend hazır olduğu 
 
 ## 7. Başkan kararı
 
-**U3.1 kabul edildi.** Claude bağımsız incelemesindeki geçici kayıt hatası, 44 px ve `aria-expanded` açıkları kapatılmıştır.
+**U4 kabul edildi.** Claude bağımsız incelemesindeki geçici kayıt hatası, 44 px ve `aria-expanded` açıkları kapatılmıştır.
 
 Sıradaki ana geliştirme:
 
@@ -156,10 +156,10 @@ Sıradaki ana geliştirme:
 
 ## 8. Durum kaydı
 
-**Source of truth:** `AXYON_Orbital_Ascendancy_v4.4.1_U3.1_Save_Recovery_Hotfix.zip`  
-**Sürüm:** `4.4.1-u3.1`  
+**Source of truth:** `AXYON_Orbital_Ascendancy_v4.4.1_U4_Save_Recovery_Hotfix.zip`  
+**Sürüm:** `4.5.0-u4`  
 **Save şeması:** `v16`  
-**Son karar:** U3.1 hotfix kabul edildi.  
+**Son karar:** U4 hotfix kabul edildi.  
 **Sıradaki iş:** U4 P0 — IndexedDB storage adapter.  
 **Kritik risk:** Ortak evrene geçmeden önce istemci kayıtlarının sunucu otoritesinden kesin ayrılması.  
 **Bitiş kriteri:** Eski kayıt kaybolmadan IndexedDB geçişi, rollback ve gerçek cihaz testleri.

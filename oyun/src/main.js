@@ -1,6 +1,7 @@
-/** AXYON: Orbital Ascendancy v4.4.1 U3.1 — save recovery and accessibility hotfix. */
-(function(){
+/** AXYON: Orbital Ascendancy v4.5.0 U4 — durable IndexedDB vault bootstrap. */
+(async function(){
   const E=window.Axyon.Economy,Q=window.Axyon.Quests,S=window.Axyon.SaveService,UI=window.Axyon.UI,T=window.Axyon.Toast,N=window.Axyon.Numbers,D=window.Axyon.Data,FC=window.Axyon.FactoryCanvas,H=window.Axyon.HelpSystem,CUI=window.Axyon.CombatUI;
+  const storageReport=await S.prepare();
   const bootProfile=S.bootstrap();
   let state=S.load()||E.createInitialState(),selectedEntityId=null,firstRun=!bootProfile;
   const activeName=()=>S.currentProfile()?.name||'Komutan';
@@ -9,6 +10,7 @@
   const saveDiagnostics=S.diagnostics?.();
   if(saveDiagnostics?.blockingError)setTimeout(()=>{console.error('[Axyon Save Recovery]',saveDiagnostics.blockingError);alert('Kayıt güvenlik nedeniyle açılmadı. Orijinal kayıt ve migrasyon yedeği korunuyor. Aktif profil sıfırlanana veya kayıt içe aktarılana kadar otomatik kayıt durduruldu.');},0);
   UI.buildInventory(state,E);UI.buildResearch(state,E);UI.buildPlantCards(state,E);UI.buildPalette(state,E);UI.el('active-profile-name').textContent=activeName();
+  const storageStatus=UI.el('storage-backend-status');if(storageStatus)storageStatus.textContent=storageReport.mode==='indexeddb-primary'?'IndexedDB ana kasa · localStorage uyumluluk aynası':`localStorage fallback · ${storageReport.issues?.[0]||'IndexedDB kullanılamadı'}`;
 
   FC.init(UI.el('factory-canvas'),state,E,{
     onModeChange:UI.setToolbarMode,
@@ -146,4 +148,4 @@
   document.addEventListener('visibilitychange',()=>{if(firstRun)return;if(document.visibilityState==='hidden'){backgrounded=true;S.save(state);last=performance.now();}else if(backgrounded){backgrounded=false;applyResumeProgress();}});
   window.addEventListener('pageshow',ev=>{if(ev.persisted&&!firstRun)applyResumeProgress();});
   window.__axyon={get state(){return state;},E,S,Q,UI};
-})();
+})().catch(error=>{console.error('[AXYON U4 Bootstrap]',error);document.body.innerHTML='<main style="padding:24px;color:#fff;background:#0f1115;min-height:100vh;font-family:system-ui"><h1>AXYON başlatılamadı</h1><p>Veri katmanı başlatılırken beklenmeyen bir hata oluştu. Tarayıcı konsolundaki hata kaydı korunmuştur.</p></main>';});

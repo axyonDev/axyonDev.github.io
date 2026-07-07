@@ -25,7 +25,7 @@ fail=false;saveCtx.Axyon.SaveService.clearBlockingError();initial.planetary.defe
 
 // Touch and brand contracts.
 const canvas=fs.readFileSync(path.join(root,'src/canvas/factory-canvas.js'),'utf8');for(const token of ['activePointers = new Map()','function beginPinch','function updatePinch','activePointers.size>=2','function viewBounds','function drawGrid(side,v)','FactoryCanvas.getCamera'])assert(canvas.includes(token),`pinch contract missing: ${token}`);
-const manifest=JSON.parse(fs.readFileSync(path.join(root,'manifest.json'),'utf8'));assert.strictEqual(manifest.name,'AXYON: Orbital Ascendancy — Planetary Bastions');assert.strictEqual(manifest.version,'4.4.1-u3.1');
+const manifest=JSON.parse(fs.readFileSync(path.join(root,'manifest.json'),'utf8'));assert.strictEqual(manifest.name,'AXYON: Orbital Ascendancy — Data Vault');assert.strictEqual(manifest.version,'4.5.0-u4');
 const index=fs.readFileSync(path.join(root,'index.html'),'utf8');assert(index.includes('viewport-fit=cover'));assert(index.includes('AXYON: Orbital Ascendancy'));assert(index.includes('data-tab="infrastructure"'));assert(index.includes('aria-selected'));
 const css=fs.readFileSync(path.join(root,'css/style.css'),'utf8');assert(css.includes('safe-area-inset-top')&&css.includes('prefers-reduced-motion'));
 console.log('PASS u3-background-save-brand: idempotent 10-minute resume, visible save failure, U3 persistence, pinch and Orbital Ascendancy metadata');

@@ -4,7 +4,7 @@
 
 ## Bugünkü durum
 
-v4.4.1-u3.1 hâlâ tarayıcıda/local-first çalışan oynanabilir prototiptir. Bu paket çok oyunculu backend içermez ve mevcut local save hiçbir zaman gelecekteki ortak evrende otorite kabul edilmeyecektir.
+v4.5.0-u4 hâlâ tarayıcıda/local-first çalışan oynanabilir prototiptir. Bu paket çok oyunculu backend içermez ve mevcut local save hiçbir zaman gelecekteki ortak evrende otorite kabul edilmeyecektir.
 
 ## Değişmez mimari kararlar
 
@@ -26,10 +26,18 @@ v4.4.1-u3.1 hâlâ tarayıcıda/local-first çalışan oynanabilir prototiptir. 
 
 ## Geçiş kapıları
 
-### U4
-- IndexedDB dayanıklılığı ve storage adapter.
+### U4 — mevcut durum
+
+Tamamlanan:
+- IndexedDB ana kayıt kasası ve localStorage uyumluluk aynası.
+- Checksum, monoton revizyon, sınırlı yedek, rollback ve tombstone silme güvenliği.
+- U3.1 kayıtlarının kayıpsız aktarımı ve fallback davranışı.
+
+Sıradaki U4 işleri:
 - Domain kurallarının localStorage/DOM bağımlılığından ayrılması.
-- İşlem kimliği ve event kayıt formatının tanımlanması.
+- İdempotent işlem kimliği ve event kayıt formatının tanımlanması.
+- Sunucuya gönderilebilir offline komut kuyruğu sözleşmesi.
+- Gerçek origin ve gerçek cihaz IndexedDB kabul testi.
 
 ### Sunucu prototipi
 - Yetkili hesap/profil/save.

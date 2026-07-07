@@ -1,7 +1,7 @@
 {
   "title": "AXYON: Orbital Ascendancy — Planetary Bastions",
   "brand": "AXYON: Orbital Ascendancy",
-  "version": "v4.4.1 U3.1 · SAVE RECOVERY",
+  "version": "v4.5.0 U4 · SAVE RECOVERY",
   "capacityCards": 8,
   "desktopScrollWidth": 1440,
   "desktopInnerWidth": 1440,
