@@ -9,6 +9,8 @@ node tests\warfront-maintenance.js || goto :fail
 node tests\stability-fuzz.js || goto :fail
 node tests\data-integrity.js || goto :fail
 node tests\dom-contract.js || goto :fail
+node tests\u3-background-save-brand.js || goto :fail
+node tests\u3-capacity-defense.js || goto :fail
 echo.
 echo ALL TESTS PASSED
 pause

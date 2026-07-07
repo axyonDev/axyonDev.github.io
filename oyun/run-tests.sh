@@ -9,3 +9,5 @@ node tests/warfront-maintenance.js
 node tests/stability-fuzz.js
 node tests/data-integrity.js
 node tests/dom-contract.js
+node tests/u3-background-save-brand.js
+node tests/u3-capacity-defense.js

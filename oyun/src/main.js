@@ -1,4 +1,4 @@
-/** Axyon v4.4 U2 First Orbit — uygulama giriş ve olay akışı. */
+/** AXYON: Orbital Ascendancy v4.4 U3 — uygulama giriş ve olay akışı. */
 (function(){
   const E=window.Axyon.Economy,Q=window.Axyon.Quests,S=window.Axyon.SaveService,UI=window.Axyon.UI,T=window.Axyon.Toast,N=window.Axyon.Numbers,D=window.Axyon.Data,FC=window.Axyon.FactoryCanvas,H=window.Axyon.HelpSystem,CUI=window.Axyon.CombatUI;
   const bootProfile=S.bootstrap();
@@ -25,7 +25,10 @@
   FC.refreshTheme();UI.setToolbarMode('select');H?.init(()=>state,()=>E);UI.el('factory-canvas')?.addEventListener('contextmenu',ev=>ev.preventDefault());document.addEventListener('contextmenu',ev=>{if(ev.target.closest('.factory-shell,.fx-canvas-wrap'))ev.preventDefault();});
   requestAnimationFrame(function paint(){FC.draw();requestAnimationFrame(paint);});
 
-  const offline=firstRun?{usableSeconds:0}:E.applyOfflineProgress(state);if(offline.usableSeconds>8){UI.el('offline-text').textContent=`${N.formatTime(offline.usableSeconds)} çevrimdışı ilerleme işlendi. Pazar seferleri, tersane ve filo görevleri de güncellendi.${offline.wasCapped?' Çevrimdışı süre 8 saatle sınırlandı.':''}${offline.raidDeferred?' Vadesi gelen uzaylı baskını, savunma hazırlığı yapabilmen için dönüşünden sonraya ertelendi.':''}`;UI.showModal('offline-modal');}
+  let backgrounded=false,resumeLock=false;
+  function showOfflineResult(offline){if(!offline||offline.usableSeconds<=8)return;UI.el('offline-text').textContent=`${N.formatTime(offline.usableSeconds)} arka plan/çevrimdışı ilerleme işlendi. Üretim, araştırma, pazar, tersane, tamir ve filo görevleri güncellendi.${offline.wasCapped?' Çevrimdışı süre sınırlandı.':''}${offline.raidDeferred?' Vadesi gelen NPC baskını hazırlık penceresine ertelendi.':''}`;UI.showModal('offline-modal');}
+  function applyResumeProgress(){if(firstRun||resumeLock)return{usableSeconds:0};resumeLock=true;try{const result=E.applyOfflineProgress(state);last=performance.now();showOfflineResult(result);S.save(state);refreshAll();return result;}finally{resumeLock=false;}}
+  const offline=firstRun?{usableSeconds:0}:E.applyOfflineProgress(state);showOfflineResult(offline);
   refreshAll();postAction();if(firstRun)UI.showModal('commander-onboarding');
 
   function refreshAll(){UI.el('active-profile-name').textContent=activeName();UI.render(state,E);UI.buildPalette(state,E);if(selectedEntityId&&state.grid.entities[selectedEntityId])UI.showInspector(state,E,state.grid.entities[selectedEntityId]);else if(selectedEntityId){selectedEntityId=null;UI.showInspector(state,E,null);}}
@@ -33,7 +36,7 @@
   function tryOpenSector(sx,sy){if(E.openSector(state,sx,sy)){T.show(`🧭 Sektör taraması başladı: ${sx},${sy}`,'success');S.save(state);postAction();}else T.show('Komşu sektör, tarama modülü veya malzemeler yetersiz','error');}
 
   // Sekmeler
-  document.querySelectorAll('[data-tab]').forEach(b=>b.addEventListener('click',()=>{UI.switchTab(b.dataset.tab);if(b.dataset.tab==='galaxy')UI.renderGalaxy(state,E);if(b.dataset.tab==='combat')CUI?.render(state,E);if(b.dataset.tab==='report')UI.renderReport(state,E);if(b.dataset.tab==='factory')setTimeout(()=>FC.resize(),20);}));
+  document.querySelectorAll('[data-tab]').forEach(b=>b.addEventListener('click',()=>{UI.switchTab(b.dataset.tab);if(b.dataset.tab==='galaxy')UI.renderGalaxy(state,E);if(b.dataset.tab==='infrastructure')UI.renderInfrastructure(state,E);if(b.dataset.tab==='combat')CUI?.render(state,E);if(b.dataset.tab==='report')UI.renderReport(state,E);if(b.dataset.tab==='factory')setTimeout(()=>FC.resize(),20);}));
 
   // Canvas araçları
   document.querySelectorAll('.fx-tool[data-mode]').forEach(b=>b.addEventListener('click',()=>FC.setMode(b.dataset.mode)));
@@ -99,17 +102,32 @@
     if(rz||rs||rd){const kind=rz?'zone':rs?'ship':'defense',node=rz||rs||rd,id=rz?.dataset.repairZone||rs?.dataset.repairShip||rd?.dataset.repairDefense,amount=Number(node.dataset.amount)||1;if(E.queueRepair(state,kind,id,amount))T.show('🧰 Tamirat kuyruğa alındı','success');else T.show('Bakım tesisi veya tamir malzemeleri yetersiz','error');S.save(state);CUI?.render(state,E);refreshAll();}
   });
 
+  // U3 Gezegen / yörünge kapasitesi ve cohort savunma kontrolleri
+  UI.el('panel-infrastructure')?.addEventListener('click',ev=>{
+    const cap=ev.target.closest('[data-upgrade-capacity]'),asset=ev.target.closest('[data-build-asset]'),buildC=ev.target.closest('[data-build-complex]'),upC=ev.target.closest('[data-upgrade-complex]'),preset=ev.target.closest('[data-cohort-preset]'),buildD=ev.target.closest('[data-build-cohort]');
+    if(preset){const input=UI.el(`cohort-count-${preset.dataset.cohortPreset}`);if(input)input.value=preset.dataset.value;return;}
+    let ok=false,msg='';
+    if(cap){ok=E.upgradeCapacity(state,cap.dataset.upgradeCapacity);msg='Kapasite araştırması geliştirildi';}
+    else if(asset){ok=E.buildAsset(state,asset.dataset.buildAsset);msg='Altyapı tesisi kuruldu';}
+    else if(buildC){ok=E.buildComplex(state,buildC.dataset.buildComplex);msg='Savunma kompleksi kuruldu';}
+    else if(upC){ok=E.upgradeComplex(state,upC.dataset.upgradeComplex);msg='Savunma kompleksi yükseltildi';}
+    else if(buildD){const id=buildD.dataset.buildCohort,count=Math.max(1,Math.min(2000000,Math.floor(Number(UI.el(`cohort-count-${id}`)?.value)||1)));ok=E.buildDefense(state,id,count);msg=`${N.format(count)} savunma birimi üretildi`;}
+    else return;
+    T.show(ok?`✅ ${msg}`:'Kapasite, teknoloji veya üretim malzemeleri yetersiz',ok?'success':'error');S.save(state);UI.renderInfrastructure(state,E);refreshAll();
+  });
+
   // Modallar / ayarlar
   document.querySelectorAll('[data-close]').forEach(b=>b.addEventListener('click',()=>UI.hideModal(b.dataset.close)));
   function rebuildForState(){firstRun=!S.currentProfile();FC.setState(state);applyTheme(state.settings.theme||'dark');UI.buildInventory(state,E);UI.buildResearch(state,E);UI.buildPlantCards(state,E);UI.buildPalette(state,E);selectedEntityId=null;UI.showInspector(state,E,null);refreshAll();}
   function renderProfiles(){const active=S.currentProfileId(),list=S.listProfiles();UI.el('profile-list').innerHTML=list.map(p=>`<article class="profile-row ${p.id===active?'active':''}"><div><b>👤 ${p.name}</b><small>${p.empireName||''} · Son oyun ${new Date(p.lastPlayedAt||p.createdAt).toLocaleString('tr-TR')}</small></div><div>${p.id===active?'<span class="badge">Aktif</span>':`<button class="btn-setting compact" data-profile-switch="${p.id}">Geç</button>`}<button class="btn-danger compact" data-profile-delete="${p.id}" data-profile-name="${p.name.replace(/"/g,'&quot;')}">Sil</button></div></article>`).join('');UI.el('active-profile-name').textContent=activeName();}
-  function switchProfile(id){S.save(state);if(!S.selectProfile(id))return;state=S.load()||E.createInitialState();E.applyOfflineProgress(state);rebuildForState();renderProfiles();T.show(`👤 ${activeName()} profiline geçildi`,'success');}
+  function switchProfile(id){S.save(state);if(!S.selectProfile(id))return;state=S.load()||E.createInitialState();showOfflineResult(E.applyOfflineProgress(state));rebuildForState();renderProfiles();T.show(`👤 ${activeName()} profiline geçildi`,'success');}
   function completeFirstCommander(){const name=UI.el('first-commander-name').value,r=S.createProfile(name,null,{planetType:UI.el('first-planet-type')?.value||'temperate',startRegion:UI.el('first-start-region')?.value||'center'});if(!r.ok){UI.el('first-commander-error').textContent=r.error;return;}state=r.state;firstRun=false;UI.el('first-commander-error').textContent='';UI.hideModal('commander-onboarding');rebuildForState();S.save(state);T.show(`👤 Hoş geldin Komutan ${r.profile.name}`,'success');}
   UI.el('first-commander-create').addEventListener('click',completeFirstCommander);UI.el('first-commander-name').addEventListener('keydown',ev=>{if(ev.key==='Enter')completeFirstCommander();});
   UI.el('btn-profiles').addEventListener('click',()=>{renderProfiles();UI.showModal('profiles-modal');});
   UI.el('profile-list').addEventListener('click',ev=>{const sw=ev.target.closest('[data-profile-switch]'),del=ev.target.closest('[data-profile-delete]');if(sw)switchProfile(sw.dataset.profileSwitch);if(del){const expected=del.dataset.profileName,typed=prompt(`“${expected}” profilini kalıcı silmek için komutan adını yaz:`);if(typed!==expected){if(typed!==null)T.show('Profil adı eşleşmedi; silinmedi.','error');return;}const wasActive=del.dataset.profileDelete===S.currentProfileId();S.deleteProfile(del.dataset.profileDelete);S.bootstrap();if(wasActive){state=S.load()||E.createInitialState();rebuildForState();if(!S.currentProfile())UI.showModal('commander-onboarding');}renderProfiles();T.show('Profil kalıcı olarak silindi','info');}});
   UI.el('create-profile').addEventListener('click',()=>{S.save(state);const r=S.createProfile(UI.el('new-profile-name').value);if(!r.ok){T.show(r.error,'error');return;}state=r.state;UI.el('new-profile-name').value='';rebuildForState();renderProfiles();T.show(`👤 ${r.profile.name} profili oluşturuldu`,'success');});
   UI.el('btn-achievements').addEventListener('click',()=>{UI.renderAchievements(state);UI.showModal('ach-modal');});UI.el('btn-settings').addEventListener('click',()=>{UI.el('export-code').value='';UI.el('reset-confirm-text').value='';UI.el('do-reset').disabled=true;UI.showModal('settings-modal');});
+  const saveWarning=UI.el('save-warning');window.addEventListener('axyon:save-error',ev=>{if(saveWarning){saveWarning.classList.remove('hidden');UI.el('save-warning-text').textContent=ev.detail?.message||'Tarayıcı depolamasına yazılamadı. Kaydı dışa aktar.';}T.show('⚠️ Kayıt başarısız. Kaydı dışa aktar ve depolama alanını kontrol et.','error');});window.addEventListener('axyon:save-success',()=>saveWarning?.classList.add('hidden'));UI.el('save-warning-export')?.addEventListener('click',()=>{UI.el('export-code').value=S.exportString(state);UI.showModal('settings-modal');UI.el('export-code').select();});
   UI.el('theme-toggle').addEventListener('click',()=>{state.settings.theme=state.settings.theme==='dark'?'light':'dark';applyTheme(state.settings.theme);S.save(state);});
   UI.el('do-export').addEventListener('click',()=>{UI.el('export-code').value=S.exportString(state);UI.el('export-code').select();T.show('📋 Aktif profil kayıt kodu hazır','info');});
   UI.el('do-import').addEventListener('click',()=>{const r=S.importString(UI.el('import-code').value);if(!r.ok){T.show('❌ '+r.error,'error');return;}if(!confirm('Aktif profil kaydı değiştirilecek. Devam?'))return;state=r.state;S.save(state);rebuildForState();UI.hideModal('settings-modal');T.show('✅ Kayıt aktif profile yüklendi','success');});
@@ -118,7 +136,10 @@
   function applyTheme(t){document.documentElement.setAttribute('data-theme',t);const b=UI.el('theme-toggle');if(b)b.textContent=t==='dark'?'☀️ Açık tema':'🌙 Koyu tema';FC?.refreshTheme?.();}
 
   let last=performance.now(),check=0;
-  setInterval(()=>{const now=performance.now(),dt=Math.min(1,(now-last)/1000);last=now;if(firstRun)return;const before=Object.keys(state.researched).length+Object.values(state.repeatResearch).reduce((a,b)=>a+b,0);E.tick(state,dt);const after=Object.keys(state.researched).length+Object.values(state.repeatResearch).reduce((a,b)=>a+b,0);if(after>before){T.show('🔬 Araştırma tamamlandı; yeni teknoloji etkinleştirildi','success');UI.buildPalette(state,E);UI.buildResearch(state,E);S.save(state);}UI.render(state,E);check+=dt;if(check>=.75){check=0;postAction(false);}},D.economyConfig.tickIntervalMs);
-  setInterval(()=>{if(!firstRun)S.save(state);},D.economyConfig.autosaveIntervalMs);window.addEventListener('beforeunload',()=>{if(!firstRun)S.save(state);});document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden'&&!firstRun)S.save(state);});
+  setInterval(()=>{const stamp=performance.now();if(document.visibilityState==='hidden'){last=stamp;return;}const dt=Math.min(1,(stamp-last)/1000);last=stamp;if(firstRun||resumeLock)return;const before=Object.keys(state.researched).length+Object.values(state.repeatResearch).reduce((a,b)=>a+b,0);E.tick(state,dt);const after=Object.keys(state.researched).length+Object.values(state.repeatResearch).reduce((a,b)=>a+b,0);if(after>before){T.show('🔬 Araştırma tamamlandı; yeni teknoloji etkinleştirildi','success');UI.buildPalette(state,E);UI.buildResearch(state,E);S.save(state);}UI.render(state,E);check+=dt;if(check>=.75){check=0;postAction(false);}},D.economyConfig.tickIntervalMs);
+  setInterval(()=>{if(!firstRun&&document.visibilityState!=='hidden')S.save(state);},D.economyConfig.autosaveIntervalMs);
+  window.addEventListener('beforeunload',()=>{if(!firstRun)S.save(state);});
+  document.addEventListener('visibilitychange',()=>{if(firstRun)return;if(document.visibilityState==='hidden'){backgrounded=true;S.save(state);last=performance.now();}else if(backgrounded){backgrounded=false;applyResumeProgress();}});
+  window.addEventListener('pageshow',ev=>{if(ev.persisted&&!firstRun)applyResumeProgress();});
   window.__axyon={get state(){return state;},E,S,Q,UI};
 })();

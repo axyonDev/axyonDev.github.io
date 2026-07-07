@@ -6,7 +6,7 @@ const D=ctx.Axyon.Data,C=ctx.Axyon.Canonical,E=ctx.Axyon.Economy;
 const assert=(x,m)=>{if(!x)throw new Error(m);};
 const items=new Set(Object.keys(D.items)),techs=new Set(D.research.map(x=>x.id)),machines=new Set(D.machines.map(x=>x.id));
 
-assert(D.game.version==='4.4.0-u2','game version mismatch');
+assert(D.game.version==='4.4.0-u3','game version mismatch');assert(D.game.title==='AXYON: Orbital Ascendancy','product title mismatch');
 assert(C&&C.version==='4.4.0','canonical data not loaded');
 assert(C.counts.items===52&&C.counts.machines===50&&C.counts.technologies===52&&C.counts.repeatableTechnologies===12,'canonical counts mismatch');
 assert(C.counts.ships===10&&C.counts.satellites===3&&C.counts.defenses===8&&C.counts.planetTypes===4,'canonical strategic counts mismatch');
@@ -52,4 +52,6 @@ assert(D.automation?.maxLevel===5,'five-stage automation config missing');
 assert(Array.isArray(D.repairFacilities)&&D.repairFacilities.length===3,'repair facilities missing');
 assert(fs.existsSync(path.join(root,'encyclopedia.html')),'encyclopedia missing');
 assert(fs.existsSync(path.join(root,'src/ui/help-system.js')),'help system missing');
-console.log('PASS data-integrity U2: frozen canonical counts, zero-credit first orbit, DAG, recipes, material construction, synthetic route, research-only data and Mk0 fuel safety');
+assert(D.u3&&D.u3.defenses.length===8&&D.u3.defenseComplexes.length===2,'U3 defense/capacity data missing');
+assert(D.u3.capacity.baseMaintenanceCapacityPerSector>=18,'starter maintenance capacity is below playable floor');
+console.log('PASS data-integrity U3: frozen canonical counts, zero-credit first orbit, DAG, recipes, material construction, synthetic route, research-only data and Mk0 fuel safety');

@@ -1,0 +1,21 @@
+PASS smoke-core U2: 300x300 starter factory, Decimal upgrades, galaxy, raids, migrations, complete research DAG, Mk V and quests
+PASS profile-reset U2: isolated profiles, zero-credit reset, Decimal sanitization, starter recovery and deletion
+PASS U2 foundation: canonical loader, Decimal-native v16 storage, exact unsafe migration, rollback, reset recovery and export/import
+PASS u2-first-orbit: Decimal runtime, zero-credit industry, discoveries, Mk0 satellite, guaranteed contracts, Market Mk I, satellite-only sales, legacy bridges and offline raid safety
+PASS warfront-maintenance U2: Decimal-safe automation/actions, bounded click, repairs, detailed combat, salvage, raids, frontier and migration
+PASS stability-fuzz U2: 3,000 deterministic cycles across three Decimal economy/combat/repair scenarios, invariants and v16 roundtrips
+PASS data-integrity U3: frozen canonical counts, zero-credit first orbit, DAG, recipes, material construction, synthetic route, research-only data and Mk0 fuel safety
+PASS dom-contract U3: static ids, local assets, offline cache, U2 script order, encyclopedia bridge and responsive First Orbit UI
+[Save v16] Error: QuotaExceededError test
+    at storage.setItem (/mnt/data/axyon_u3_work/tests/u3-background-save-brand.js:20:146)
+    at writeState (src/services/save-service.js:63:194)
+    at Object.save (src/services/save-service.js:69:314)
+    at Object.<anonymous> (/mnt/data/axyon_u3_work/tests/u3-background-save-brand.js:21:56)
+    at Module._compile (node:internal/modules/cjs/loader:1730:14)
+    at Object..js (node:internal/modules/cjs/loader:1895:10)
+    at Module.load (node:internal/modules/cjs/loader:1465:32)
+    at Function._load (node:internal/modules/cjs/loader:1282:12)
+    at TracingChannel.traceSync (node:diagnostics_channel:322:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:235:24)
+PASS u3-background-save-brand: idempotent 10-minute resume, visible save failure, U3 persistence, pinch and Orbital Ascendancy metadata
+PASS u3-capacity-defense: multi-axis limits, legacy mapping, recovery assets, orbital slots, safe removal and 1,000,000-unit cohort in 0.33 ms

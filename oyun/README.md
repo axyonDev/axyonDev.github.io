@@ -1,90 +1,66 @@
-# Axyon Idle Factory: First Orbit & Dominion — v4.4 U2 Economy
+# AXYON: Orbital Ascendancy
+## v4.4 U3 — Planetary Bastions
 
-Bu paket, v4.4’ün ilk yörünge ekonomisini gerçek oynanabilir tabana bağlayan ikinci uygulama katmanıdır. U1’de kurulan Save v16 ve canonical veri temeli korunur; kredi, stok, üretim ve maliyet akışları artık `EconomyNumber` üzerinden Decimal-native çalışır.
+Uzay sanayisi, otomasyon, ilk yörünge ekonomisi, gezegen/yörünge kapasitesi ve milyon ölçekli cohort savunmalarını birleştiren idle/makro-strateji prototipi.
 
-## U2’de etkin olanlar
+## U3 öne çıkanlar
 
-- Save v16 ve kayıpsız v15 → v16 migrasyon
-- `break_eternity.js@2.1.3` arkasında merkezi `Axyon.EconomyNumber`
-- Decimal-native kredi, stok, üretim, akış, maliyet ve pazar işlemleri
-- Yeni oyunda **0 kredi**
-- Tek sektörlük başlangıç ve birer demir, bakır, kömür kaynağı
-- 120 güçlük geçici iniş reaktörü ve tek seferlik başlangıç makineleri
-- Para yerine gerçek malzeme tüketen makine ve santral inşası
-- Süreli sektör taraması
-- İlk genişlemede su ve taş garantisi
-- Petrol rotası ve petrolsüz sentetik yakıt rotası
-- RP-1, Sıvı Oksijen, Basınçlı Azot ve Mk 0 uydu zinciri
-- Prototip Pazar Uydusu Mk 0
-- Toplam 13.500 kredi veren üç kuruluş sözleşmesi
-- 12.000 kredi maliyetli Pazar Ağı Mk I ve garantili 1.500 kredi bakiyesi
-- Yerel satışın kapalı kalması; bütün ticaretin uydu kotası ve sefer süresiyle yapılması
-- Çevrimdışı üretim ve cezalandırıcı baskının sessiz çözülmemesi
-- Warfront savaş, enkaz, filo ve tamir sistemlerinin korunması
-- U2 verisini kullanan ansiklopedi ve offline cache
+- Yeni oyun markası: **AXYON: Orbital Ascendancy**
+- U2 Decimal-native ekonomi ve sıfır kredili First Orbit akışı korunur.
+- Arka plandan dönüşte kaybolan idle süre düzeltilmiştir; aynı süre iki kez ödenmez.
+- Mobil canvas için gerçek iki parmak pinch-to-zoom vardır.
+- Kayıt hataları oyun içinde görünür; dışa aktarma yolu sunulur.
+- Gezegen yüzey alanı, altyapı, enerji, ısı, bakım, yörünge kütlesi, orbital slot ve komuta limitleri canlıdır.
+- Gezegen Soğutma, Bakım Deposu, Komuta Dizisi ve Yörünge Kontrol tesisleri vardır.
+- Yüzey Savunma Kompleksi ve Yörünge Savunma Halkası Mk I–V çalışır.
+- Savunmalar cohort/stack olarak milyon ölçeğine çıkabilir.
+- Enerji, mühimmat, ısı ve bakım savunma hazırlığını gerçek zamanlı etkiler.
+- Tier-0 Acil Barikat ölüm sarmalını engeller fakat saldırı gücü üretmez.
+- Eski kayıtlar silinmez; kapasite aşımı varsa **Miras Aşımı** ile yalnız yeni inşa kısıtlanır.
+- 300×300 haritada viewport culling yalnız görünen grid/sektör/entity alanını çizer.
+- Teknoloji kartları açtıkları tüm altyapı, kompleks ve kapasite sistemlerini listeler.
+- Ansiklopediye U3 Altyapı ve Kapasite bölümü eklenmiştir.
 
-## İlk yörünge akışı
+## Çalıştırma
 
-```text
-Demir + Bakır + Kömür
-→ Temel üretim ve elektronik
-→ Sektör Tarama Modülü
-→ Su / taş / petrol keşfi veya sentetik yakıt rotası
-→ RP-1 + Sıvı Oksijen + Basınçlı Azot
-→ Prototip Pazar Uydusu Mk 0
-→ 3 kuruluş sözleşmesi
-→ 13.500 kredi
-→ Pazar Ağı Mk I
-→ 1.500 kredi başlangıç bakiyesi
+En sağlıklı kullanım için klasörde yerel bir web sunucusu açın:
+
+```bash
+python -m http.server 8080
 ```
 
-## Kayıt güvenliği
+Ardından tarayıcıda `http://localhost:8080` adresini açın.
 
-- v15 ham kayıt migrasyon öncesi yedeklenir.
-- Güvensiz büyük integer literal JavaScript Number’a çevrilmeden okunur.
-- v16 kayıt geçici anahtarda doğrulanır.
-- Commit hatasında eski kayıt otomatik geri yüklenir.
-- Bozuk kayıt aktif kaydın üzerine yazılmaz.
-- Büyük ekonomi alanları string olarak saklanır ve runtime’da Decimal nesnesine dönüştürülür.
-
-## Bilinçli sınırlar
-
-U2 henüz v4.4’ün tamamı değildir. Şunlar sonraki uygulama katmanlarına aittir:
-
-- P2 tasarımındaki m² / altyapı / ısı / bakım kapasitesinin tam canlı oynanışı
-- Milyonluk cohort savunmaların gerçek UI ve savaş entegrasyonu
-- Genişletilmiş OGame araştırma/filo ağacının tamamı
-- Gerçek PvP sunucu otoritesi
+Doğrudan `index.html` de açılabilir; ancak Service Worker/PWA önbelleği tarayıcı güvenlik politikası nedeniyle `file:` protokolünde çalışmayabilir.
 
 ## Test
 
-Windows: `run-tests.bat`
+```bash
+./run-tests.sh
+```
 
-Linux/macOS: `./run-tests.sh`
+Windows:
 
-Geçen ana kontroller:
+```bat
+run-tests.bat
+```
 
-- Core üretim, araştırma, pazar, filo ve tamir regresyonları
-- Sıfır kredili ilk yörünge akışı
-- Petrol ve petrolsüz keşif rotaları
-- Mk 0 uydu ve üç kuruluş sözleşmesi
-- Pazar Mk I sonrası 1.500 kredi garantisi
-- Yerel satışın kapalı kalması
-- Decimal v16 round-trip ve unsafe integer migrasyonu
-- Bozuk kayıt rollback ve profil izolasyonu
-- 3.000 deterministik ekonomi/savaş/tamir çevrimi
-- Canonical veri, DAG, tarif ve DOM kontratları
-- Masaüstü ve mobil gerçek Chromium render smoke testi
+Gerçek Chromium smoke harness’i, Python Playwright kurulu ortamlarda:
 
-## Source of truth
+```bash
+python tests/u3-browser-smoke.py
+```
 
-- Tasarım: `Axyon_v4.4_Final_Design_Freeze_Report.md`
-- Canonical veri: `data/canonical/game-data.v4.4.final.json`
-- Save şeması: `data/canonical/save-state-v16.schema.json`
-- Oynanabilir U2 tabanı: bu paket
+## Önemli sınırlar
 
-## Sıradaki uygulama katmanı
+- Gerçek oyunculu PvP için sunucu otoritesi henüz yoktur.
+- IndexedDB fallback U4 kapsamındadır; U3 localStorage yazma hatasını görünür hale getirir.
+- Milyonluk savunmalar tek tek render edilmez; kompleks içinde cohort/stack olarak tutulur.
+- Save şeması v16 ve eski kayıt anahtarları uyumluluk için korunur.
 
-**U3 — Planet Capacity & Cohort Defense Runtime**
+## Raporlar
 
-Gezegen yüzey alanı, altyapı yükü, yörünge kapasitesi, enerji/ısı/bakım sınırları ve cohort savunmalar gerçek oynanışa bağlanacaktır.
+- `reports/U3_INTEGRATION_REPORT.html`
+- `reports/U3_NODE_TESTS.txt`
+- `reports/U3_BROWSER_SMOKE_FINAL.json`
+- Masaüstü/mobil ve ansiklopedi ekran görüntüleri `reports/` klasöründedir.

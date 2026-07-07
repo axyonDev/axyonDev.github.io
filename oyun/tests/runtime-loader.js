@@ -12,8 +12,10 @@ const CORE_SCRIPTS=[
   'src/core/numbers.js',
   'data/config.js',
   'data/u2-first-orbit-data.js',
+  'data/u3-planetary-bastions-data.js',
   'src/core/economy.js',
   'src/core/u2-first-orbit-runtime.js',
+  'src/core/u3-planetary-bastions-runtime.js',
   'src/core/quests.js'
 ];
 function memoryStorage(){

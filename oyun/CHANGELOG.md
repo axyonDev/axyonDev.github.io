@@ -1,3 +1,28 @@
+# AXYON: Orbital Ascendancy — Changelog
+
+## 4.4.0-u3 — Planetary Bastions
+
+- Oyun adı **AXYON: Orbital Ascendancy** olarak değiştirildi; manifest, başlık, onboarding, ansiklopedi ve cache kimliği güncellendi.
+- Arka plan/sekme dönüşünde offline ilerleme kaybı düzeltildi; görünürlük, BFCache ve yeniden yükleme yollarında çift ödeme koruması eklendi.
+- Mobil fabrika canvas’ına iki pointer mesafesini ve orta nokta ankrajını kullanan pinch-to-zoom eklendi.
+- Kayıt yazma hataları `axyon:save-error` olayı, kalıcı uyarı ve doğrudan export yolu ile görünür hale getirildi.
+- Safe-area, temel ARIA durumları, klavye focus görünümü, azaltılmış hareket ve 44 px dokunma hedefleri eklendi.
+- 300×300 canvas için grid, sektör, kaynak, bina ve hat viewport culling’i eklendi.
+- Gezegen m², altyapı, yörünge kütlesi/slotu, komuta, enerji, ısı ve bakım runtime sistemleri eklendi.
+- Gezegen Soğutma Merkezi, Bakım Deposu, Gezegen Komuta Dizisi ve Yörünge Kontrol Düğümü eklendi.
+- Yüzey Savunma Kompleksi ve Yörünge Savunma Halkası Mk I–V eklendi.
+- Sekiz canonical savunma türü ve milyon ölçekli cohort/stack üretimi canlı oynanışa bağlandı.
+- Enerji, mühimmat, ısı ve bakım oranları savunma operasyonel hazırlığına bağlandı.
+- Enerji ve mühimmatsız çalışan, saldırı üretmeyen Tier-0 Acil Barikat failsafe’i eklendi.
+- Eski taret/interceptor/kalkan kayıtları yeni cohort sınıflarına silinmeden taşındı.
+- Eski fabrikalarda kapasite aşımı varsa yapı silmek yerine Miras Aşımı ve yeni inşa kilidi uygulanır.
+- Kapasite kazandıran kurtarma tesisleri mevcut aşımı çözebilecekse aşım altında kurulabilir.
+- Bina silme sonrasında kapasite/hover/selection yeniden hesaplaması güvenli hale getirildi.
+- Teknoloji kartları U3 altyapı tesislerini, savunma komplekslerini ve kapasite seviyelerini açıklamayla listeler.
+- Ansiklopediye Altyapı ve Kapasite bölümü, Mk savunma tabloları ve araştırma tüketicileri eklendi.
+- Savaş kaynaklı Metal Hurda, Elektronik Hurda ve Uzaylı Alaşımının gerçek kaynak açıklamaları geri getirildi.
+- Yeni U3 arka plan, kayıt, marka, kapasite, cohort, gerçek Chromium ve codex testleri eklendi.
+
 # Changelog
 
 ## 4.4.0-u2 — Decimal Economy & First Orbit Bridge

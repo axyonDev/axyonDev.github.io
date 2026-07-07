@@ -15,6 +15,8 @@
   let linkFrom = null;           // konveyör/hat çizerken başlangıç entity
   let hover = { gx: -1, gy: -1, entityId: null };
   let pointer = { x: 0, y: 0, down: false, moved: false, startX: 0, startY: 0 };
+  const activePointers = new Map();
+  let pinch = null, multiTouch = false;
   let panning = false;
   let flowT = 0;                 // akış animasyon fazı
   let dpr = 1;
@@ -89,6 +91,7 @@
     canvas.addEventListener('pointerdown', onDown);
     canvas.addEventListener('pointermove', onMove);
     canvas.addEventListener('pointerup', onUp);
+    canvas.addEventListener('pointercancel', onUp);
     canvas.addEventListener('pointerleave', ev => { clearHelpTimers(true); helpHoverKey=''; onUp(ev); });
     canvas.addEventListener('wheel', onWheel, { passive: false });
     window.addEventListener('resize', () => { resize(); });
@@ -97,10 +100,22 @@
     const r = canvas.getBoundingClientRect();
     return { x: ev.clientX - r.left, y: ev.clientY - r.top };
   }
+  function beginPinch(){
+    const pts=[...activePointers.values()].slice(0,2);if(pts.length<2)return;
+    const dx=pts[1].x-pts[0].x,dy=pts[1].y-pts[0].y,mid={x:(pts[0].x+pts[1].x)/2,y:(pts[0].y+pts[1].y)/2};
+    pinch={distance:Math.max(8,Math.hypot(dx,dy)),zoom:cam.zoom,anchor:screenToWorld(mid.x,mid.y)};multiTouch=true;
+    clearHelpTimers(true);dragEntity=null;panning=false;linkFrom=null;pointer.moved=true;
+  }
+  function updatePinch(){
+    if(!pinch||activePointers.size<2)return false;const pts=[...activePointers.values()].slice(0,2),dx=pts[1].x-pts[0].x,dy=pts[1].y-pts[0].y,mid={x:(pts[0].x+pts[1].x)/2,y:(pts[0].y+pts[1].y)/2};
+    cam.zoom=Math.max(0.08,Math.min(2.8,pinch.zoom*(Math.max(8,Math.hypot(dx,dy))/pinch.distance)));
+    cam.x=pinch.anchor.x-mid.x/cam.zoom;cam.y=pinch.anchor.y-mid.y/cam.zoom;return true;
+  }
   function onDown(ev) {
     if (ev.button && ev.button !== 0) { ev.preventDefault(); return; }
     canvas.setPointerCapture && canvas.setPointerCapture(ev.pointerId);
-    const p = localPos(ev);
+    const p = localPos(ev);activePointers.set(ev.pointerId,p);
+    if(activePointers.size>=2){beginPinch();ev.preventDefault();return;}
     pointer.down = true; pointer.moved = false;
     pointer.startX = p.x; pointer.startY = p.y; pointer.x = p.x; pointer.y = p.y;
     const c = screenToCell(p.x, p.y);
@@ -127,7 +142,7 @@
     }
   }
   function onMove(ev) {
-    const p = localPos(ev);
+    const p = localPos(ev);if(activePointers.has(ev.pointerId))activePointers.set(ev.pointerId,p);if(updatePinch()){ev.preventDefault();return;}
     const dx = p.x - pointer.x, dy = p.y - pointer.y;
     pointer.x = p.x; pointer.y = p.y;
     if (Math.abs(p.x - pointer.startX) + Math.abs(p.y - pointer.startY) > 4) { pointer.moved = true; clearTimeout(helpLongTimer); }
@@ -151,6 +166,8 @@
     else if (mode === 'select' && dragEntity) { /* taşıma önizleme; bırakınca uygula */ }
   }
   function onUp(ev) {
+    activePointers.delete(ev.pointerId);
+    if(multiTouch){clearTimeout(helpLongTimer);pinch=null;pointer.down=false;pointer.moved=true;dragEntity=null;panning=false;linkFrom=null;if(activePointers.size===0){multiTouch=false;pointer.moved=false;}ev.preventDefault();return;}
     if (ev.button && ev.button !== 0) { ev.preventDefault(); pointer.down=false; return; }
     clearTimeout(helpLongTimer);
     if (!pointer.down) return;
@@ -223,6 +240,12 @@
   }
   function zoomBy(f) { cam.zoom = Math.max(0.08, Math.min(2.8, cam.zoom * f)); }
   function recenter() { centerCamera(E.gridSize(state)); }
+  function viewBounds(padCells=2){
+    const w=canvas.width/dpr,h=canvas.height/dpr,side=E.gridSize(state);
+    return{minX:Math.max(0,Math.floor(cam.x/cell)-padCells),minY:Math.max(0,Math.floor(cam.y/cell)-padCells),maxX:Math.min(side,Math.ceil((cam.x+w/cam.zoom)/cell)+padCells),maxY:Math.min(side,Math.ceil((cam.y+h/cam.zoom)/cell)+padCells)};
+  }
+  function rectVisible(x,y,w,h,b){return x+w>=b.minX&&x<=b.maxX&&y+h>=b.minY&&y<=b.maxY;}
+  function lineVisible(a,b,v){const minX=Math.min(a.cx,b.cx),maxX=Math.max(a.cx,b.cx),minY=Math.min(a.cy,b.cy),maxY=Math.max(a.cy,b.cy);return maxX>=v.minX&&minX<=v.maxX&&maxY>=v.minY&&minY<=v.maxY;}
 
   // ===== Çizim =====
   function css(v) { return getComputedStyle(document.documentElement).getPropertyValue(v).trim(); }
@@ -250,14 +273,14 @@
     ctx.scale(cam.zoom, cam.zoom);
     ctx.translate(-cam.x, -cam.y);
 
-    const side = E.gridSize(state);
+    const side = E.gridSize(state), visible=viewBounds();
     drawSurface(side);
-    drawSectors(side);
-    drawNodes();
-    drawGrid(side);
-    drawPowerLines();
-    drawConveyors();
-    drawEntities();
+    drawSectors(side,visible);
+    drawNodes(visible);
+    drawGrid(side,visible);
+    drawPowerLines(visible);
+    drawConveyors(visible);
+    drawEntities(visible);
     drawHover(side);
     drawDragGhost();
     drawLinkPreview();
@@ -289,11 +312,12 @@
   }
 
   // Açık sektörler aydınlık, kapalı sektörler sisli/kilitli
-  function drawSectors(side) {
+  function drawSectors(side,v) {
     const M = window.Axyon.Data.map;
     const sps = Math.floor(M.size / M.sectorSize), ss = M.sectorSize;
     const openableSet = new Set(E.openableSectors(state).map(o => `${o.sx},${o.sy}`));
-    for (let sy = 0; sy < sps; sy++) for (let sx = 0; sx < sps; sx++) {
+    const minSx=Math.max(0,Math.floor(v.minX/ss)),maxSx=Math.min(sps-1,Math.floor(Math.max(0,v.maxX-1)/ss)),minSy=Math.max(0,Math.floor(v.minY/ss)),maxSy=Math.min(sps-1,Math.floor(Math.max(0,v.maxY-1)/ss));
+    for (let sy = minSy; sy <= maxSy; sy++) for (let sx = minSx; sx <= maxSx; sx++) {
       const open = E.isSectorOpen(state, sx, sy);
       const px = sx * ss * cell, py = sy * ss * cell, pw = ss * cell;
       if (open) {
@@ -320,11 +344,11 @@
   }
 
   // Kaynak nodları (sadece açık sektörlerde görünür)
-  function drawNodes() {
+  function drawNodes(v) {
     const RN = window.Axyon.Data.resourceNodes;
     for (const key in state.map.nodes) {
       const [x, y] = key.split(',').map(Number);
-      if (!E.isCellOpen(state, x, y)) continue;
+      if (x<v.minX||x>v.maxX||y<v.minY||y>v.maxY||!E.isCellOpen(state, x, y)) continue;
       const nd = state.map.nodes[key], def = RN[nd.type];
       const px = x * cell, py = y * cell;
       // nod zemini (yumuşak renkli daire)
@@ -340,23 +364,20 @@
   }
 
   function drawSurface(side) { /* zemin drawSectors içinde çizilir */ }
-  function drawGrid(side) {
+  function drawGrid(side,v) {
     ctx.strokeStyle = theme.grid; ctx.lineWidth = 1;
-    ctx.globalAlpha = 0.5;
-    ctx.beginPath();
-    for (let i = 0; i <= side; i++) {
-      ctx.moveTo(i * cell, 0); ctx.lineTo(i * cell, side * cell);
-      ctx.moveTo(0, i * cell); ctx.lineTo(side * cell, i * cell);
-    }
-    ctx.stroke();
-    ctx.globalAlpha = 1;
+    ctx.globalAlpha = 0.5;ctx.beginPath();
+    const minX=Math.max(0,Math.floor(v.minX)),maxX=Math.min(side,Math.ceil(v.maxX)),minY=Math.max(0,Math.floor(v.minY)),maxY=Math.min(side,Math.ceil(v.maxY));
+    for(let x=minX;x<=maxX;x++){ctx.moveTo(x*cell,minY*cell);ctx.lineTo(x*cell,maxY*cell);}
+    for(let y=minY;y<=maxY;y++){ctx.moveTo(minX*cell,y*cell);ctx.lineTo(maxX*cell,y*cell);}
+    ctx.stroke();ctx.globalAlpha=1;
   }
 
-  function drawPowerLines() {
+  function drawPowerLines(v) {
     state.grid.powerLines.forEach((l) => {
       const a = state.grid.entities[l.from], b = state.grid.entities[l.to];
       if (!a || !b) return;
-      const ca = E.entityCenter(state, a), cb = E.entityCenter(state, b);
+      const ca = E.entityCenter(state, a), cb = E.entityCenter(state, b);if(!lineVisible(ca,cb,v))return;
       ctx.strokeStyle = theme.power; ctx.lineWidth = 2; ctx.globalAlpha = 0.55;
       ctx.setLineDash([6, 5]);
       ctx.beginPath(); ctx.moveTo(ca.cx * cell, ca.cy * cell); ctx.lineTo(cb.cx * cell, cb.cy * cell); ctx.stroke();
@@ -364,11 +385,11 @@
     });
   }
 
-  function drawConveyors() {
+  function drawConveyors(v) {
     state.grid.conveyors.forEach((c) => {
       const a = state.grid.entities[c.from], b = state.grid.entities[c.to];
       if (!a || !b) return;
-      const ca = E.entityCenter(state, a), cb = E.entityCenter(state, b);
+      const ca = E.entityCenter(state, a), cb = E.entityCenter(state, b);if(!lineVisible(ca,cb,v))return;
       const x1 = ca.cx * cell, y1 = ca.cy * cell, x2 = cb.cx * cell, y2 = cb.cy * cell;
       // bant
       ctx.strokeStyle = theme.grid; ctx.lineWidth = 10; ctx.lineCap = 'round';
@@ -407,11 +428,11 @@
     ctx.closePath(); ctx.fill();
   }
 
-  function drawEntities() {
+  function drawEntities(v) {
     for (const id in state.grid.entities) {
       const e = state.grid.entities[id];
       const def = e.type === 'plant' ? E.pDef(e.defId) : E.mDef(e.defId);
-      const sz = E.entityFootprintCells(e.defId, e.type);
+      const sz = E.entityFootprintCells(e.defId, e.type);if(!rectVisible(e.x,e.y,sz,sz,v))continue;
       const x = e.x * cell, y = e.y * cell, wsz = sz * cell;
       // gövde
       const isPlant = e.type === 'plant';
@@ -536,6 +557,8 @@
   FactoryCanvas.refreshTheme = refreshTheme;
   FactoryCanvas.zoomBy = zoomBy;
   FactoryCanvas.recenter = recenter;
+  FactoryCanvas.viewBounds = viewBounds;
+  FactoryCanvas.getCamera = () => ({x:cam.x,y:cam.y,zoom:cam.zoom});
 
   global.Axyon = global.Axyon || {};
   global.Axyon.FactoryCanvas = FactoryCanvas;

@@ -1,4 +1,4 @@
-/** Axyon v4.4 U2 feature gates — Decimal runtime and First Orbit economy. */
+/** AXYON: Orbital Ascendancy v4.4 U3 feature gates. */
 (function(global){
   global.Axyon=global.Axyon||{};
   global.Axyon.FeatureFlags=Object.freeze({
@@ -7,7 +7,9 @@
     V44_ZERO_CREDIT_GAMEPLAY_ENABLED:true,
     V44_DECIMAL_RUNTIME_ENABLED:true,
     V44_FIRST_ORBIT_ENABLED:true,
-    V44_COHORT_DEFENSE_ENABLED:false,
-    release:'4.4.0-u2'
+    V44_COHORT_DEFENSE_ENABLED:true,
+    V44_PLANETARY_CAPACITY_ENABLED:true,
+    V44_BACKGROUND_RESUME_ENABLED:true,
+    release:'4.4.0-u3'
   });
 })(typeof window!=='undefined'?window:globalThis);
