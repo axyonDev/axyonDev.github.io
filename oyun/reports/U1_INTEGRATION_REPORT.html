@@ -1,0 +1,125 @@
+<!doctype html><html lang="tr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Axyon v4.4 U1 Integration Report</title><style>body{margin:0;background:#0b1120;color:#e5eefc;font:16px/1.6 system-ui}main{max-width:1050px;margin:auto;padding:28px 18px 70px}h1{font-size:38px}h2{margin-top:34px;color:#7dd3fc;border-bottom:1px solid #334155;padding-bottom:7px}p,li{color:#d5dfef}pre{background:#07101d;border:1px solid #334155;border-radius:12px;padding:16px;overflow:auto}.card{background:#111b2e;border:1px solid #2b3a55;border-radius:16px;padding:24px}.tableline{font-family:ui-monospace,monospace;background:#0e1729;padding:5px 10px;border-left:1px solid #334155;border-right:1px solid #334155}strong{color:#fff}@media(max-width:600px){h1{font-size:28px}.card{padding:16px}}</style></head><body><main><div class="card"><h1>Axyon Idle Factory v4.4 U1 — Integration Report</h1>
+
+<p><strong>Version:</strong> 4.4.0-u1  </p>
+<p><strong>Stage:</strong> U1 — Save v16 &amp; Canonical Data Foundation  </p>
+<p><strong>Playable mechanics:</strong> Warfront Command v4.3 compatibility gameplay  </p>
+<p><strong>Target design:</strong> First Orbit &amp; Dominion v4.4</p>
+
+<h2>Net result</h2>
+
+<p>U1 integration passed. The playable v4.3 base now stores profiles as save schema v16, migrates v15 losslessly with immutable backup and rollback, loads the frozen v4.4 canonical data, and exposes the `break_eternity.js` EconomyNumber adapter.</p>
+
+<p>The full economy tick still runs in numeric compatibility mode. Zero-credit First Orbit gameplay and Decimal-native production are intentionally deferred to U2.</p>
+
+<h2>Implemented</h2>
+
+<li>`break_eternity.js@2.1.3` vendor integration</li>
+<li>Central `Axyon.EconomyNumber` adapter</li>
+<li>Browser/Node lossless JSON parser</li>
+<li>Browser/Node v15 → v16 migrator</li>
+<li>SHA-256 migration backup</li>
+<li>Temporary commit + validation + rollback</li>
+<li>Corrupt-save autosave block</li>
+<li>v16 profile create/save/load/reset/export/import</li>
+<li>Frozen v4.4 canonical data loader and read-only ID indexes</li>
+<li>Service worker and PWA manifest update</li>
+<li>Removal of leaked `economy.js.pre430`</li>
+<li>U1 feature flags and diagnostics</li>
+
+<h2>Feature flags</h2>
+
+<pre><code>
+V44_SAVE_V16_ENABLED=true
+
+V44_CANONICAL_DATA_ENABLED=true
+
+V44_ZERO_CREDIT_GAMEPLAY_ENABLED=false
+
+V44_DECIMAL_RUNTIME_ENABLED=false
+
+</code></pre>
+
+<h2>Node regression results</h2>
+
+<pre><code>
+PASS smoke-core: map, automation, market, upgrades, galaxy, resurgence, colonization, raids, migration, timed research, Mk V, offline safety, quests
+
+PASS profile-reset: isolated local profiles, switching, deletion, corrupt-import sanitization and full reset
+
+PASS u1-foundation: canonical loader, SHA-256, v16 storage, exact unsafe migration shadow, rollback block, reset recovery and export/import
+
+PASS warfront-maintenance: automation V, bounded manual click, repair reservation/parallelism, detailed combat, cargo-limited salvage, raids, frontier scaling and v15 migration
+
+PASS stability-fuzz: 12,000 deterministic economy/combat/repair cycles, numeric invariants, queues and save roundtrip
+
+PASS data-integrity: technology, recipes, multi-year research horizon, documentation and encyclopedia references
+
+PASS dom-contract: static ids, help keys, responsive UI contracts, combat page, script order and local assets
+
+</code></pre>
+
+<h2>Browser smoke results</h2>
+
+<li>Console/page errors: 0</li>
+<li>New profile stored as v16: True</li>
+<li>Economy values stored as strings: True</li>
+<li>Reload persistence: True</li>
+<li>Unsafe integer exact storage preserved: 9007199254740993123456789</li>
+<li>Immutable migration backup count: 1</li>
+<li>Corrupt original preserved: True</li>
+<li>Autosave blocked after corrupt migration: True</li>
+<li>Reset recovery returned valid v16: True</li>
+<li>Horizontal document overflow: False</li>
+
+<h2>Canonical data loaded</h2>
+
+<div class="tableline">| Group | Count |</div>
+<div class="tableline">|---|---:|</div>
+<div class="tableline">| items | 52 |</div>
+<div class="tableline">| machines | 50 |</div>
+<div class="tableline">| powerPlants | 5 |</div>
+<div class="tableline">| technologies | 52 |</div>
+<div class="tableline">| repeatableTechnologies | 12 |</div>
+<div class="tableline">| ships | 10 |</div>
+<div class="tableline">| satellites | 3 |</div>
+<div class="tableline">| defenses | 8 |</div>
+<div class="tableline">| planetTypes | 4 |</div>
+
+<h2>Important limitation</h2>
+
+<p>An unsafe manually edited v15 integer larger than `Number.MAX_SAFE_INTEGER` is kept exactly in v16 storage. U1’s existing gameplay runtime displays a safe clamped value because the old economy core still uses JavaScript Number. If the value is not changed, the exact shadow string is preserved on subsequent saves. Decimal-native gameplay operations are the U2 acceptance gate.</p>
+
+<h2>Rollback</h2>
+
+<li>Set `V44_SAVE_V16_ENABLED=false` to disable v16 storage in a development build.</li>
+<li>Every v15 migration creates a `.backup.v15.&lt;sha-prefix&gt;` localStorage entry before commit.</li>
+<li>Failed migration never overwrites the active raw save.</li>
+<li>Corrupt migration suspends autosave until reset/import recovery.</li>
+
+<h2>Verification boundary</h2>
+
+<p>Passed:</p>
+
+<li>Static syntax</li>
+<li>Existing production/gameplay regressions</li>
+<li>12,000-cycle deterministic fuzz</li>
+<li>v16 save round-trip</li>
+<li>Unsafe integer migration</li>
+<li>Truncated save rollback</li>
+<li>Browser onboarding/profile/save/reload/migration/reset smoke</li>
+<li>Canonical data counts and duplicate-ID validation</li>
+<li>DOM/PWA asset contracts</li>
+
+<p>Not yet claimed:</p>
+
+<li>Decimal-native economy tick</li>
+<li>Zero-credit start</li>
+<li>Mk 0 satellite gameplay</li>
+<li>v4.4 production recipes in the live game</li>
+<li>Real multiplayer server authority</li>
+
+<h2>Next work</h2>
+
+<p><strong>U2 — Decimal Runtime &amp; First Orbit Economy Bridge</strong></p>
+
+<p>Convert credits, inventory, flow, market revenues, production totals and cost comparisons to EconomyNumber; then activate the zero-credit First Orbit start and Mk 0 satellite chain behind a separate gameplay flag.</p></div></main></body></html>

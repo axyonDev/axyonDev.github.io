@@ -2,6 +2,12 @@
 setlocal
 for /r %%F in (*.js) do node --check "%%F" || goto :fail
 node tests\smoke-core.js || goto :fail
+node tests\profile-reset.js || goto :fail
+node tests\u1-foundation.js || goto :fail
+node tests\warfront-maintenance.js || goto :fail
+node tests\stability-fuzz.js || goto :fail
+node tests\data-integrity.js || goto :fail
+node tests\dom-contract.js || goto :fail
 echo.
 echo ALL TESTS PASSED
 pause

@@ -1,51 +1,75 @@
-# Axyon Idle Factory: Frontier v4.0.0
+# Axyon Idle Factory: First Orbit & Dominion — v4.4 U1 Foundation
 
-Kalıcı fabrika otomasyonu ile OGame tarzı filo/gezegen mücadelesini aynı ekonomi içinde birleştiren tarayıcı/PWA oyunu.
+Bu paket, **Warfront Command v4.3 oynanışını koruyan** ilk gerçek v4.4 entegrasyon patch'idir. İlk Yörünge ekonomisi ve yeni üretim zincirleri henüz oynanışa açılmamıştır. U1'in görevi kayıt ve veri temelini güvenli biçimde hazırlamaktır.
 
-## Ana döngü
+## U1'de etkin olanlar
 
-Keşfet → kaynak çıkar → otomatik üretim hatları kur → bina sınıflarını Mk I–V yükselt → Pazar Uydusu ile sevkiyat yap → gemi ve savunma üret → sistem tara → rakip dünyalara saldır → koloni kur → sınırsız Omega araştırmalarıyla büyü.
+- Save şeması v16
+- v15 → v16 kayıpsız ve transactional migrasyon
+- Migrasyon öncesi değişmez SHA-256 yedeği
+- Bozuk/truncated kayıtta rollback ve otomatik kayıt kilidi
+- `break_eternity.js@2.1.3` + merkezi `Axyon.EconomyNumber` adaptörü
+- Frozen `game-data.v4.4.final.json` canonical veri yükleyicisi
+- Profil oluşturma, değiştirme, silme, dışa/içe aktarma ve tam sıfırlama için v16 depolama
+- Service worker/offline asset listesinde yeni altyapı dosyaları
 
-## v4.0.0 kapsamı
+## Bilinçli olarak henüz etkin olmayanlar
 
-- Nexus/prestige ve ilerleme sıfırlaması tamamen kaldırıldı.
-- Gezegen yüzeyi 300×300 hücre, 20×20 sektör ve toplam 225 bölge oldu.
-- Görünür fabrika alanı, pan/zoom ve minimap ile büyük harita kullanılabilir durumda.
-- Maden, fabrika, laboratuvar ve santral sınıfları Mk I–V yükseltilebilir.
-- Alfa, Beta, Gama yanında Delta ve Omega Veri eklendi.
-- Ana teknoloji ağı ve beş sınırsız Omega araştırması eklendi.
-- Pazar Uydusu: ana AUTO aç/kapa, tüm ürünlere ortak elde tutma yüzdesi, ürün bazlı istisna, sefer süresi ve kota, Mk I–V yükseltme.
-- Manuel satış anlık fakat %85 fiyatlı; uydu satışı süreli ve tam fiyatlı.
-- Yeni ileri kaynak zinciri: Titanyum, Axyon Kristali, Enerji Kristali, Zırh, Mühimmat ve Yıldız Yakıtı.
-- Tersane, beş gemi sınıfı, üretim kuyruğu, yakıtlı sefer, gidiş/dönüş süresi ve savaş raporları.
-- Altı keşfedilebilir rakip dünya/sistem; korsan, yerli sürü, rakip şirket, uzaylı kovanı, rakip imparatorluk ve kadim filo. Kolonileştirilmeyen rakipler zamanla daha güçlü biçimde yeniden örgütlenir.
-- Ele geçirilen dünyalar Koloni Protokolü ile kolonileştirilebilir; her koloni kalıcı üretim bonusu verir.
-- Gezegen savunmaları, mühimmat etkisi, önceden bildirilen uzaylı baskınları ve kaybedildiğinde bina silmeyen kontrollü yağma sistemi. Çevrimdışıyken vadesi gelen baskın oyuncu dönene kadar ertelenir.
-- Eski v8 kayıtları v12 şemasına taşınır. Envanter ve teknoloji korunur; eski 48×48 binaları görünmez üretim oluşturmaması için kaldırılır ve yatırımların %65'i kredi olarak iade edilir. Yeni 300×300 harita güvenli biçimde kurulur.
+- Sıfır kredili First Orbit başlangıcı
+- Yeni v4.4 makine/teknoloji tariflerinin gerçek oynanışı
+- Decimal tabanlı tüm ekonomi tick'i
+- Gezegen/yörünge cohort savunma oynanışı
+- Gerçek PvP sunucu otoritesi
 
-## Önemli sınır
+Feature flag'ler `data/feature-flags.js` içindedir:
 
-Bu paket yerel ve tek oyunculu olduğu için gerçek oyuncuya karşı güvenli PvP içermez. Mevcut mücadele PvE rakip imparatorluklar ve uzaylı saldırılarıyladır. Gerçek PvP için hesap, sunucu otoritesi, hileye dayanıklı ekonomi, zamanlayıcı ve savaş doğrulaması gerekir; istemci tarafındaki localStorage bunun için güvenli değildir.
-
-## Çalıştırma
-
-`index.html` doğrudan açılabilir. PWA/service worker testi için klasörde yerel HTTP sunucusu kullanın:
-
-```bash
-python -m http.server 8080
+```text
+V44_SAVE_V16_ENABLED=true
+V44_CANONICAL_DATA_ENABLED=true
+V44_ZERO_CREDIT_GAMEPLAY_ENABLED=false
+V44_DECIMAL_RUNTIME_ENABLED=false
 ```
 
-Ardından `http://localhost:8080` adresini açın.
+## Kayıt güvenliği
 
-## Kaynak yapısı
+Aktif v15 kayıt ilk açılışta:
 
-- `data/config.js`: ürünler, makineler, teknoloji, gemiler, savunmalar, galaksi hedefleri ve denge.
-- `src/core/economy.js`: üretim, güç, pazar, yükseltme, harita, filo, savaş, baskın ve offline ilerleme.
-- `src/canvas/factory-canvas.js`: 300×300 gezegen yüzeyi, kamera, yerleşim, bağlantılar ve minimap.
-- `src/ui/ui.js`: tüm görünüm üretimi.
-- `src/main.js`: kullanıcı olayları, oyun döngüsü ve modüller arası koordinasyon.
-- `src/services/save-service.js`: localStorage, dışa/içe aktarma ve migrasyon.
+1. Ham metin olarak okunur; unsafe integer literal JavaScript Number'a çevrilmez.
+2. SHA-256 isimli `.backup.v15.*` anahtarına yedeklenir.
+3. Geçici v16 anahtarına dönüştürülür.
+4. v16 doğrulaması yapılır.
+5. Başarılıysa aktif kayıt değiştirilir.
+6. Hata varsa orijinal kayıt geri yüklenir ve otomatik kayıt durdurulur.
 
-## Doğrulama
+U1 runtime mevcut oyun çekirdeğiyle uyumluluk için normal JavaScript Number kullanır. Elle değiştirilmiş aşırı büyük v15 değerleri v16 depoda eksiksiz korunur; runtime görünümü güvenli üst sınıra sıkıştırılır ve değer değiştirilmediği sürece exact shadow yeniden kayıtta korunur. Tam Decimal gameplay U2 işidir.
 
-Paket hazırlanırken tüm JavaScript dosyaları `node --check` ile kontrol edildi. Çekirdek smoke testleri; harita başlatma, üretim otomasyonu, pazar kotası, Mk I–V yükseltmeler, tüm araştırma yolunun erişilebilirliği, sistem tarama, filo savaşı/dönüşü, düşmanların yeniden güçlenmesi, kolonileştirme, baskın güvenliği, çevrimdışı baskın erteleme, v8→v12 migrasyonu ve görev ilerlemesi üzerinde çalıştırıldı. Ayrıca gerçek tarayıcıda arayüz açılışı, 300×300 harita, sekmeler, galaksi taraması ve filo penceresi hatasız doğrulandı.
+## Test
+
+Windows: `run-tests.bat`
+
+Linux/macOS: `./run-tests.sh`
+
+Test kapsamı:
+
+- Core üretim, pazar, araştırma, filo, tamir
+- 12.000 çevrim stabilite fuzz testi
+- Profil izolasyonu ve tam reset
+- v16 kayıt round-trip
+- Unsafe integer exact migration
+- Corrupt kayıt rollback/autosave block
+- Frozen canonical veri sayıları ve ID bütünlüğü
+- DOM/service-worker asset kontratları
+- Chromium inline browser smoke testi
+
+## Source of truth
+
+- Tasarım: `Axyon_v4.4_Final_Design_Freeze_Report.md`
+- Canonical veri: `data/canonical/game-data.v4.4.final.json`
+- Save şeması: `data/canonical/save-state-v16.schema.json`
+- U1 oynanabilir taban: bu paket
+
+## Sıradaki iş
+
+**U2 — Decimal Runtime & First Orbit Economy Bridge**
+
+Ekonomi çekirdeğindeki kredi, stok, üretim, pazar ve maliyet işlemleri `EconomyNumber` üzerinden çalıştırılacak; ardından sıfır kredili başlangıç ve Mk 0 uydu zinciri açılacaktır.

@@ -1,0 +1,7 @@
+PASS smoke-core: map, automation, market, upgrades, galaxy, resurgence, colonization, raids, migration, timed research, Mk V, offline safety, quests
+PASS profile-reset: isolated local profiles, switching, deletion, corrupt-import sanitization and full reset
+PASS u1-foundation: canonical loader, SHA-256, v16 storage, exact unsafe migration shadow, rollback block, reset recovery and export/import
+PASS warfront-maintenance: automation V, bounded manual click, repair reservation/parallelism, detailed combat, cargo-limited salvage, raids, frontier scaling and v15 migration
+PASS stability-fuzz: 12,000 deterministic economy/combat/repair cycles, numeric invariants, queues and save roundtrip
+PASS data-integrity: technology, recipes, multi-year research horizon, documentation and encyclopedia references
+PASS dom-contract: static ids, help keys, responsive UI contracts, combat page, script order and local assets

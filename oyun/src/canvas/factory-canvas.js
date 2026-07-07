@@ -18,6 +18,7 @@
   let panning = false;
   let flowT = 0;                 // akış animasyon fazı
   let dpr = 1;
+  let helpHoverTimer = null, helpLongTimer = null, helpHoverKey = '', longHelpTriggered = false;
 
   function init(cv, st, econ, cbs) {
     canvas = cv; state = st; E = econ; callbacks = cbs || {};
@@ -62,6 +63,18 @@
     }
     return null;
   }
+  function helpKeyAtCell(gx, gy) {
+    const ent = entityAtCell(gx, gy);
+    if (ent) return `${ent.type === 'plant' ? 'plant' : 'machine'}:${ent.defId}`;
+    const node = state.map.nodes[`${gx},${gy}`];
+    if (node) return `node:${node.type}`;
+    if (!E.isCellOpen(state, gx, gy)) return 'ui:openSector';
+    return 'ui:factoryCanvas';
+  }
+  function clearHelpTimers(hide) {
+    clearTimeout(helpHoverTimer); clearTimeout(helpLongTimer); helpHoverTimer = null; helpLongTimer = null;
+    if (hide && callbacks.onHelpHide) callbacks.onHelpHide();
+  }
 
   // ===== Mod kontrolü (dışarıdan UI çağırır) =====
   function setMode(m, defId, type) {
@@ -72,10 +85,11 @@
 
   // ===== Olaylar =====
   function bindEvents() {
+    canvas.addEventListener('contextmenu', ev => ev.preventDefault());
     canvas.addEventListener('pointerdown', onDown);
     canvas.addEventListener('pointermove', onMove);
     canvas.addEventListener('pointerup', onUp);
-    canvas.addEventListener('pointerleave', onUp);
+    canvas.addEventListener('pointerleave', ev => { clearHelpTimers(true); helpHoverKey=''; onUp(ev); });
     canvas.addEventListener('wheel', onWheel, { passive: false });
     window.addEventListener('resize', () => { resize(); });
   }
@@ -84,12 +98,22 @@
     return { x: ev.clientX - r.left, y: ev.clientY - r.top };
   }
   function onDown(ev) {
+    if (ev.button && ev.button !== 0) { ev.preventDefault(); return; }
     canvas.setPointerCapture && canvas.setPointerCapture(ev.pointerId);
     const p = localPos(ev);
     pointer.down = true; pointer.moved = false;
     pointer.startX = p.x; pointer.startY = p.y; pointer.x = p.x; pointer.y = p.y;
     const c = screenToCell(p.x, p.y);
     const ent = entityAtCell(c.gx, c.gy);
+    clearHelpTimers(true); longHelpTriggered = false;
+    if (mode === 'select' && ev.pointerType !== 'mouse' && callbacks.onHelp) {
+      const key = helpKeyAtCell(c.gx, c.gy), clientX = ev.clientX, clientY = ev.clientY;
+      helpLongTimer = setTimeout(() => {
+        if (!pointer.down || pointer.moved) return;
+        longHelpTriggered = true; dragEntity = null; panning = false;
+        callbacks.onHelp(key, clientX, clientY, true);
+      }, 650);
+    }
 
     if (mode === 'select') {
       if (ent) { dragEntity = ent; const w = screenToWorld(p.x, p.y); dragOffset = { x: w.x / cell - ent.x, y: w.y / cell - ent.y }; }
@@ -106,21 +130,35 @@
     const p = localPos(ev);
     const dx = p.x - pointer.x, dy = p.y - pointer.y;
     pointer.x = p.x; pointer.y = p.y;
-    if (Math.abs(p.x - pointer.startX) + Math.abs(p.y - pointer.startY) > 4) pointer.moved = true;
+    if (Math.abs(p.x - pointer.startX) + Math.abs(p.y - pointer.startY) > 4) { pointer.moved = true; clearTimeout(helpLongTimer); }
     const c = screenToCell(p.x, p.y);
     hover.gx = c.gx; hover.gy = c.gy;
     const ent = entityAtCell(c.gx, c.gy);
     hover.entityId = ent ? ent.id : null;
 
-    if (!pointer.down) return;
+    if (!pointer.down) {
+      if (ev.pointerType === 'mouse' && mode === 'select' && callbacks.onHelp) {
+        const key = helpKeyAtCell(c.gx, c.gy);
+        if (key !== helpHoverKey) {
+          clearTimeout(helpHoverTimer); if (callbacks.onHelpHide) callbacks.onHelpHide(); helpHoverKey = key;
+          const clientX = ev.clientX, clientY = ev.clientY;
+          helpHoverTimer = setTimeout(() => callbacks.onHelp(key, clientX, clientY, false), 500);
+        }
+      }
+      return;
+    }
     if (panning) { cam.x -= dx / cam.zoom; cam.y -= dy / cam.zoom; }
     else if (mode === 'select' && dragEntity) { /* taşıma önizleme; bırakınca uygula */ }
   }
   function onUp(ev) {
+    if (ev.button && ev.button !== 0) { ev.preventDefault(); pointer.down=false; return; }
+    clearTimeout(helpLongTimer);
     if (!pointer.down) return;
+    if (longHelpTriggered) { pointer.down = false; pointer.moved = false; dragEntity = null; panning = false; longHelpTriggered = false; return; }
     const p = localPos(ev);
     const c = screenToCell(p.x, p.y);
     const ent = entityAtCell(c.gx, c.gy);
+    clearHelpTimers(true); longHelpTriggered = false;
 
     if (mode === 'select') {
       if (dragEntity) {
@@ -136,9 +174,13 @@
       } else if (!pointer.moved) {
         if (ent && callbacks.onSelect) callbacks.onSelect(ent);
         else if (!ent) {
-          // kapalı sektöre tıklama → aç isteği
-          const sc = E.cellSector(c.gx, c.gy);
-          if (!E.isSectorOpen(state, sc.sx, sc.sy) && callbacks.onSectorClick) callbacks.onSectorClick(sc.sx, sc.sy);
+          const node = state.map.nodes[`${c.gx},${c.gy}`];
+          if (node && E.isCellOpen(state,c.gx,c.gy) && callbacks.onNodeClick) callbacks.onNodeClick(node,c.gx,c.gy);
+          else {
+            // kapalı sektöre tıklama → aç isteği
+            const sc = E.cellSector(c.gx, c.gy);
+            if (!E.isSectorOpen(state, sc.sx, sc.sy) && callbacks.onSectorClick) callbacks.onSectorClick(sc.sx, sc.sy);
+          }
         }
       }
     } else if (mode === 'place' && !pointer.moved) {
@@ -160,7 +202,7 @@
       linkFrom = null;
     } else if (mode === 'delete') {
       if (!pointer.moved) {
-        if (ent) { E.removeEntity(state, ent.id); if (callbacks.onChange) callbacks.onChange(); }
+        if (ent) { E.removeEntity(state, ent.id); hover.entityId=null; if (callbacks.onChange) callbacks.onChange(); }
         else {
           // #1: bağlantıya (konveyör/hat) tıklandıysa sil
           const w = screenToWorld(p.x, p.y);
@@ -168,10 +210,10 @@
         }
       }
     }
-    pointer.down = false; panning = false;
+    pointer.down = false; panning = false; longHelpTriggered = false;
   }
   function onWheel(ev) {
-    ev.preventDefault();
+    ev.preventDefault(); clearHelpTimers(true); helpHoverKey = '';
     const p = localPos(ev);
     const before = screenToWorld(p.x, p.y);
     const factor = ev.deltaY < 0 ? 1.12 : 1 / 1.12;
@@ -217,6 +259,7 @@
     drawConveyors();
     drawEntities();
     drawHover(side);
+    drawDragGhost();
     drawLinkPreview();
 
     ctx.restore();
@@ -441,6 +484,26 @@
       ctx.strokeStyle = mode === 'power' ? theme.power : theme.accent; ctx.lineWidth = 2;
       roundRect(e.x * cell + 2, e.y * cell + 2, sz * cell - 4, sz * cell - 4, 6); ctx.stroke();
     }
+  }
+
+
+  function drawDragGhost() {
+    if (!(mode === 'select' && pointer.down && dragEntity && pointer.moved)) return;
+    const w = screenToWorld(pointer.x, pointer.y);
+    const nx = Math.round(w.x / cell - dragOffset.x), ny = Math.round(w.y / cell - dragOffset.y);
+    const sz = E.entityFootprintCells(dragEntity.defId, dragEntity.type);
+    const okp = E.canPlaceAt(state, dragEntity.defId, dragEntity.type, nx, ny, dragEntity.id);
+    ctx.save();
+    ctx.globalAlpha = 0.45;
+    ctx.fillStyle = okp ? 'rgba(74,222,128,0.30)' : 'rgba(248,113,113,0.30)';
+    ctx.strokeStyle = okp ? theme.success : theme.danger;
+    ctx.lineWidth = 3;
+    roundRect(nx * cell + 2, ny * cell + 2, sz * cell - 4, sz * cell - 4, 8); ctx.fill(); ctx.stroke();
+    ctx.globalAlpha = 0.85;
+    const def = dragEntity.type === 'plant' ? E.pDef(dragEntity.defId) : E.mDef(dragEntity.defId);
+    ctx.font = `${sz*cell*0.38}px sans-serif`; ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillStyle = theme.text; ctx.fillText(def?.icon||'?', (nx+sz/2)*cell, (ny+sz/2)*cell);
+    ctx.restore();
   }
 
   function drawLinkPreview() {

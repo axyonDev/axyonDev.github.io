@@ -1,0 +1,137 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://axyondev.com/schemas/idle-factory-save-v16.schema.json",
+  "title": "Axyon Idle Factory Save v16",
+  "type": "object",
+  "required": [
+    "version",
+    "schemaVersion",
+    "economyNumberStorage",
+    "economy",
+    "inventory",
+    "flow",
+    "researched",
+    "market",
+    "stats",
+    "galaxy",
+    "maintenance",
+    "migration"
+  ],
+  "properties": {
+    "version": {"const": 16},
+    "schemaVersion": {"const": 16},
+    "economyNumberStorage": {"const": "string"},
+    "economy": {
+      "type": "object",
+      "required": ["credits", "totalEarned", "runEarned", "topScore"],
+      "additionalProperties": false,
+      "properties": {
+        "credits": {"$ref": "#/$defs/economyNumber"},
+        "totalEarned": {"$ref": "#/$defs/economyNumber"},
+        "runEarned": {"$ref": "#/$defs/economyNumber"},
+        "topScore": {"$ref": "#/$defs/economyNumber"}
+      }
+    },
+    "inventory": {"$ref": "#/$defs/economyMap"},
+    "flow": {"$ref": "#/$defs/economyMap"},
+    "researched": {"type": "object"},
+    "market": {
+      "type": "object",
+      "required": [
+        "enabled",
+        "prototypeBuilt",
+        "creditEconomyUnlocked",
+        "networkMk",
+        "satelliteCount",
+        "keepPct",
+        "lastRevenue",
+        "lastUnits",
+        "totalRevenue",
+        "foundingContractsCompleted",
+        "legacyAccess"
+      ],
+      "properties": {
+        "enabled": {"type": "boolean"},
+        "prototypeBuilt": {"type": "boolean"},
+        "creditEconomyUnlocked": {"type": "boolean"},
+        "networkMk": {"type": "integer", "minimum": 0, "maximum": 3},
+        "satelliteCount": {"type": "integer", "minimum": 0, "maximum": 9},
+        "keepPct": {"type": "integer", "minimum": 0, "maximum": 100},
+        "nextDispatchAt": {"type": "integer", "minimum": 0},
+        "lastDispatchAt": {"type": "integer", "minimum": 0},
+        "lastRevenue": {"$ref": "#/$defs/economyNumber"},
+        "lastUnits": {"$ref": "#/$defs/economyNumber"},
+        "totalRevenue": {"$ref": "#/$defs/economyNumber"},
+        "foundingContractsCompleted": {
+          "type": "array",
+          "items": {"type": "string"},
+          "uniqueItems": true
+        },
+        "legacyAccess": {"type": "boolean"}
+      },
+      "additionalProperties": true
+    },
+    "stats": {
+      "type": "object",
+      "required": ["produced"],
+      "properties": {"produced": {"$ref": "#/$defs/economyMap"}},
+      "additionalProperties": true
+    },
+    "galaxy": {
+      "type": "object",
+      "required": ["ships", "defenses"],
+      "properties": {
+        "ships": {"$ref": "#/$defs/economyMap"},
+        "defenses": {"$ref": "#/$defs/economyMap"}
+      },
+      "additionalProperties": true
+    },
+    "maintenance": {
+      "type": "object",
+      "required": ["damagedShips", "damagedDefenses"],
+      "properties": {
+        "damagedShips": {"$ref": "#/$defs/economyMap"},
+        "damagedDefenses": {"$ref": "#/$defs/economyMap"}
+      },
+      "additionalProperties": true
+    },
+    "migration": {
+      "type": "object",
+      "required": [
+        "fromVersion",
+        "toVersion",
+        "migratedAt",
+        "backupSha256",
+        "exactUnsafeIntegerLiteralsPreserved",
+        "inheritedTechnologies",
+        "legacyCreditAccess",
+        "warnings"
+      ],
+      "properties": {
+        "fromVersion": {"const": 15},
+        "toVersion": {"const": 16},
+        "migratedAt": {"type": "integer", "minimum": 0},
+        "backupSha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+        "exactUnsafeIntegerLiteralsPreserved": {"const": true},
+        "inheritedTechnologies": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+        "legacyCreditAccess": {"const": true},
+        "warnings": {"type": "array", "items": {"type": "string"}}
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": true,
+  "$defs": {
+    "economyNumber": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 512,
+      "pattern": "^(?!-)(?!NaN$)(?!Infinity$).+$"
+    },
+    "economyMap": {
+      "type": "object",
+      "propertyNames": {"pattern": "^[A-Za-z][A-Za-z0-9_.-]*$"},
+      "additionalProperties": {"$ref": "#/$defs/economyNumber"}
+    }
+  }
+}

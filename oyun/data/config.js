@@ -1,5 +1,5 @@
 /**
- * Axyon Idle Factory: Frontier v4 — veri tanımları.
+ * Axyon Idle Factory: Orbital Dominion v4.3 — veri tanımları.
  * Fabrika otomasyonu, kalıcı teknoloji, pazar uydusu ve PvE galaksi mücadelesi.
  */
 (function (global) {
@@ -42,6 +42,13 @@
     drone:{name:'Drone İskeleti',icon:'🤖',tier:4,sell:320,cap:350,desc:'Otomasyon, keşif ve savunma bileşeni.'},
     electronics:{name:'Elektronik',icon:'💻',tier:4,sell:520,cap:350,desc:'İleri son ürün ve filo kontrol donanımı.'},
     machinery:{name:'Makine Ünitesi',icon:'🔩',tier:4,sell:470,cap:350,desc:'Bina yükseltmelerinde kullanılan ağır ünite.'},
+
+    scrapMetal:{name:'Metal Hurda',icon:'🧱',tier:1,sell:2.5,cap:1600,externalSource:'Savaş ve baskın enkazı',desc:'Savaş, baskın ve söküm sonrası toplanan geri dönüştürülebilir metal.'},
+    wreckCircuit:{name:'Elektronik Hurda',icon:'📟',tier:2,sell:10,cap:900,externalSource:'Savaş ve baskın enkazı',desc:'Hasarlı gemi, uydu ve savunmalardan çıkan elektronik parçalar.'},
+    alienAlloy:{name:'Uzaylı Alaşımı',icon:'🧬',tier:4,sell:95,cap:500,externalSource:'Uzaylı savaş enkazı',desc:'Yabancı enkazlardan çıkarılan ileri alaşım; üst seviye tamir ve teknoloji girdisi.'},
+    repairKit:{name:'Tamir Kiti',icon:'🧰',tier:3,sell:70,cap:700,desc:'Gezegen, yörünge, uydu, gemi ve savunma tamiratlarında tüketilir.'},
+    nanoGel:{name:'Nano Tamir Jeli',icon:'🫧',tier:5,sell:260,cap:400,desc:'Ağır hasarlı filo ve ileri altyapının hızlı onarımında kullanılır.'},
+    orbitalParts:{name:'Yörünge Parçası',icon:'🛰️',tier:4,sell:180,cap:450,desc:'Pazar uydusu, tersane ve orbital tesislerin bakım parçası.'},
 
     alphaCore:{name:'Alfa Veri',icon:'🔴',tier:2,sell:0,cap:600,research:true,desc:'Temel araştırma verisi.'},
     betaCore:{name:'Beta Veri',icon:'🟢',tier:3,sell:0,cap:600,research:true,desc:'Orta seviye araştırma verisi.'},
@@ -87,6 +94,10 @@
     {id:'droneFactory',name:'Drone Fabrikası',icon:'🤖',tier:4,recipe:{in:{motor:1,battery:2,circuit:3},out:{drone:1}},baseRate:.3,footprint:9,power:40,buildCost:16000,buildGrowth:1.15,managerCost:160000,tech:'robotics'},
     {id:'electronicsFab',name:'Elektronik Fab.',icon:'💻',tier:4,recipe:{in:{processor:2,circuit:1},out:{electronics:1}},baseRate:.35,footprint:8,power:32,buildCost:6500,buildGrowth:1.15,managerCost:65000,tech:'advElectronics'},
     {id:'machineryFab',name:'Makine Fabrikası',icon:'🔩',tier:4,recipe:{in:{motor:1,frame:2},out:{machinery:1}},baseRate:.35,footprint:8,power:30,buildCost:5200,buildGrowth:1.15,managerCost:52000,tech:'motors'},
+    {id:'salvageRecycler',name:'Hurda Geri Dönüşüm',icon:'♻️',tier:3,recipe:{in:{scrapMetal:5,wreckCircuit:1},out:{steel:1,copperPlate:2}},baseRate:.32,footprint:8,power:24,buildCost:7200,buildGrowth:1.16,managerCost:68000,tech:'salvageEngineering'},
+    {id:'repairKitFab',name:'Tamir Kiti Atölyesi',icon:'🧰',tier:3,recipe:{in:{steel:2,circuit:1,plastic:1},out:{repairKit:1}},baseRate:.28,footprint:8,power:28,buildCost:11000,buildGrowth:1.16,managerCost:105000,tech:'maintenanceEngineering'},
+    {id:'orbitalPartsFab',name:'Yörünge Parça Hattı',icon:'🛰️',tier:4,recipe:{in:{titaniumPlate:1,electronics:1,machinery:1},out:{orbitalParts:1}},baseRate:.18,footprint:10,power:45,buildCost:72000,buildGrowth:1.18,managerCost:620000,tech:'orbitalEngineering'},
+    {id:'nanoFoundry',name:'Nano Tamir Dökümhanesi',icon:'🫧',tier:5,recipe:{in:{repairKit:2,alienAlloy:1,energyCrystal:.25},out:{nanoGel:1}},baseRate:.12,footprint:12,power:80,buildCost:220000,buildGrowth:1.2,managerCost:1800000,tech:'nanofabrication'},
 
     {id:'alphaLab',name:'Alfa Lab',icon:'🔴',tier:2,recipe:{in:{copperPlate:1,gear:1},out:{alphaCore:1}},baseRate:.5,footprint:5,power:12,buildCost:150,buildGrowth:1.15,managerCost:400,tech:null},
     {id:'betaLab',name:'Beta Lab',icon:'🟢',tier:3,recipe:{in:{circuit:1,frame:1},out:{betaCore:1}},baseRate:.4,footprint:6,power:18,buildCost:1100,buildGrowth:1.15,managerCost:11000,tech:'electronics'},
@@ -116,42 +127,134 @@
     {id:'motors',name:'Motor Teknolojisi',icon:'🔵',cost:{betaCore:55},prereq:['electronics','steel'],desc:'Motor ve makine fabrikası.'},
     {id:'advElectronics',name:'İleri Elektronik',icon:'🟥',cost:{betaCore:100},prereq:['electronics','chemistry'],desc:'İşlemci, elektronik ve Gama Lab.'},
     {id:'buildingMk3',name:'Bina Mk III',icon:'🏭',cost:{betaCore:90,machinery:20},prereq:['motors','advElectronics'],desc:'Tüm bina sınıfları Seviye 3 olabilir.'},
+    {id:'salvageEngineering',name:'Hurda Mühendisliği',icon:'♻️',cost:{betaCore:80,steel:45,circuit:30},prereq:['steel','chemistry'],desc:'Savaş enkazını endüstriyel girdiye çeviren geri dönüşüm hatları.'},
+    {id:'maintenanceEngineering',name:'Bakım Mühendisliği',icon:'🧰',cost:{betaCore:110,machinery:18,circuit:45},prereq:['motors','salvageEngineering'],desc:'Gezegen atölyesi, tamir kitleri ve hasar yönetimi.'},
     {id:'robotics',name:'Robotik',icon:'🤖',cost:{gammaCore:40},prereq:['advElectronics','motors'],desc:'Drone üretimi ve otomasyon.'},
     {id:'quantum',name:'Kuantum Bilişim',icon:'🟦',cost:{gammaCore:65},prereq:['advElectronics'],desc:'Kuantum çekirdek üretimi.'},
     {id:'nuclear',name:'Nükleer Güç',icon:'☢️',cost:{gammaCore:90},prereq:['advElectronics','hydro'],desc:'Uranyum ve nükleer reaktör.'},
     {id:'deepMining',name:'Derin Uzay Madenciliği',icon:'🛰️',cost:{gammaCore:120,quantumCore:15},prereq:['quantum','nuclear'],desc:'Titanyum yatakları ve alaşım.'},
+    {id:'automationAI',name:'Endüstriyel Yapay Zekâ',icon:'🧠',cost:{gammaCore:145,processor:45,drone:20},prereq:['robotics','quantum'],desc:'Makine otomasyon çekirdeklerini Seviye 3 ve üstüne taşır.'},
+    {id:'modularManufacturing',name:'Modüler Üretim',icon:'🧩',cost:{gammaCore:180,machinery:40,electronics:25},prereq:['automationAI','buildingMk3'],desc:'Sınıf bazlı otomasyon ve bakım verimliliğini geliştirir.'},
     {id:'deltaScience',name:'Delta Bilimi',icon:'🟣',cost:{gammaCore:160,titaniumPlate:20},prereq:['deepMining','robotics'],desc:'Delta Gözlemevi ve gezegen bilimi.'},
     {id:'scanner',name:'Yıldız Tarayıcı',icon:'🔭',cost:{deltaCore:35,electronics:25},prereq:['deltaScience'],desc:'Yeni yıldız sistemlerini keşfet.'},
     {id:'shipyard',name:'Yörünge Tersanesi',icon:'🚀',cost:{deltaCore:50,titaniumPlate:30,machinery:20},prereq:['scanner'],desc:'Savaş gemileri ve zırh üretimi.'},
     {id:'defenseGrid',name:'Gezegen Savunması',icon:'🛡️',cost:{deltaCore:55,drone:20},prereq:['shipyard'],desc:'Taret, kalkan ve mühimmat üretimi.'},
+    {id:'combatAnalytics',name:'Savaş Analitiği',icon:'📡',cost:{deltaCore:70,processor:40,electronics:25},prereq:['defenseGrid','scanner'],desc:'Çok turlu savaş raporları, kayıp analizi ve enkaz tahmini.'},
+    {id:'orbitalEngineering',name:'Yörünge Mühendisliği',icon:'🛰️',cost:{deltaCore:95,titaniumPlate:45,machinery:35},prereq:['shipyard','maintenanceEngineering'],desc:'Orbital kuru havuz, uydu servis merkezi ve yörünge parça hattı.'},
     {id:'fleetCommand',name:'Filo Komutası',icon:'🎖️',cost:{deltaCore:75,quantumCore:25},prereq:['shipyard'],desc:'Savaş görevleri ve daha büyük filolar.'},
     {id:'crystalTech',name:'Kristal Teknolojisi',icon:'💎',cost:{deltaCore:90,titaniumPlate:35},prereq:['deepMining','scanner'],desc:'Axyon Kristali ve enerji kristali.'},
     {id:'warpDrive',name:'Warp Sürüşü',icon:'🌌',cost:{deltaCore:120,energyCrystal:30},prereq:['crystalTech','fleetCommand'],desc:'Yıldız yakıtı ve hızlı seferler.'},
     {id:'buildingMk4',name:'Bina Mk IV',icon:'🌐',cost:{deltaCore:150,machinery:60,titaniumPlate:60},prereq:['warpDrive'],desc:'Tüm bina sınıfları Seviye 4 olabilir.'},
     {id:'fusionPower',name:'Füzyon Gücü',icon:'☀️',cost:{deltaCore:135,energyCrystal:40},prereq:['warpDrive','nuclear'],desc:'Füzyon çekirdeği.'},
     {id:'omegaScience',name:'Omega Bilimi',icon:'⚪',cost:{deltaCore:220,energyCrystal:70,quantumCore:50},prereq:['warpDrive','fusionPower'],desc:'Omega İstasyonu ve galaktik araştırmalar.'},
+    {id:'nanofabrication',name:'Nano Fabrikasyon',icon:'🫧',cost:{omegaCore:60,alienAlloy:35,energyCrystal:45},prereq:['omegaScience','orbitalEngineering'],desc:'Nano tamir jeli, ağır hasar onarımı ve otomatik bakım.'},
+    {id:'frontierDoctrine',name:'Sonsuz Cephe Doktrini',icon:'🗺️',cost:{omegaCore:95,starFuel:100,electronics:60},prereq:['omegaScience','fleetCommand','combatAnalytics'],desc:'Prosedürel galaktik cepheleri ve sonsuz sefer zincirini açar.'},
     {id:'plasmaWeapons',name:'Plazma Silahları',icon:'💥',cost:{omegaCore:45,ammunition:100},prereq:['omegaScience','defenseGrid'],desc:'Filo ve savunma saldırı gücü.'},
     {id:'phaseShields',name:'Faz Kalkanları',icon:'🛡️',cost:{omegaCore:55,energyCrystal:60},prereq:['omegaScience'],desc:'Kalkan ve filo dayanıklılığı.'},
     {id:'colonization',name:'Koloni Protokolü',icon:'🪐',cost:{omegaCore:75,starFuel:80},prereq:['omegaScience','fleetCommand'],desc:'Ele geçirilen dünyalarda kalıcı üs.'},
     {id:'buildingMk5',name:'Bina Mk V',icon:'✨',cost:{omegaCore:120,machinery:120,energyCrystal:100},prereq:['plasmaWeapons','phaseShields'],desc:'Tüm bina sınıfları en yüksek seviyeye ulaşır.'},
+    {id:'planetaryLogistics',name:'Gezegen Lojistiği',icon:'🏗️',cost:{betaCore:140,machinery:28,steel:80},prereq:['maintenanceEngineering','buildingMk3'],desc:'Gezegen altyapısını büyütür; bina, santral ve savunma yük sınırını yükseltir.'},
+    {id:'orbitalCommand',name:'Yörünge Komutası',icon:'🛰️',cost:{gammaCore:190,electronics:55,quantumCore:20},prereq:['deltaScience','automationAI'],desc:'Filo, pazar uydusu, casus uydusu ve tersane yörünge kapasitesini genişletir.'},
+    {id:'espionageNetwork',name:'Casusluk Ağı',icon:'📡',cost:{deltaCore:95,processor:45,electronics:40},prereq:['scanner','orbitalCommand'],desc:'Casus uyduları, istihbarat seviyeleri ve ayrıntılı hedef analizini açar.'},
+    {id:'debrisRecovery',name:'Enkaz Kurtarma Filosu',icon:'♻️',cost:{deltaCore:125,machinery:45,titaniumPlate:55},prereq:['shipyard','salvageEngineering','orbitalCommand'],desc:'Kalıcı uzay enkaz alanlarını toplayan Enkaz Toplayıcı gemisini açar.'},
+    {id:'planetaryInvasion',name:'Gezegen İstilası',icon:'🪐',cost:{omegaCore:105,starFuel:130,orbitalParts:55},prereq:['colonization','fleetCommand','espionageNetwork'],desc:'Koloni gemileriyle yenilmiş gezegenleri işgal edip kalıcı kolonilere dönüştürür.'},
+    {id:'orbitalMegastructure',name:'Yörünge Mega Yapıları',icon:'🌐',cost:{omegaCore:160,energyCrystal:120,machinery:150},prereq:['buildingMk5','orbitalEngineering','orbitalCommand'],desc:'Gezegen ve yörünge altyapısını Mk V kapasitesine ulaştırır.'},
   ];
 
+
+  // v4.3 uzun dönem araştırma dengesi. Maliyet, laboratuvar ve süre tek veri kaynağında tutulur.
+  const eraOrder=['alpha','beta','gamma','delta','omega'];
+  const eraLabels={alpha:'Alfa Çağı',beta:'Beta Çağı',gamma:'Gama Çağı',delta:'Delta Çağı',omega:'Omega Çağı'};
+  const researchPlan={
+    basics:{era:'alpha',durationSec:45,coins:250,lab:'alphaLab',labLevel:1},
+    buildingMk2:{era:'alpha',durationSec:180,coins:1800,lab:'alphaLab',labLevel:1,requirements:{machineTotal:5}},
+    steel:{era:'alpha',durationSec:150,coins:1200,lab:'alphaLab',labLevel:1},
+    electronics:{era:'alpha',durationSec:240,coins:2600,lab:'alphaLab',labLevel:1,requirements:{machineTotal:6}},
+    solar:{era:'alpha',durationSec:210,coins:2200,lab:'alphaLab',labLevel:1},
+    marketSatellite:{era:'alpha',durationSec:600,coins:8500,lab:'alphaLab',labLevel:2,requirements:{machineTotal:10,sectors:4}},
+    oil:{era:'beta',durationSec:1200,coins:18000,lab:'betaLab',labLevel:1},
+    chemistry:{era:'beta',durationSec:1800,coins:32000,lab:'betaLab',labLevel:1},
+    hydro:{era:'beta',durationSec:1500,coins:28000,lab:'betaLab',labLevel:1},
+    motors:{era:'beta',durationSec:2400,coins:55000,lab:'betaLab',labLevel:1,requirements:{machineTotal:15}},
+    advElectronics:{era:'beta',durationSec:3600,coins:95000,lab:'betaLab',labLevel:2},
+    buildingMk3:{era:'beta',durationSec:7200,coins:220000,lab:'betaLab',labLevel:2,requirements:{machineTotal:25,sectors:6}},
+    salvageEngineering:{era:'beta',durationSec:9000,coins:300000,lab:'betaLab',labLevel:2,requirements:{machineTotal:28}},
+    maintenanceEngineering:{era:'beta',durationSec:12600,coins:460000,lab:'betaLab',labLevel:3,requirements:{machineTotal:32,sectors:8}},
+    robotics:{era:'gamma',durationSec:10800,coins:420000,lab:'gammaLab',labLevel:1},
+    quantum:{era:'gamma',durationSec:14400,coins:600000,lab:'gammaLab',labLevel:1},
+    nuclear:{era:'gamma',durationSec:18000,coins:850000,lab:'gammaLab',labLevel:2},
+    deepMining:{era:'gamma',durationSec:28800,coins:1600000,lab:'gammaLab',labLevel:2,requirements:{sectors:10}},
+    automationAI:{era:'gamma',durationSec:32400,coins:1900000,lab:'gammaLab',labLevel:2,requirements:{machineTotal:45}},
+    modularManufacturing:{era:'gamma',durationSec:39600,coins:2600000,lab:'gammaLab',labLevel:3,requirements:{machineTotal:55,sectors:12}},
+    deltaScience:{era:'gamma',durationSec:43200,coins:2800000,lab:'gammaLab',labLevel:3,requirements:{machineTotal:40,sectors:12}},
+    scanner:{era:'delta',durationSec:64800,coins:5000000,lab:'deltaLab',labLevel:1},
+    shipyard:{era:'delta',durationSec:86400,coins:8500000,lab:'deltaLab',labLevel:1,requirements:{sectors:15}},
+    defenseGrid:{era:'delta',durationSec:108000,coins:12000000,lab:'deltaLab',labLevel:1},
+    combatAnalytics:{era:'delta',durationSec:118800,coins:15500000,lab:'deltaLab',labLevel:2,requirements:{battlesWon:1}},
+    orbitalEngineering:{era:'delta',durationSec:172800,coins:30000000,lab:'deltaLab',labLevel:2,requirements:{battlesWon:2,sectors:18}},
+    fleetCommand:{era:'delta',durationSec:129600,coins:18000000,lab:'deltaLab',labLevel:2,requirements:{ships:5}},
+    crystalTech:{era:'delta',durationSec:151200,coins:24000000,lab:'deltaLab',labLevel:2,requirements:{sectors:18}},
+    warpDrive:{era:'delta',durationSec:216000,coins:40000000,lab:'deltaLab',labLevel:3,requirements:{battlesWon:1}},
+    buildingMk4:{era:'delta',durationSec:259200,coins:65000000,lab:'deltaLab',labLevel:3,requirements:{machineTotal:70,sectors:22}},
+    fusionPower:{era:'delta',durationSec:302400,coins:80000000,lab:'deltaLab',labLevel:4},
+    omegaScience:{era:'delta',durationSec:432000,coins:140000000,lab:'deltaLab',labLevel:4,requirements:{battlesWon:3}},
+    nanofabrication:{era:'omega',durationSec:518400,coins:220000000,lab:'omegaLab',labLevel:1,requirements:{battlesWon:4}},
+    frontierDoctrine:{era:'omega',durationSec:777600,coins:420000000,lab:'omegaLab',labLevel:2,requirements:{battlesWon:6,sectors:26}},
+    plasmaWeapons:{era:'omega',durationSec:604800,coins:260000000,lab:'omegaLab',labLevel:1,requirements:{battlesWon:4}},
+    phaseShields:{era:'omega',durationSec:691200,coins:320000000,lab:'omegaLab',labLevel:1},
+    colonization:{era:'omega',durationSec:864000,coins:500000000,lab:'omegaLab',labLevel:2,requirements:{battlesWon:5}},
+    buildingMk5:{era:'omega',durationSec:1209600,coins:900000000,lab:'omegaLab',labLevel:3,requirements:{machineTotal:120,sectors:30,battlesWon:6}},
+    planetaryLogistics:{era:'beta',durationSec:21600,coins:900000,lab:'betaLab',labLevel:3,requirements:{machineTotal:38,sectors:8}},
+    orbitalCommand:{era:'gamma',durationSec:57600,coins:4200000,lab:'gammaLab',labLevel:3,requirements:{machineTotal:60,sectors:12}},
+    espionageNetwork:{era:'delta',durationSec:194400,coins:34000000,lab:'deltaLab',labLevel:2,requirements:{ships:3,sectors:16}},
+    debrisRecovery:{era:'delta',durationSec:237600,coins:52000000,lab:'deltaLab',labLevel:3,requirements:{battlesWon:2,ships:6}},
+    planetaryInvasion:{era:'omega',durationSec:1036800,coins:720000000,lab:'omegaLab',labLevel:2,requirements:{battlesWon:8,ships:12,sectors:30}},
+    orbitalMegastructure:{era:'omega',durationSec:1555200,coins:1400000000,lab:'omegaLab',labLevel:3,requirements:{machineTotal:160,sectors:36,battlesWon:10}},
+  };
+  const eraCostFactor={alpha:2.2,beta:4,gamma:6.5,delta:9,omega:13};
+  research.forEach(t=>{
+    Object.assign(t,researchPlan[t.id]||{});
+    const f=eraCostFactor[t.era]||1;
+    t.cost=Object.fromEntries(Object.entries(t.cost).map(([k,v])=>[k,Math.ceil(v*f)]));
+    t.durationSec=t.durationSec||60;t.coins=t.coins||0;t.labLevel=t.labLevel||1;t.requirements=t.requirements||{};
+  });
+
   global.Axyon.Data = {
-    game:{title:'Axyon Idle Factory: Frontier',version:'4.0.0',world:'Kestros İmparatorluğu'},
+    game:{title:'Axyon Idle Factory: First Orbit & Dominion — U1 Foundation',version:'4.4.0-u1',world:'Kestros İmparatorluğu'},
     resource:{id:'coin',name:'Kredi',symbol:'🪙'},
-    items, machines, powerPlants, research,
+    items, machines, powerPlants, research, eraOrder, eraLabels,
     levelMultipliers:[1,1.75,3,5,8],
     plantMultipliers:[1,1.6,2.6,4.2,7],
     levelTech:{2:'buildingMk2',3:'buildingMk3',4:'buildingMk4',5:'buildingMk5'},
     repeatableResearch:[
-      {id:'industrialEfficiency',name:'Endüstriyel Verim',icon:'⚙️',base:{omegaCore:18},growth:1.55,desc:'Tüm üretim +%5/seviye.'},
-      {id:'marketLogistics',name:'Galaktik Lojistik',icon:'🛰️',base:{omegaCore:15},growth:1.5,desc:'Pazar kotası +%10, süre -%3/seviye.'},
-      {id:'weaponSystems',name:'Silah Sistemleri',icon:'💥',base:{omegaCore:22},growth:1.6,desc:'Filo ve savunma saldırısı +%7/seviye.'},
-      {id:'shieldSystems',name:'Kalkan Sistemleri',icon:'🛡️',base:{omegaCore:22},growth:1.6,desc:'Filo ve savunma dayanıklılığı +%7/seviye.'},
-      {id:'warpNavigation',name:'Warp Navigasyonu',icon:'🌌',base:{omegaCore:20},growth:1.58,desc:'Sefer süresi -%4/seviye.'},
+      {id:'industrialEfficiency',name:'Endüstriyel Verim',icon:'⚙️',base:{omegaCore:80,machinery:12},growth:1.92,durationSec:259200,desc:'Tüm üretim +%5/seviye.'},
+      {id:'marketLogistics',name:'Galaktik Lojistik',icon:'🛰️',base:{omegaCore:70,electronics:20},growth:1.88,durationSec:259200,desc:'Pazar kotası +%10, süre -%3/seviye.'},
+      {id:'weaponSystems',name:'Silah Sistemleri',icon:'💥',base:{omegaCore:100,ammunition:180},growth:1.95,durationSec:345600,desc:'Filo ve savunma saldırısı +%7/seviye.'},
+      {id:'shieldSystems',name:'Kalkan Sistemleri',icon:'🛡️',base:{omegaCore:100,energyCrystal:45},growth:1.95,durationSec:345600,desc:'Filo ve savunma dayanıklılığı +%7/seviye.'},
+      {id:'warpNavigation',name:'Warp Navigasyonu',icon:'🌌',base:{omegaCore:90,starFuel:70},growth:1.93,durationSec:302400,desc:'Sefer süresi -%4/seviye.'},
+      {id:'repairEfficiency',name:'Otomatik Tamir',icon:'🧰',base:{omegaCore:85,repairKit:120},growth:1.91,durationSec:302400,desc:'Tamir süresi ve parça tüketimi -%4/seviye.'},
+      {id:'salvageRecovery',name:'Enkaz Kurtarma',icon:'♻️',base:{omegaCore:80,orbitalParts:35},growth:1.9,durationSec:302400,desc:'Savaş ve baskın hurdası +%6/seviye.'},
+      {id:'automationDepth',name:'Otonom Fabrikalar',icon:'🧠',base:{omegaCore:110,machinery:90,electronics:70},growth:1.96,durationSec:432000,desc:'Otomasyon çekirdeği etkisi +%3/seviye.'},
+      {id:'frontierLogistics',name:'Cephe Lojistiği',icon:'🗺️',base:{omegaCore:120,starFuel:120,orbitalParts:45},growth:1.98,durationSec:432000,desc:'Sonsuz cephe ganimeti +%5 ve sefer ikmali -%2/seviye.'},
+      {id:'planetaryExpansion',name:'Gezegen Taşıma Ağı',icon:'🏗️',base:{omegaCore:130,machinery:120,orbitalParts:60},growth:2.02,durationSec:518400,desc:'Gezegen yük kapasitesi +%4/seviye.'},
+      {id:'fleetCoordination',name:'Filo Koordinasyonu',icon:'🎖️',base:{omegaCore:145,electronics:110,starFuel:90},growth:2.04,durationSec:518400,desc:'Yörünge komuta kapasitesi +%4/seviye.'},
+      {id:'espionageMastery',name:'Derin İstihbarat',icon:'📡',base:{omegaCore:120,processor:100,energyCrystal:70},growth:2.01,durationSec:475200,desc:'Casusluk süresi -%3 ve bilgi doğruluğu +%5/seviye.'},
     ],
     milestones:[{count:10,multiplier:1.5},{count:25,multiplier:2},{count:50,multiplier:2.5},{count:100,multiplier:3}],
-    map:{size:300,sectorSize:20,startSectors:2,openBaseCost:350,openGrowth:1.28},
+    map:{size:300,sectorSize:20,startSectors:1,openBaseCost:350,openGrowth:1.28},
+    planetTypes:{
+      temperate:{name:'Ilıman Endüstri Dünyası',icon:'🌍',desc:'Dengeli kaynak ve düşük tehdit. Yeni başlayanlar için güvenli.',capacityBonus:0,threatBonus:0,resourceBias:['ironOre','copperOre','coal']},
+      mineral:{name:'Maden Zengini Dünya',icon:'🪨',desc:'Daha yüksek yapı kapasitesi ve bol cevher; yerli tehdit biraz daha yüksek.',capacityBonus:.18,threatBonus:.25,resourceBias:['ironOre','copperOre','coal','stone','titaniumOre']},
+      frontier:{name:'Sınır Kolonisi',icon:'🪐',desc:'Genişleme ve savaş ödülü güçlü; baskınlar daha serttir.',capacityBonus:.10,threatBonus:.55,resourceBias:['ironOre','coal','crystalOre']},
+      oceanic:{name:'Okyanus Ayı',icon:'🌊',desc:'Su ve enerji zinciri güçlü; kara kapasitesi sınırlı.',capacityBonus:-.12,threatBonus:.12,resourceBias:['water','copperOre','ironOre']}
+    },
+    startRegions:{
+      center:{name:'Merkez Ovası',icon:'🏕️',sx:7,sy:7,capacityBonus:0,desc:'Haritanın merkezinde dengeli başlangıç.'},
+      north:{name:'Kuzey Maden Kuşağı',icon:'⛰️',sx:3,sy:3,capacityBonus:4,bonusNode:'stone',desc:'Demir ve taş zincirine yakın erken sanayi bölgesi.'},
+      south:{name:'Güney Krateri',icon:'☄️',sx:11,sy:11,capacityBonus:6,bonusNode:'copperOre',desc:'Bakır ve yörünge elektroniği için avantajlı uzak bölge.'},
+      west:{name:'Batı Petrol Havzası',icon:'🛢️',sx:3,sy:10,capacityBonus:2,bonusNode:'crudeOil',desc:'Petrol ve kimya zincirine hazırlıklı başlangıç.'},
+      east:{name:'Doğu Su Platosu',icon:'🌊',sx:10,sy:3,capacityBonus:4,bonusNode:'water',desc:'Enerji ve hidroelektrik için elverişli başlangıç.'}
+    },
     resourceNodes:{
       ironOre:{icon:'🪨',name:'Demir Yatağı',color:'#9ca3af',rarity:1,guaranteedStart:true},
       copperOre:{icon:'🟫',name:'Bakır Yatağı',color:'#c2703d',rarity:1,guaranteedStart:true},
@@ -163,18 +266,24 @@
       titaniumOre:{icon:'🪙',name:'Titanyum Yatağı',color:'#94a3b8',rarity:5,minDistance:4},
       crystalOre:{icon:'💎',name:'Axyon Kristal Alanı',color:'#38bdf8',rarity:6,minDistance:5},
     },
-    market:{baseCapacity:350,capacityGrowth:1.9,baseCooldownSec:75,cooldownStep:.82,maxLevel:5,manualPriceFactor:.85},
+    market:{baseCapacity:350,capacityGrowth:1.9,baseCooldownSec:75,cooldownStep:.82,maxLevel:3,satellitesPerLevel:3,maxSatellites:9},
     ships:[
-      {id:'scout',name:'Keşif Gemisi',icon:'🛸',attack:8,hull:20,cargo:40,speed:1.5,fuel:2,buildSec:18,tech:'scanner',cost:{circuit:8,motor:2,battery:4}},
-      {id:'fighter',name:'Avcı',icon:'🚀',attack:28,hull:45,cargo:15,speed:1.25,fuel:4,buildSec:30,tech:'shipyard',cost:{steel:12,circuit:8,motor:4,ammunition:4}},
-      {id:'bomber',name:'Bombardıman Gemisi',icon:'💣',attack:85,hull:95,cargo:40,speed:.9,fuel:9,buildSec:65,tech:'fleetCommand',cost:{armorPlate:5,electronics:4,motor:8,ammunition:12}},
-      {id:'cruiser',name:'Kruvazör',icon:'🛰️',attack:190,hull:260,cargo:120,speed:.72,fuel:18,buildSec:120,tech:'warpDrive',cost:{titaniumPlate:18,armorPlate:12,quantumCore:4,electronics:10,ammunition:25}},
-      {id:'dreadnought',name:'Axyon Dretnotu',icon:'🌠',attack:520,hull:850,cargo:300,speed:.48,fuel:42,buildSec:260,tech:'plasmaWeapons',cost:{titaniumPlate:55,armorPlate:40,energyCrystal:12,quantumCore:15,electronics:30,ammunition:80}},
+      {id:'spyProbe',name:'Casus Sondası',icon:'📡',attack:0,hull:6,cargo:0,speed:2.4,fuel:1,commandLoad:1,buildSec:12,tech:'espionageNetwork',cost:{circuit:3,wire:8,battery:1}},
+      {id:'scout',name:'Keşif Gemisi',icon:'🛸',attack:8,hull:20,cargo:40,speed:1.5,fuel:2,commandLoad:1,buildSec:18,tech:'scanner',cost:{circuit:8,motor:2,battery:4}},
+      {id:'fighter',name:'Avcı',icon:'🚀',attack:28,hull:45,cargo:15,speed:1.25,fuel:4,commandLoad:1,buildSec:30,tech:'shipyard',cost:{steel:12,circuit:8,motor:4,ammunition:4}},
+      {id:'bomber',name:'Bombardıman Gemisi',icon:'💣',attack:85,hull:95,cargo:40,speed:.9,fuel:9,commandLoad:2,buildSec:65,tech:'fleetCommand',cost:{armorPlate:5,electronics:4,motor:8,ammunition:12}},
+      {id:'cruiser',name:'Kruvazör',icon:'🛰️',attack:190,hull:260,cargo:120,speed:.72,fuel:18,commandLoad:4,buildSec:120,tech:'warpDrive',cost:{titaniumPlate:18,armorPlate:12,quantumCore:4,electronics:10,ammunition:25}},
+      {id:'dreadnought',name:'Axyon Dretnotu',icon:'🌠',attack:520,hull:850,cargo:300,speed:.48,fuel:42,commandLoad:9,buildSec:260,tech:'plasmaWeapons',cost:{titaniumPlate:55,armorPlate:40,energyCrystal:12,quantumCore:15,electronics:30,ammunition:80}},
+      {id:'recycler',name:'Enkaz Toplayıcı',icon:'♻️',attack:2,hull:75,cargo:420,speed:.78,fuel:10,commandLoad:3,buildSec:95,tech:'debrisRecovery',cost:{steel:20,machinery:6,electronics:5,orbitalParts:5}},
+      {id:'colonyShip',name:'Koloni Gemisi',icon:'🪐',attack:0,hull:480,cargo:200,speed:.42,fuel:55,commandLoad:12,buildSec:360,tech:'planetaryInvasion',cost:{titaniumPlate:70,machinery:55,quantumCore:18,energyCrystal:25,orbitalParts:30}},
+    ],
+    satellites:[
+      {id:'spySatellite',name:'Casus Uydusu',icon:'📡',commandLoad:1,buildSec:45,tech:'espionageNetwork',cost:{circuit:12,electronics:5,battery:8}},
     ],
     defenses:[
-      {id:'turret',name:'Plazma Tareti',icon:'🔫',attack:45,hull:70,tech:'defenseGrid',cost:{steel:12,circuit:5,ammunition:8}},
-      {id:'interceptor',name:'Savunma Dronu',icon:'🤖',attack:80,hull:100,tech:'defenseGrid',cost:{drone:1,battery:3,ammunition:12}},
-      {id:'shield',name:'Faz Kalkanı',icon:'🛡️',attack:10,hull:360,tech:'phaseShields',cost:{energyCrystal:3,quantumCore:1,electronics:4}},
+      {id:'turret',name:'Plazma Tareti',icon:'🔫',attack:45,hull:70,load:2,tech:'defenseGrid',cost:{steel:12,circuit:5,ammunition:8}},
+      {id:'interceptor',name:'Savunma Dronu',icon:'🤖',attack:80,hull:100,load:3,tech:'defenseGrid',cost:{drone:1,battery:3,ammunition:12}},
+      {id:'shield',name:'Faz Kalkanı',icon:'🛡️',attack:10,hull:360,load:8,tech:'phaseShields',cost:{energyCrystal:3,quantumCore:1,electronics:4}},
     ],
     galaxyTargets:[
       {id:'nyx',name:'Nyx Korsan Üssü',type:'Korsan',distance:1.2,strength:180,loot:{coins:4500,steel:80,circuit:35},threat:1},
@@ -207,6 +316,15 @@
       {id:'a_conqueror',desc:'Üç hedefi yen',check:s=>(s.galaxy.targets||[]).filter(t=>t.defeated).length>=3},
       {id:'a_alltech',desc:'Ana teknoloji tamam',check:s=>Object.keys(s.researched).length>=research.length},
     ],
-    economyConfig:{basePower:30,offlineCapSeconds:8*60*60,offlineRate:.65,tickIntervalMs:150,autosaveIntervalMs:8000,manualBurstSeconds:3,storageUpgradeCostPer:20,storageUpgradeMult:1.5,raidBaseSec:12*60,raidWarningSec:90},
+    automation:{maxLevel:5,techByLevel:{2:'basics',3:'automationAI',4:'modularManufacturing',5:'nanofabrication'},rateBonusPerLevel:.12,powerSavingPerLevel:.045,costGrowth:2.35},
+    repairFacilities:[
+      {id:'planetWorkshop',name:'Gezegen Bakım Atölyesi',icon:'🏗️',zone:'planet',tech:'maintenanceEngineering',baseSecPerPoint:18,load:4,maxLevel:5},
+      {id:'orbitalDrydock',name:'Yörünge Kuru Havuzu',icon:'🛠️',zone:'orbital',tech:'orbitalEngineering',baseSecPerPoint:24,load:5,maxLevel:5},
+      {id:'satelliteHub',name:'Uydu Servis Merkezi',icon:'📡',zone:'satellite',tech:'orbitalEngineering',baseSecPerPoint:20,load:3,maxLevel:5},
+    ],
+    frontier:{baseStrength:16500,strengthGrowth:1.48,distanceBase:8,distanceGrowth:.7,scanCoinBase:950000,scanGrowth:1.72,recoverySec:900},
+    capacity:{planetByMk:[0,120,190,300,470,720],orbitByMk:[0,18,32,52,80,120],sectorPlanetBonus:8,loadEfficiencyByClass:[1,.9,.8,.7,.6],overloadFloor:.25,marketSatelliteLoad:1,spySatelliteLoad:1},
+    infrastructure:{maxLevel:5,techByLevel:{2:'planetaryLogistics',3:'orbitalCommand',4:'orbitalEngineering',5:'orbitalMegastructure'}},
+    economyConfig:{basePower:30,offlineCapSeconds:8*60*60,offlineRate:.65,tickIntervalMs:150,autosaveIntervalMs:8000,manualBurstSeconds:3,storageUpgradeCostPer:20,storageUpgradeMult:1.5,raidBaseSec:25*60,raidWarningSec:120},
   };
 })(typeof window !== 'undefined' ? window : globalThis);
