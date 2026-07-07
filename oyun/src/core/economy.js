@@ -830,5 +830,9 @@
     computeScore,updateTopScore,canResearch,isResearchVisible,doResearch,researchMissing,researchQueueCapacity,researchLabSpeed,researchProgressInfo,cancelResearch,repeatCost,repeatDuration,canRepeatResearch,repeatMissing,doRepeatResearch,tickResearch,applyOfflineProgress,machineCountTotal,plantCountTotal,
     targetById,reportById,scanCost,canScan,scanNextTarget,canSpyTarget,spyTarget,colonyCost,canColonize,colonizeTarget,canBuildShip,queueShip,canBuildSatellite,queueSatellite,canSendSpyMission,sendSpyMission,canSendSalvageMission,sendSalvageMission,canSendInvasionMission,sendInvasionMission,debrisTotal,spyTravelSeconds,canBuildDefense,buildDefense,fleetStats,canSendFleet,sendFleet,travelSeconds,defenseStats,weaponMult,shieldMult,simulateBattle,
     facilityLevel,facilityUpgradeCost,canUpgradeFacility,upgradeFacility,repairJobCost,repairAvailableAmount,canQueueRepair,queueRepair,maintenanceStatus,tickMaintenance,operationFeed,researchUnlocks,
+    // Internal compatibility hook for the v4.4 Decimal bridge.  It advances
+    // only time-based galaxy/maintenance events and deliberately skips the
+    // legacy Number economy production/market loop.
+    tickGalaxyLegacy:tickGalaxy,
   };
 })(typeof window !== 'undefined' ? window : globalThis);

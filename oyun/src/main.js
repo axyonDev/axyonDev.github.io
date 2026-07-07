@@ -1,4 +1,4 @@
-/** Axyon v4.4 U1 Foundation — uygulama giriş ve olay akışı. */
+/** Axyon v4.4 U2 First Orbit — uygulama giriş ve olay akışı. */
 (function(){
   const E=window.Axyon.Economy,Q=window.Axyon.Quests,S=window.Axyon.SaveService,UI=window.Axyon.UI,T=window.Axyon.Toast,N=window.Axyon.Numbers,D=window.Axyon.Data,FC=window.Axyon.FactoryCanvas,H=window.Axyon.HelpSystem,CUI=window.Axyon.CombatUI;
   const bootProfile=S.bootstrap();
@@ -15,7 +15,7 @@
     onSelect:e=>{selectedEntityId=e.id;UI.showInspector(state,E,e);},
     onChange:()=>{S.save(state);refreshAll();},
     onPlaced:id=>{T.show(`🏗️ ${E.mDef(id)?.name||E.pDef(id)?.name} kuruldu`,'success');UI.buildPalette(state,E);postAction();},
-    onPlaceFail:(id,type)=>{const d=type==='plant'?E.pDef(id):E.mDef(id);T.show(E.isExtractor(id)&&!E.hasFreeNodeFor(state,id)?`⛏️ Uygun ${d.name} yatağı bulunamadı`:'Kurulum için kredi, açık alan veya uygun hücre yetersiz','error');},
+    onPlaceFail:(id,type)=>{const d=type==='plant'?E.pDef(id):E.mDef(id);T.show(E.isExtractor(id)&&!E.hasFreeNodeFor(state,id)?`⛏️ Uygun ${d.name} yatağı bulunamadı`:'Kurulum için malzeme, kapasite, açık alan veya uygun hücre yetersiz','error');},
     onSectorClick:(sx,sy)=>tryOpenSector(sx,sy),
     onNodeClick:(node,gx,gy)=>{selectedEntityId=null;UI.showNodeBuilder(state,E,node.type,gx,gy);},
     onPowerFail:()=>T.show('⚡ Hat santralden makineye çekilmeli','info'),
@@ -30,7 +30,7 @@
 
   function refreshAll(){UI.el('active-profile-name').textContent=activeName();UI.render(state,E);UI.buildPalette(state,E);if(selectedEntityId&&state.grid.entities[selectedEntityId])UI.showInspector(state,E,state.grid.entities[selectedEntityId]);else if(selectedEntityId){selectedEntityId=null;UI.showInspector(state,E,null);}}
   function postAction(force=true){let changed=false,c=Q.tryComplete(state);while(c){changed=true;T.show(`✅ Görev: ${c.desc}<br><span class="toast-reward">${c.rewardText}</span>`,'success');c=Q.tryComplete(state);}const achievements=Q.checkAchievements(state);achievements.forEach(a=>T.show(`🏆 ${a.desc}`,'achievement'));if(achievements.length)changed=true;if(force||changed)refreshAll();}
-  function tryOpenSector(sx,sy){if(E.openSector(state,sx,sy)){T.show(`🧭 Yeni bölge açıldı: ${sx},${sy}`,'success');S.save(state);postAction();}else T.show('Bölge komşu değil veya kredi yetersiz','error');}
+  function tryOpenSector(sx,sy){if(E.openSector(state,sx,sy)){T.show(`🧭 Sektör taraması başladı: ${sx},${sy}`,'success');S.save(state);postAction();}else T.show('Komşu sektör, tarama modülü veya malzemeler yetersiz','error');}
 
   // Sekmeler
   document.querySelectorAll('[data-tab]').forEach(b=>b.addEventListener('click',()=>{UI.switchTab(b.dataset.tab);if(b.dataset.tab==='galaxy')UI.renderGalaxy(state,E);if(b.dataset.tab==='combat')CUI?.render(state,E);if(b.dataset.tab==='report')UI.renderReport(state,E);if(b.dataset.tab==='factory')setTimeout(()=>FC.resize(),20);}));
@@ -45,7 +45,7 @@
     if(ev.target.id==='fxi-close'){selectedEntityId=null;UI.showInspector(state,E,null);return;}
     const nodeBuild=ev.target.closest('[data-build-node]');if(nodeBuild){FC.setMode('place',nodeBuild.dataset.buildNode,'machine');T.show('⛏️ Aynı kaynak yatağına dokunarak çıkarıcıyı yerleştir','info');UI.showInspector(state,E,null);return;}
     const b=ev.target.closest('[data-fxi]'),ent=state.grid.entities[UI.el('fx-inspector').dataset.entity];if(!b||!ent)return;
-    if(b.dataset.fxi==='run'){const g=E.manualClick(state,ent.defId);T.show(g>0?`▶ +${N.format(g)} üretildi`:'Girdi veya depo yetersiz',g>0?'success':'info');}
+    if(b.dataset.fxi==='run'){const g=E.manualClick(state,ent.defId),ok=N.gt?N.gt(g,0):Number(g)>0;T.show(ok?`▶ +${N.format(g)} üretildi`:'Girdi veya depo yetersiz',ok?'success':'info');}
     if(b.dataset.fxi==='automation'){if(E.upgradeAutomation(state,ent.defId)){const lv=E.automationLevel(state,ent.defId);T.show(`🧠 Otomasyon çekirdeği Seviye ${lv} oldu`,'success');}else T.show('Teknoloji, kredi veya otomasyon malzemeleri yetersiz','error');}
     if(b.dataset.fxi==='upgrade'){if(E.doUpgradeClass(state,ent.defId,ent.type))T.show(`⬆ ${ent.type==='plant'?E.pDef(ent.defId).name:E.mDef(ent.defId).name} yükseltildi`,'success');else T.show('Teknoloji, malzeme veya kredi yetersiz','error');}
     if(b.dataset.fxi==='info'&&ent.type==='machine'){const out=Object.keys(E.mDef(ent.defId).recipe.out)[0];UI.showItemInfo(state,E,out);}
@@ -69,10 +69,11 @@
   UI.el('inventory-list').addEventListener('change',()=>UI.render(state,E));
   UI.el('bulk-selall').addEventListener('change',ev=>{Object.keys(D.items).forEach(id=>{const c=UI.el(`check-${id}`);if(c&&!c.disabled)c.checked=ev.target.checked;});UI.render(state,E);});
   document.querySelectorAll('[data-bulksell]').forEach(b=>b.addEventListener('click',()=>T.show('Yerel satış kapalı; Pazar Uydusu kullanılıyor.','info')));
-  UI.el('market-master').addEventListener('click',()=>{if(!state.researched.marketSatellite){T.show('Önce Pazar Uydusu araştırılmalı','info');return;}state.market.enabled=!state.market.enabled;if(state.market.enabled&&!state.market.nextDispatchAt)state.market.nextDispatchAt=Date.now()+E.marketCooldownSec(state)*1000;S.save(state);refreshAll();});
+  UI.el('market-master').addEventListener('click',()=>{if(!state.researched.marketNetworkMk1){T.show('Önce Pazar Ağı Mk I araştırılmalı','info');return;}state.market.enabled=!state.market.enabled;if(state.market.enabled&&!state.market.nextDispatchAt)state.market.nextDispatchAt=Date.now()+E.marketCooldownSec(state)*1000;S.save(state);refreshAll();});
   document.querySelectorAll('[data-globalkeep]').forEach(b=>b.addEventListener('click',()=>{E.setGlobalMarketKeep(state,Number(b.dataset.globalkeep));T.show(`🛰️ Tüm ürünlerde elde tutma %${b.dataset.globalkeep}`,'success');S.save(state);refreshAll();}));
   UI.el('market-all-on').addEventListener('click',()=>{const sellables=Object.keys(D.items).filter(k=>!D.items[k].research&&D.items[k].sell>0),allOn=sellables.every(k=>state.autoSell[k]);E.setAllAutoSell(state,!allOn);T.show(allOn?'Tüm ürünlerin uydu satışı kapatıldı':'Tüm ürünlerin uydu satışı açıldı','success');S.save(state);refreshAll();});
-  UI.el('market-upgrade').addEventListener('click',()=>{if(E.buyMarketSatellites&&E.marketSatelliteCount(state)<E.marketSatelliteLimit(state)){if(E.buyMarketSatellites(state,1))T.show('🛰️ Yeni Pazar Uydusu filoya eklendi','success');else T.show('Filo kapasitesi, kredi veya uydu parçaları yetersiz','error');}else if(E.upgradeMarket(state))T.show('🛰️ Pazar Uydusu geliştirildi','success');else T.show('Araştırma, kredi veya malzeme yetersiz','error');S.save(state);postAction();});
+  UI.el('market-upgrade').addEventListener('click',()=>{const action=UI.el('market-upgrade').dataset.action;let ok=false;if(action==='prototype')ok=E.queueSatellite(state,'prototypeMarketSatellite',1);else if(action==='satellite')ok=E.queueSatellite(state,'marketSatellite',1);else if(action==='upgrade')ok=E.upgradeMarket(state);if(ok)T.show(action==='prototype'?'🚀 Prototip Pazar Uydusu fırlatma kuyruğuna alındı':action==='satellite'?'🛰️ Yeni Pazar Uydusu üretime alındı':'📈 Pazar ağı geliştirildi','success');else T.show('Araştırma, kapasite, kredi veya malzeme yetersiz','error');S.save(state);postAction();});
+  UI.el('founding-contracts')?.addEventListener('click',ev=>{const b=ev.target.closest('[data-contract]');if(!b)return;if(E.startFoundingContract(state,b.dataset.contract))T.show('📦 Kuruluş sevkiyatı yola çıktı','success');else T.show('Önceki sözleşme, Mk 0 uydu veya ürünler eksik','error');S.save(state);postAction();});
   UI.el('ticker-toggle')?.addEventListener('click',()=>UI.el('live-ticker')?.classList.toggle('collapsed'));
 
   // Araştırma — maliyet başta ayrılır, laboratuvar süresi sonunda tamamlanır.
@@ -82,7 +83,7 @@
 
   // Galaksi
   UI.el('scan-system').addEventListener('click',()=>{const t=E.scanNextTarget(state);if(t)T.show(`🔭 ${t.name} keşfedildi`,'success');else T.show('Tarayıcı kilitli, beklemede veya kaynak yetersiz','error');S.save(state);postAction();});
-  UI.el('shipyard-list').addEventListener('click',ev=>{const b=ev.target.closest('[data-buildship]');if(!b)return;const id=b.dataset.buildship,count=Math.max(1,Number(UI.el(`ship-count-${id}`).value)||1);if(E.queueShip(state,id,count))T.show(`🚀 ${count} gemi üretim kuyruğuna alındı`,'success');else T.show('Gemi teknolojisi veya malzemeler yetersiz','error');S.save(state);postAction();});
+  UI.el('shipyard-list').addEventListener('click',ev=>{const sat=ev.target.closest('[data-buildsat]'),b=ev.target.closest('[data-buildship]');if(sat){const id=sat.dataset.buildsat,count=Math.max(1,Number(UI.el(`sat-count-${id}`)?.value)||1);if(E.queueSatellite(state,id,count))T.show(`🛰️ ${count} uydu üretim kuyruğuna alındı`,'success');else T.show('Uydu teknolojisi, yörünge limiti veya malzemeler yetersiz','error');S.save(state);postAction();return;}if(!b)return;const id=b.dataset.buildship,count=Math.max(1,Number(UI.el(`ship-count-${id}`).value)||1);if(E.queueShip(state,id,count))T.show(`🚀 ${count} gemi üretim kuyruğuna alındı`,'success');else T.show('Gemi teknolojisi veya malzemeler yetersiz','error');S.save(state);postAction();});
   UI.el('defense-list').addEventListener('click',ev=>{const b=ev.target.closest('[data-builddef]');if(!b)return;const id=b.dataset.builddef,count=Math.max(1,Number(UI.el(`def-count-${id}`).value)||1);if(E.buildDefense(state,id,count))T.show(`🛡️ ${count} savunma birimi kuruldu`,'success');else T.show('Savunma teknolojisi veya malzemeler yetersiz','error');S.save(state);postAction();});
   UI.el('target-list').addEventListener('click',ev=>{const spy=ev.target.closest('[data-spy]'),attack=ev.target.closest('[data-attack]'),col=ev.target.closest('[data-colonize]');if(spy){if(E.spyTarget(state,spy.dataset.spy))T.show('📡 Casusluk raporu hazır','success');else T.show('Casus sondası, yıldız yakıtı veya tarayıcı yetersiz','error');S.save(state);postAction();return;}if(attack)UI.renderFleetModal(state,E,E.targetById(state,attack.dataset.attack));if(col){if(E.colonizeTarget(state,col.dataset.colonize))T.show('🪐 Yeni koloni kuruldu · üretim +%4','success');else T.show('Koloni teknolojisi veya kaynaklar yetersiz','error');S.save(state);postAction();}});
   UI.el('fleet-body').addEventListener('input',()=>{const target=E.targetById(state,UI.el('fleet-modal').dataset.target),sel=UI.fleetSelection(),fs=E.fleetStats(sel,state),fuel=fs.fuel*(target?.distance||0),sec=target?E.travelSeconds(state,target,sel):0;UI.el('fleet-preview').textContent=fs.total?`Filo gücü ${N.format(fs.attack*E.weaponMult(state))} · Gövde ${N.format(fs.hull*E.shieldMult(state))} · Yakıt ${N.format(fuel)} · Varış ${N.formatTime(sec)}`:'Gemi seçilmedi.';});

@@ -220,7 +220,7 @@
   });
 
   global.Axyon.Data = {
-    game:{title:'Axyon Idle Factory: First Orbit & Dominion — U1 Foundation',version:'4.4.0-u1',world:'Kestros İmparatorluğu'},
+    game:{title:'Axyon Idle Factory: First Orbit & Dominion — U2 Economy',version:'4.4.0-u2',world:'Kestros İmparatorluğu'},
     resource:{id:'coin',name:'Kredi',symbol:'🪙'},
     items, machines, powerPlants, research, eraOrder, eraLabels,
     levelMultipliers:[1,1.75,3,5,8],

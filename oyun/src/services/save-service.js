@@ -1,4 +1,4 @@
-/** Axyon.SaveService v4.4 U1 — v16 storage, transactional v15 migration, numeric runtime bridge. */
+/** Axyon.SaveService v4.4 U2 — v16 storage, transactional migration, Decimal-native runtime. */
 (function(global){
   'use strict';
   const LEGACY_KEY='axyon_idle_factory_v2',INDEX_KEY='axyon_frontier_profiles_v1',ACTIVE_KEY='axyon_frontier_active_profile',SAVE_PREFIX='axyon_frontier_save_';
@@ -15,18 +15,27 @@
   const listProfiles=()=>readIndex().sort((a,b)=>(b.lastPlayedAt||0)-(a.lastPlayedAt||0));
   function touchProfile(id,patch){const list=readIndex(),i=list.findIndex(x=>x.id===id);if(i<0)return null;list[i]=Object.assign({},list[i],patch||{},{lastPlayedAt:now()});writeIndex(list);return list[i];}
   const economyPaths={
-    roots:['credits','totalEarned','runEarned','topScore'],maps:['inventory','flow','stats.produced','galaxy.ships','galaxy.defenses','maintenance.damagedShips','maintenance.damagedDefenses']
+    roots:['credits','totalEarned','runEarned','topScore'],
+    decimalMaps:['inventory','flow','stats.produced'],
+    structuralMaps:['galaxy.ships','galaxy.defenses','maintenance.damagedShips','maintenance.damagedDefenses']
   };
+  const allEconomyMaps=()=>economyPaths.decimalMaps.concat(economyPaths.structuralMaps);
   function getPath(obj,path){return path.split('.').reduce((v,k)=>v&&v[k],obj);}
   function setPath(obj,path,value){const parts=path.split('.');let cur=obj;for(let i=0;i<parts.length-1;i++)cur=cur[parts[i]]||(cur[parts[i]]={});cur[parts.at(-1)]=value;}
-  function buildShadow(v16){const out={};for(const key of economyPaths.roots)out[`economy.${key}`]=v16.economy?.[key]||'0';for(const path of economyPaths.maps)for(const[k,v]of Object.entries(getPath(v16,path)||{}))out[`${path}.${k}`]=v;return out;}
-  function storageValue(path,value,shadow){const prior=shadow?.[path];if(prior&&EN.toSafeNumber(prior)===Number(value||0))return prior;return EN.toStorage(value||0);}
+  function buildShadow(v16){const out={};for(const key of economyPaths.roots)out[`economy.${key}`]=v16.economy?.[key]||'0';for(const path of allEconomyMaps())for(const[k,v]of Object.entries(getPath(v16,path)||{}))out[`${path}.${k}`]=v;return out;}
+  function storageValue(path,value,shadow,signedValue){
+    const prior=shadow?.[path];
+    try{if(prior&&(signedValue?EN.fromStorageSigned(prior).eq(EN.signed(value)):EN.fromStorage(prior).eq(EN.safe(value))))return prior;}catch(_){}
+    return signedValue?EN.toStorageSigned(value||0):EN.toStorage(value||0);
+  }
   function runtimeFromV16(v16){
     M.validateV16(v16);const shadow=buildShadow(v16),raw=clone(v16);
-    raw.version=15;raw.coins=EN.toSafeNumber(v16.economy.credits);raw.totalEarned=EN.toSafeNumber(v16.economy.totalEarned);raw.runEarned=EN.toSafeNumber(v16.economy.runEarned);raw.topScore=EN.toSafeNumber(v16.economy.topScore);
+    raw.version=16;
+    raw.coins=EN.fromStorage(v16.economy.credits);raw.totalEarned=EN.fromStorage(v16.economy.totalEarned);raw.runEarned=EN.fromStorage(v16.economy.runEarned);raw.topScore=EN.fromStorage(v16.economy.topScore);
     delete raw.economy;delete raw.schemaVersion;delete raw.economyNumberStorage;
-    for(const path of economyPaths.maps){const map=getPath(v16,path)||{},converted={};for(const[k,v]of Object.entries(map))converted[k]=EN.toSafeNumber(v);setPath(raw,path,converted);}
-    raw.market=Object.assign({},raw.market,{level:Math.max(1,Number(v16.market.networkMk||raw.market?.level||1)),satellites:Number(v16.market.satelliteCount||raw.market?.satellites||0)});
+    for(const path of economyPaths.decimalMaps){const map=getPath(v16,path)||{},converted={};for(const[k,v]of Object.entries(map))converted[k]=path==='flow'?EN.fromStorageSigned(v):EN.fromStorage(v);setPath(raw,path,converted);}
+    for(const path of economyPaths.structuralMaps){const map=getPath(v16,path)||{},converted={};for(const[k,v]of Object.entries(map))converted[k]=Math.max(0,Math.floor(EN.toSafeNumber(v,1000000000)));setPath(raw,path,converted);}
+    raw.market=Object.assign({},raw.market,{level:Number(v16.market.networkMk||0),networkMk:Number(v16.market.networkMk||0),satellites:Number(v16.market.satelliteCount||0),prototypeBuilt:!!v16.market.prototypeBuilt,creditEconomyUnlocked:!!v16.market.creditEconomyUnlocked,legacyAccess:!!v16.market.legacyAccess,lastRevenue:EN.fromStorage(v16.market.lastRevenue||'0'),lastUnits:EN.fromStorage(v16.market.lastUnits||'0'),totalRevenue:EN.fromStorage(v16.market.totalRevenue||'0')});
     const state=normalize(raw);
     Object.defineProperty(state,'__v16Shadow',{value:shadow,writable:true,configurable:true,enumerable:false});
     Object.defineProperty(state,'__v16Migration',{value:clone(v16.migration),writable:true,configurable:true,enumerable:false});
@@ -36,10 +45,11 @@
   function encodeRuntime(state){
     const raw=clone(state),shadow=state.__v16Shadow||{};raw.version=16;raw.schemaVersion=16;raw.economyNumberStorage='string';
     raw.economy={credits:storageValue('economy.credits',state.coins,shadow),totalEarned:storageValue('economy.totalEarned',state.totalEarned,shadow),runEarned:storageValue('economy.runEarned',state.runEarned,shadow),topScore:storageValue('economy.topScore',state.topScore,shadow)};
-    for(const path of economyPaths.maps){const map=getPath(state,path)||{},encoded={};for(const[k,v]of Object.entries(map))encoded[k]=storageValue(`${path}.${k}`,v,shadow);setPath(raw,path,encoded);}
-    const hasMarket=!!state.researched?.marketSatellite,mk=hasMarket?Math.max(1,Math.min(3,Math.floor(Number(state.market?.level)||1))):0,sats=hasMarket?Math.max(0,Math.min(mk*3,Math.floor(Number(state.market?.satellites)||mk*3))):0;
-    raw.market=Object.assign({},raw.market,{networkMk:mk,satelliteCount:sats,prototypeBuilt:hasMarket,creditEconomyUnlocked:true,lastRevenue:storageValue('market.lastRevenue',state.market?.lastRevenue||0,shadow),lastUnits:storageValue('market.lastUnits',state.market?.lastUnits||0,shadow),totalRevenue:storageValue('market.totalRevenue',state.market?.totalRevenue||0,shadow),foundingContractsCompleted:hasMarket?[...M.FOUNDING_CONTRACT_IDS]:[],legacyAccess:true});
-    const previous=state.__v16Migration||{};raw.migration={fromVersion:15,toVersion:16,migratedAt:previous.migratedAt||now(),backupSha256:previous.backupSha256||M.sha256(JSON.stringify(state)),exactUnsafeIntegerLiteralsPreserved:true,inheritedTechnologies:Array.isArray(previous.inheritedTechnologies)?previous.inheritedTechnologies:[],legacyCreditAccess:true,warnings:Array.isArray(previous.warnings)?previous.warnings:[]};
+    for(const path of economyPaths.decimalMaps){const map=getPath(state,path)||{},encoded={};for(const[k,v]of Object.entries(map))encoded[k]=storageValue(`${path}.${k}`,v,shadow,path==='flow');setPath(raw,path,encoded);}
+    for(const path of economyPaths.structuralMaps){const map=getPath(state,path)||{},encoded={};for(const[k,v]of Object.entries(map))encoded[k]=EN.toStorage(Math.max(0,Math.floor(Number(v)||0)));setPath(raw,path,encoded);}
+    const mk=Math.max(0,Math.min(3,Math.floor(Number(state.market?.networkMk??state.market?.level)||0))),sats=Math.max(0,Math.min(9,Math.floor(Number(state.galaxy?.satellites?.prototypeMarketSatellite||0)+Number(state.galaxy?.satellites?.marketSatellite||0))));
+    raw.market=Object.assign({},raw.market,{networkMk:mk,satelliteCount:sats,prototypeBuilt:!!state.market?.prototypeBuilt,creditEconomyUnlocked:!!state.market?.creditEconomyUnlocked,lastRevenue:storageValue('market.lastRevenue',state.market?.lastRevenue||0,shadow),lastUnits:storageValue('market.lastUnits',state.market?.lastUnits||0,shadow),totalRevenue:storageValue('market.totalRevenue',state.market?.totalRevenue||0,shadow),foundingContractsCompleted:[...(state.market?.foundingContractsCompleted||[])],legacyAccess:!!state.market?.legacyAccess});
+    const previous=state.__v16Migration||{};raw.migration={fromVersion:Number(previous.fromVersion||15),toVersion:16,migratedAt:previous.migratedAt||now(),backupSha256:previous.backupSha256||M.sha256(JSON.stringify(state)),exactUnsafeIntegerLiteralsPreserved:previous.exactUnsafeIntegerLiteralsPreserved!==false,inheritedTechnologies:Array.isArray(previous.inheritedTechnologies)?previous.inheritedTechnologies:[],legacyCreditAccess:!!state.market?.legacyAccess,warnings:Array.isArray(previous.warnings)?previous.warnings:[]};
     delete raw.coins;delete raw.credits;delete raw.totalEarned;delete raw.runEarned;delete raw.topScore;
     M.validateV16(raw);return raw;
   }
@@ -64,7 +74,7 @@
   const b64encode=s=>btoa(unescape(encodeURIComponent(s))),b64decode=s=>decodeURIComponent(escape(atob(s)));
   function exportString(state){const payload={format:'axyon-frontier-profile-v16',version:2,profile:currentProfile(),state:encodeRuntime(state)};return b64encode(JSON.stringify(payload));}
   function importString(str){try{const decoded=JSON.parse(b64decode(str.trim())),raw=decoded&&/^axyon-frontier-profile/.test(decoded.format||'')?decoded.state:decoded;if(Number(raw?.version)===16){M.validateV16(raw);return{ok:true,state:runtimeFromV16(raw)};}return{ok:true,state:normalize(raw)};}catch(e){return{ok:false,error:'Geçersiz veya bozuk kayıt kodu.'};}}
-  function diagnostics(){return{schema:16,enabled:FLAGS.V44_SAVE_V16_ENABLED!==false,suspended,blockingError,lastMigration,profile:currentProfile(),canonicalVersion:global.Axyon.Canonical?.version||null,economyEngine:EN?.engine||null,runtimeMode:global.Axyon.Numbers?.runtimeMode||null};}
+  function diagnostics(){return{schema:16,enabled:FLAGS.V44_SAVE_V16_ENABLED!==false,suspended,blockingError,lastMigration,profile:currentProfile(),canonicalVersion:global.Axyon.Canonical?.version||null,economyEngine:EN?.engine||null,runtimeMode:global.Axyon.Numbers?.runtimeMode||null,firstOrbit:true};}
   function rawActiveSave(){const id=currentProfileId();return id?localStorage.getItem(saveKey(id)):null;}
   global.Axyon=global.Axyon||{};global.Axyon.SaveService={bootstrap,save,load,resetCurrent,deleteAll,exportString,importString,listProfiles,currentProfile,currentProfileId,createProfile,selectProfile,deleteProfile,setSuspended,diagnostics,rawActiveSave,hasBlockingError:()=>!!blockingError,clearBlockingError:()=>{blockingError=null;suspended=false;},keys:{INDEX_KEY,ACTIVE_KEY,SAVE_PREFIX,LEGACY_KEY},_test:{encodeRuntime,runtimeFromV16,ensureV16}};
 })(typeof window!=='undefined'?window:globalThis);

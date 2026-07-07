@@ -1,7 +1,7 @@
 {
-  "name": "Axyon Idle Factory: First Orbit & Dominion — U1 Foundation",
+  "name": "Axyon Idle Factory: First Orbit & Dominion — U2 Economy",
   "short_name": "Axyon First Orbit",
-  "description": "v4.4 U1 altyapı sürümü: save v16, kayıpsız v15 migrasyonu, EconomyNumber adaptörü, frozen canonical data; Warfront Command oynanışı korunur. Mevcut filo, savaş, enkaz ve tamir sistemleri korunur.",
+  "description": "v4.4 U2 oynanabilir ekonomi köprüsü: Decimal-native üretim ve kayıt, sıfır kredili başlangıç, sentetik/petrol yakıt rotaları, Mk 0 Pazar Uydusu ve üç kuruluş sözleşmesi; savaş, enkaz ve tamir sistemleri korunur.",
   "start_url": "./index.html",
   "display": "standalone",
   "orientation": "any",
@@ -20,5 +20,6 @@
       "type": "image/png",
       "purpose": "any maskable"
     }
-  ]
+  ],
+  "version": "4.4.0-u2"
 }

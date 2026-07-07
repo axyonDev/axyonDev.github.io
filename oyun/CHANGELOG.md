@@ -1,5 +1,23 @@
 # Changelog
 
+## 4.4.0-u2 — Decimal Economy & First Orbit Bridge
+
+- Kredi, stok, üretim, akış ve maliyet işlemleri EconomyNumber/Decimal-native runtime’a geçirildi.
+- Yeni oyun 0 krediyle başlar; kredi göstergesi ilk yörünge ekonomisi açılana kadar kilitli görünür.
+- Başlangıç tek sektörde garantili demir, bakır ve kömürle kurulur.
+- Tek seferlik başlangıç makineleri ve 120 güçlük iniş reaktörü eklendi.
+- Makine ve santral inşası kredi yerine gerçek üretim malzemeleri tüketir.
+- Süreli sektör taraması, su/taş garantisi, petrol rotası ve petrolsüz sentetik yakıt rotası eklendi.
+- RP-1, Sıvı Oksijen ve Basınçlı Azot kullanan Prototip Pazar Uydusu Mk 0 oynanışa açıldı.
+- Üç kuruluş sözleşmesi toplam 13.500 kredi verir; Pazar Ağı Mk I sonrası en az 1.500 kredi kalır.
+- Yerel satış kapalı tutuldu; normal satışlar yalnız Pazar Uydusu kotası ve sefer süresiyle çalışır.
+- v16 kayıt sistemi Decimal runtime nesneleri ve exact unsafe-integer shadow verisiyle uyumlu hale getirildi.
+- Eski filo, savaş, enkaz, baskın ve tamir işlemleri Decimal tiplerini koruyan güvenli köprüye alındı.
+- Çevrimdışı cezalandırıcı baskın sessizce çözülmez; hazırlık penceresine ertelenir.
+- U2 First Orbit durum kartları, kuruluş sözleşmeleri ve responsive CSS eklendi.
+- Ansiklopedi U2 canonical köprüsüne, service worker U2 asset listesine bağlandı.
+- Yeni U2 ilk yörünge, veri bütünlüğü, DOM, migrasyon ve stabilite testleri eklendi.
+
 ## 4.4.0-u1 — Save v16 & Canonical Data Foundation
 
 - `break_eternity.js` ve merkezi EconomyNumber adaptörü eklendi.
