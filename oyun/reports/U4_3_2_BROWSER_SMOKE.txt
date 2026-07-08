@@ -1,0 +1,56 @@
+PASS U4.3.2 direct resource build, ESC/back cancellation and strict connected power
+{
+  "directResourceBuild": {
+    "mode": "select",
+    "x": 149,
+    "y": 140,
+    "defId": "ironMine",
+    "inspectorEntity": "e1"
+  },
+  "escapeSelection": {
+    "mode": "select",
+    "hidden": true
+  },
+  "escapeTool": {
+    "mode": "select",
+    "paletteHidden": true
+  },
+  "mobileBack": {
+    "mode": "select",
+    "inspectorHidden": true
+  },
+  "strictPower": {
+    "before": {
+      "ore": "0",
+      "plate": "0",
+      "coal": "12"
+    },
+    "unlinkedCoal": "12",
+    "after": {
+      "ore": "4.999999999999998",
+      "plate": "4.999999999999998",
+      "coal": "11.249999999999972"
+    },
+    "links": [
+      true,
+      true
+    ],
+    "minePower": {
+      "linked": true,
+      "powered": true,
+      "ratio": 1
+    },
+    "furnacePower": {
+      "linked": true,
+      "powered": true,
+      "ratio": 1
+    },
+    "landing": 0
+  },
+  "overflow": {
+    "scroll": 390,
+    "inner": 390
+  },
+  "errors": [],
+  "consoleErrors": []
+}

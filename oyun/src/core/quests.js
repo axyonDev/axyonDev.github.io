@@ -16,12 +16,12 @@
       case 'battleWin':cur=s.stats.battlesWon||0;break;
       case 'coins':cur=s.coins||0;break;
     }
-    return {quest:q,current:cur,target:q.target,done:cur>=q.target};
+    return {quest:q,current:cur,target:q.target,done:N.gte?N.gte(cur,q.target):Number(cur)>=q.target};
   }
   function tryComplete(s){
     const p=questProgress(s);if(!p||!p.done)return null;const r=p.quest.reward||{},parts=[];
     if(r.coins){E.addCoins(s,r.coins);parts.push(`+${N.format(r.coins)} 🪙`);}
-    Object.keys(D.items).forEach(k=>{if(r[k]){s.inventory[k]=(s.inventory[k]||0)+r[k];parts.push(`+${r[k]} ${D.items[k].icon}`);}});
+    Object.keys(D.items).forEach(k=>{if(r[k]){s.inventory[k]=N.add(s.inventory[k]||0,r[k]);parts.push(`+${r[k]} ${D.items[k].icon}`);}});
     s.questIndex++;return {desc:p.quest.desc,rewardText:parts.join('  ')};
   }
   function checkAchievements(s){const out=[];D.achievements.forEach(a=>{if(!s.achievements[a.id]&&a.check(s)){s.achievements[a.id]=true;out.push(a);}});return out;}

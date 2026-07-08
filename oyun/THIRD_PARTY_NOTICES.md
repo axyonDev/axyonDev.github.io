@@ -3,8 +3,10 @@
 ## break_eternity.js
 
 - Version: 2.1.3
-- Purpose: very large economy number representation for staged v4.4 integration
+- Copyright: Patashu and contributors
 - License: MIT
-- License file: `vendor/break_eternity/LICENSE`
+- Source project: `break_eternity.js`
+- Bundled files: `vendor/break_eternity/break_eternity.min.js`, `vendor/break_eternity/break_eternity.cjs.js`
+- License copy: `vendor/break_eternity/LICENSE`
 
-The U1 gameplay runtime remains in numeric compatibility mode. Direct Decimal economy operations are not enabled until U2.
+U2 ekonomi runtime’ı kütüphaneye yalnız `Axyon.EconomyNumber` adaptörü üzerinden erişir. Oyun modüllerinde doğrudan Decimal bağımlılığı kullanılmamalıdır.

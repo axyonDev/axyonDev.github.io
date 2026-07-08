@@ -5,7 +5,7 @@
   const esc=v=>String(v??'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
   const fmtItems=obj=>Object.entries(obj||{}).filter(([,v])=>v>0).map(([k,v])=>k==='coins'?`🪙 ${N.format(v)} Kredi`:`${D.items[k]?.icon||''} ${N.format(v)} ${D.items[k]?.name||k}`).join(' · ')||'—';
   const fmtFleet=obj=>D.ships.filter(d=>(obj?.[d.id]||0)>0).map(d=>`${d.icon} ${obj[d.id]} ${d.name}`).join(' · ')||'—';
-  const fmtDefense=obj=>D.defenses.filter(d=>(obj?.[d.id]||0)>0).map(d=>`${d.icon} ${obj[d.id]} ${d.name}`).join(' · ')||'—';
+  const fmtDefense=obj=>D.defenses.filter(d=>!d.hidden&&(obj?.[d.id]||0)>0).map(d=>`${d.icon} ${obj[d.id]} ${d.name}`).join(' · ')||'—';
   const zoneMeta={planet:{name:'Gezegen Yüzeyi',icon:'🪐',desc:'Üretim ve savunma altyapısı'},orbital:{name:'Yörünge Tesisleri',icon:'🛰️',desc:'Tersane, filo ve kuru havuz'},satellite:{name:'Uydu Ağı',icon:'📡',desc:'Pazar uydusu ve iletişim'}};
   let filter='all',selectedId='';
 
@@ -22,7 +22,7 @@
   function renderDamaged(state,E){
     const shipRoot=el('damaged-ship-list'),defRoot=el('damaged-defense-list');
     if(shipRoot)shipRoot.innerHTML=D.ships.map(d=>{const n=state.maintenance.damagedShips[d.id]||0,c=E.repairJobCost(state,'ship',d.id,Math.max(1,Math.min(5,n)));return `<div class="damage-row ${n?'':'empty'}"><span>${d.icon}</span><div><b>${d.name}</b><small>Hasarlı: ${n}${n?` · ${fmtItems(c.items)} · ${N.formatTime(c.seconds)}`:''}</small></div><button data-repair-ship="${d.id}" data-amount="${Math.max(1,Math.min(5,n))}" ${n<1||!E.canQueueRepair(state,'ship',d.id,Math.max(1,Math.min(5,n)))?'disabled':''}>${Math.min(5,n)||1} tamir</button></div>`;}).join('');
-    if(defRoot)defRoot.innerHTML=D.defenses.map(d=>{const n=state.maintenance.damagedDefenses[d.id]||0,c=E.repairJobCost(state,'defense',d.id,Math.max(1,Math.min(10,n)));return `<div class="damage-row ${n?'':'empty'}"><span>${d.icon}</span><div><b>${d.name}</b><small>Hasarlı: ${n}${n?` · ${fmtItems(c.items)} · ${N.formatTime(c.seconds)}`:''}</small></div><button data-repair-defense="${d.id}" data-amount="${Math.max(1,Math.min(10,n))}" ${n<1||!E.canQueueRepair(state,'defense',d.id,Math.max(1,Math.min(10,n)))?'disabled':''}>${Math.min(10,n)||1} tamir</button></div>`;}).join('');
+    if(defRoot)defRoot.innerHTML=D.defenses.filter(d=>!d.hidden).map(d=>{const n=state.maintenance.damagedDefenses[d.id]||0,c=E.repairJobCost(state,'defense',d.id,Math.max(1,Math.min(10,n)));return `<div class="damage-row ${n?'':'empty'}"><span>${d.icon}</span><div><b>${d.name}</b><small>Hasarlı: ${n}${n?` · ${fmtItems(c.items)} · ${N.formatTime(c.seconds)}`:''}</small></div><button data-repair-defense="${d.id}" data-amount="${Math.max(1,Math.min(10,n))}" ${n<1||!E.canQueueRepair(state,'defense',d.id,Math.max(1,Math.min(10,n)))?'disabled':''}>${Math.min(10,n)||1} tamir</button></div>`;}).join('');
   }
 
   function renderQueue(state){const root=el('repair-queue');if(!root)return;const now=Date.now();root.innerHTML=state.maintenance.repairQueue.length?state.maintenance.repairQueue.map(j=>{const name=j.kind==='zone'?zoneMeta[j.targetId]?.name:j.kind==='ship'?D.ships.find(d=>d.id===j.targetId)?.name:D.defenses.find(d=>d.id===j.targetId)?.name;return `<div class="queue-row"><span>🧰 ${esc(name)} ×${j.amount}</span><b>${N.formatTime(Math.max(0,(j.finishAt-now)/1000))}</b></div>`;}).join(''):'<div class="report-empty">Tamir kuyruğu boş.</div>';}

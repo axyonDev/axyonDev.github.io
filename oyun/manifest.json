@@ -1,7 +1,7 @@
 {
-  "name": "Axyon Idle Factory: First Orbit & Dominion — U1 Foundation",
-  "short_name": "Axyon First Orbit",
-  "description": "v4.4 U1 altyapı sürümü: save v16, kayıpsız v15 migrasyonu, EconomyNumber adaptörü, frozen canonical data; Warfront Command oynanışı korunur. Mevcut filo, savaş, enkaz ve tamir sistemleri korunur.",
+  "name": "AXYON: Orbital Ascendancy — Power Discipline",
+  "short_name": "AXYON OA",
+  "description": "Gerçek enerji bağlantıları, yakıt disiplini, doğrudan kaynak kurulumu ve sunucu-otoriteli kalıcı strateji oyunu.",
   "start_url": "./index.html",
   "display": "standalone",
   "orientation": "any",
@@ -20,5 +20,6 @@
       "type": "image/png",
       "purpose": "any maskable"
     }
-  ]
+  ],
+  "version": "4.5.5-u4.3.2"
 }

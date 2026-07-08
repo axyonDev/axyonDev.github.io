@@ -41,6 +41,15 @@
     }
   }
 
+  function signed(value, fallback) {
+    try {
+      const d = decimal(value);
+      return finite(d) ? d : decimal(fallback === undefined ? 0 : fallback);
+    } catch (_) {
+      return decimal(fallback === undefined ? 0 : fallback);
+    }
+  }
+
   function nonNegative(value, fallback) {
     const d = finite(value) ? decimal(value) : decimal(fallback === undefined ? 0 : fallback);
     return d.lt ? (d.lt(0) ? new Decimal(0) : d) : (d.sign < 0 ? new Decimal(0) : d);
@@ -51,11 +60,18 @@
   }
 
   function add(a, b) { return safe(a).add(safe(b)); }
+  function addSigned(a, b) { return signed(a).add(signed(b)); }
   function sub(a, b) { return safe(a).sub(safe(b)).max(0); }
+  function subSigned(a, b) { return signed(a).sub(signed(b)); }
   function mul(a, b) { return safe(a).mul(safe(b)); }
+  function mulSigned(a, b) { return signed(a).mul(signed(b)); }
   function div(a, b) {
     const denominator = safe(b);
     return denominator.eq(0) ? new Decimal(0) : safe(a).div(denominator).max(0);
+  }
+  function divSigned(a, b) {
+    const denominator = signed(b);
+    return denominator.eq(0) ? new Decimal(0) : signed(a).div(denominator);
   }
   function pow(base, exponent) {
     const result = safe(base).pow(decimal(exponent));
@@ -77,6 +93,9 @@
     // break_eternity's own notation is round-trippable, including e/ee/(e^n).
     return d.toString();
   }
+  function toStorageSigned(value) {
+    return signed(value).toString();
+  }
 
   function fromStorage(value) {
     if (typeof value !== 'string' && typeof value !== 'number' && typeof value !== 'bigint') {
@@ -86,12 +105,30 @@
     if (!finite(d) || d.sign < 0) throw new RangeError('Invalid EconomyNumber storage value');
     return d;
   }
+  function fromStorageSigned(value) {
+    if (typeof value !== 'string' && typeof value !== 'number' && typeof value !== 'bigint') {
+      throw new TypeError('EconomyNumber storage value must be string/number/bigint');
+    }
+    const d = decimal(value);
+    if (!finite(d)) throw new RangeError('Invalid signed EconomyNumber storage value');
+    return d;
+  }
 
   function isValidStorage(value) {
     try {
       if (typeof value !== 'string' || value.trim() === '') return false;
       const d = fromStorage(value);
       const roundTrip = fromStorage(toStorage(d));
+      return roundTrip.eq(d);
+    } catch (_) {
+      return false;
+    }
+  }
+  function isValidSignedStorage(value) {
+    try {
+      if (typeof value !== 'string' || value.trim() === '') return false;
+      const d = fromStorageSigned(value);
+      const roundTrip = fromStorageSigned(toStorageSigned(d));
       return roundTrip.eq(d);
     } catch (_) {
       return false;
@@ -137,12 +174,17 @@
     ZERO,
     ONE,
     decimal,
+    signed,
     safe,
     finite,
     add,
+    addSigned,
     sub,
+    subSigned,
     mul,
+    mulSigned,
     div,
+    divSigned,
     pow,
     min,
     max,
@@ -155,13 +197,16 @@
     gt: (a,b) => safe(a).gt(safe(b)),
     gte: (a,b) => safe(a).gte(safe(b)),
     toStorage,
+    toStorageSigned,
     fromStorage,
+    fromStorageSigned,
     isValidStorage,
+    isValidSignedStorage,
     toSafeNumber,
     format,
     sum,
     product,
-    version: '1.0.0',
+    version: '1.1.0-u2',
     engine: 'break_eternity.js@2.1.3'
   });
 });

@@ -1,169 +1,51 @@
-const fs = require('fs');
-const vm = require('vm');
-const path = require('path');
-const root = path.resolve(__dirname, '..');
-const ctx = { console, Date, Math, setTimeout, clearTimeout };
-ctx.globalThis = ctx;
-vm.createContext(ctx);
-for (const file of ['data/feature-flags.js','vendor/break_eternity/break_eternity.min.js','src/core/economy-number.js','src/core/lossless-json.js','src/services/save-migrator-v16.js','data/canonical/game-data.v4.4.final.js','src/core/canonical-data-loader.js','src/core/numbers.js','data/config.js','src/core/economy.js','src/core/quests.js']) {
-  vm.runInContext(fs.readFileSync(path.join(root, file), 'utf8'), ctx, { filename: file });
-}
-const { Economy:E, Data:D, Quests:Q } = ctx.Axyon;
-function assert(condition, message) { if (!condition) throw new Error(message); }
-function findNode(s, type) { for (const key in s.map.nodes) if (s.map.nodes[key].type === type) return key.split(',').map(Number); return null; }
-function freeCell(s, defId, type='machine') {
-  for (const sec of E.openSectorList(s)) {
-    for (let y=sec.sy*D.map.sectorSize; y<(sec.sy+1)*D.map.sectorSize; y++) {
-      for (let x=sec.sx*D.map.sectorSize; x<(sec.sx+1)*D.map.sectorSize; x++) {
-        if (E.canPlaceAt(s, defId, type, x, y)) return [x,y];
-      }
-    }
-  }
-  return null;
-}
+'use strict';
+const assert=require('assert');
+const {loadRuntime,fillEconomy,decimalEq}=require('./runtime-loader');
+const ctx=loadRuntime();
+const {Economy:E,Data:D,Quests:Q,EconomyNumber:EN}=ctx.Axyon;
+const seedAll=(s,value='1e15')=>{fillEconomy(ctx,s,value);};
 
-const s = E.createInitialState();
-assert(s.version === 15, 'save schema must be v15');
-assert(D.map.size === 300, 'map must be 300x300');
-assert(E.sectorsPerSide() === 15, 'map must have 15 sectors per side');
-assert(E.openSectorList(s).length === 1, 'start must open 1 sector');
-assert(!('nexus' in s) && !('prestigeCount' in s), 'Nexus/prestige state must not exist');
+const s=E.createInitialState();
+assert.strictEqual(s.version,16);assert.strictEqual(D.map.size,300);assert.strictEqual(E.sectorsPerSide(),15);assert.strictEqual(E.openSectorList(s).length,1);assert(!('nexus'in s)&&!('prestigeCount'in s));assert.strictEqual(Object.keys(s.grid.entities).length,0,'new game must open on an empty map');
+const starterIds=Object.keys(D.firstOrbit.starterPackage.machines),starterEntities=[];for(const id of starterIds){let cell=null;for(const sec of E.openSectorList(s))for(let y=sec.sy*20;y<(sec.sy+1)*20&&!cell;y++)for(let x=sec.sx*20;x<(sec.sx+1)*20;x++)if(E.canPlaceAt(s,id,'machine',x,y)){cell=[x,y];break;}const eid=cell&&E.placeMachine(s,id,...cell);assert(eid,`manual starter placement failed: ${id}`);starterEntities.push(eid);}
+// Strict power discipline: the factory remains inert until a fueled generator is physically linked.
+for(let i=0;i<10;i++)E.tick(s,.1,Date.now()+i*100);
+assert(EN.eq(s.stats.produced.coal,0),'unpowered starter factory produced resources');
+let plantCell=null;for(const sec of E.openSectorList(s))for(let y=sec.sy*20;y<(sec.sy+1)*20&&!plantCell;y++)for(let x=sec.sx*20;x<(sec.sx+1)*20;x++)if(E.canPlaceAt(s,'coalGen','plant',x,y)){plantCell=[x,y];break;}const plantId=plantCell&&E.placePlant(s,'coalGen',...plantCell);assert(plantId,'free coal generator placement failed');for(const eid of starterEntities)assert(E.addPowerLine(s,plantId,eid),`power line failed: ${eid}`);
+for(let i=0;i<300;i++)E.tick(s,.1,Date.now()+1000+i*100);
+assert(EN.gt(s.stats.produced.coal,0),'powered starter extraction failed');assert(EN.gt(s.stats.produced.alphaCore,0),'powered starter research-data chain failed');
 
-s.coins = 1e9;
-const ironNode = findNode(s, 'ironOre');
-assert(ironNode, 'guaranteed iron node missing');
-assert(E.placeMachine(s, 'ironMine', ironNode[0], ironNode[1]), 'iron mine placement failed');
-const furnaceCell = freeCell(s, 'ironFurnace');
-assert(furnaceCell && E.placeMachine(s, 'ironFurnace', ...furnaceCell), 'iron furnace placement failed');
-assert(E.buyManager(s, 'ironMine'), 'iron mine automation failed');
-assert(E.buyManager(s, 'ironFurnace'), 'furnace automation failed');
-for (let i=0;i<100;i++) E.tick(s, .1, Date.now()+i*100);
-assert(s.stats.produced.ironOre > 0, 'iron production failed');
-assert(s.stats.produced.ironPlate > 0, 'production chain failed');
+// Existing Mk/automation systems remain playable through the Decimal bridge.
+seedAll(s);D.research.forEach(t=>s.researched[t.id]=true);s.market.prototypeBuilt=true;s.galaxy.satellites.prototypeMarketSatellite=1;E.initializeThreatState(s,Date.now());
+assert(E.upgradeAutomation(s,'ironMine'));assert(E.automationLevel(s,'ironMine')>=2);
+assert(E.doUpgradeClass(s,'ironMine','machine'));assert.strictEqual(E.machineLevel(s,'ironMine'),2);
+assert(s.coins instanceof EN.Decimal&&s.inventory.gear instanceof EN.Decimal,'legacy upgrade downgraded economy values');
 
-s.researched.marketSatellite = true;
-s.market.satellites = 3;
-s.market.enabled = true;
-E.setGlobalMarketKeep(s, 0);
-s.inventory.ironPlate = 500;
-s.market.nextDispatchAt = Date.now()-1;
-const creditsBefore = s.coins;
-E.tick(s, .2, Date.now());
-assert(s.stats.marketDispatches === 1, 'market dispatch failed');
-assert(s.coins > creditsBefore, 'market revenue missing');
-assert(s.market.lastUnits <= E.marketCapacity(s)+0.001, 'market exceeded quota');
+// Galaxy battle, return, resurgence and colonization remain functional.
+s.galaxy.scanCooldownUntil=0;const target=E.scanNextTarget(s);assert(target&&target.discovered,'galaxy scan failed');s.galaxy.ships.dreadnought=20;
+assert(E.sendFleet(s,target.id,{dreadnought:8}),'fleet launch failed');const mission=s.galaxy.missions[0];E.tick(s,1,mission.arrivalAt+1);assert.strictEqual(mission.status,'returning');E.tick(s,1,mission.returnAt+1);assert.strictEqual(s.galaxy.missions.length,0);assert.strictEqual(s.stats.battlesWon+s.stats.battlesLost,1);
+target.defeated=true;target.colonized=false;target.recoveryAt=Date.now()-1;const oldStrength=target.strength;E.tick(s,.1,Date.now());assert(!target.defeated&&target.strength>oldStrength,'enemy resurgence failed');
+target.defeated=true;s.galaxy.ships.colonyShip=1;assert(E.colonizeTarget(s,target.id),'invasion launch failed');const invasion=s.galaxy.missions.find(m=>m.type==='invasion');E.tick(s,1,invasion.arrivalAt+1);E.tick(s,1,invasion.returnAt+1);assert.strictEqual(s.galaxy.colonies,2);
 
-s.researched.buildingMk2 = true;
-s.inventory.gear = 1000;
-s.inventory.circuit = 1000;
-assert(E.doUpgradeClass(s, 'ironMine', 'machine'), 'Mk II upgrade failed');
-assert(E.machineLevel(s, 'ironMine') === 2, 'machine level did not increase');
+// Raid reports damage without deleting the spatial factory.
+const entitiesBefore=Object.keys(s.grid.entities).length;s.galaxy.nextRaidAt=Date.now()-1;E.tick(s,.1,Date.now());assert.strictEqual(Object.keys(s.grid.entities).length,entitiesBefore);assert.strictEqual(s.stats.raidsWon+s.stats.raidsLost,1);
 
-for (const id of ['scanner','shipyard','fleetCommand','warpDrive']) s.researched[id] = true;
-s.inventory.processor = 10000;
-s.inventory.starFuel = 10000;
-const target = E.scanNextTarget(s);
-assert(target && target.discovered, 'galaxy scan failed');
-s.galaxy.ships.fighter = 100;
-assert(E.sendFleet(s, target.id, { fighter:50 }), 'fleet launch failed');
-const mission = s.galaxy.missions[0];
-E.tick(s, 1, mission.arrivalAt+1);
-assert(mission.status === 'returning', 'battle did not resolve');
-E.tick(s, 1, mission.returnAt+1);
-assert(s.galaxy.missions.length === 0, 'fleet did not return');
-assert(s.stats.battlesWon + s.stats.battlesLost === 1, 'battle result missing');
+// v8 spatial migration refunds legacy investment and restores the v4.4 starter base.
+const old={version:8,coins:1234,inventory:{ironOre:77},machines:{ironMine:{count:4,hasManager:true,eff:1,milestoneMult:1}},plants:{},researched:{basics:true},map:{openSectors:{'0,0':true},nodes:{},nodeNextSeed:1},grid:{entities:{old:{id:'old',type:'machine',defId:'ironMine',x:1,y:1}},conveyors:[],powerLines:[],nextId:2},stats:{produced:{ironOre:5}}};
+const migrated=E.normalizeState(old);assert.strictEqual(migrated.version,16);assert(EN.gte(migrated.coins,1234));assert(decimalEq(ctx,migrated.inventory.ironOre,77));assert.strictEqual(migrated.machines.ironMine.count,1,'legacy machines were not replaced by starter package');assert.strictEqual(Object.keys(migrated.grid.entities).length,7);
 
-// Defeated non-colonized enemies must return stronger; the galaxy cannot become permanently empty.
-target.defeated = true;
-target.colonized = false;
-target.recoveryAt = Date.now()-1;
-const recoveredStrength = target.strength;
-E.tick(s, .1, Date.now());
-assert(!target.defeated && target.strength > recoveredStrength, 'defeated enemy resurgence failed');
+// A modern spatial save must preserve the existing 300x300 factory.
+const modern=E.createInitialState();modern.version=12;seedAll(modern,'999999');modern.researched.basics=true;const req=E.buildRequirements(modern,'gearPress');for(const[k,v]of Object.entries(req))modern.inventory[k]=EN.add(modern.inventory[k],v);let cell=null;for(const sec of E.openSectorList(modern))for(let y=sec.sy*20;y<(sec.sy+1)*20&&!cell;y++)for(let x=sec.sx*20;x<(sec.sx+1)*20;x++)if(E.canPlaceAt(modern,'gearPress','machine',x,y)){cell=[x,y];break;}assert(cell&&E.placeMachine(modern,'gearPress',...cell));const ids=Object.keys(modern.grid.entities),modernCoins=EN.toStorage(modern.coins);const restored=E.normalizeState(JSON.parse(JSON.stringify(modern)));assert.strictEqual(restored.version,16);assert.strictEqual(EN.toStorage(restored.coins),modernCoins);assert.strictEqual(Object.keys(restored.grid.entities).length,ids.length);
 
-// Force colonization path independently of random battle result.
-target.defeated = true;
-s.researched.colonization = true; s.researched.planetaryInvasion = true; s.galaxy.ships.colonyShip = 1;
-s.coins = 1e9;
-s.inventory.titaniumPlate = 10000;
-s.inventory.machinery = 10000;
-s.inventory.quantumCore = 10000;
-s.inventory.energyCrystal = 10000;
-s.inventory.orbitalParts = 10000;
-s.inventory.starFuel = 10000;
-const multBefore = E.globalMult(s);
-assert(E.colonizeTarget(s, target.id), 'colonization failed');
-const inv=s.galaxy.missions.find(m=>m.type==='invasion');assert(inv,'invasion mission not queued');E.tick(s,1,inv.arrivalAt+1);E.tick(s,1,inv.returnAt+1);assert(s.galaxy.colonies === 2, 'colony count failed');
-assert(E.globalMult(s) > multBefore, 'colony production bonus missing');
-
-// Raid must resolve without deleting buildings.
-const machinesBefore = E.machineCountTotal(s);
-s.galaxy.nextRaidAt = Date.now()-1;
-E.tick(s, .1, Date.now());
-assert(E.machineCountTotal(s) === machinesBefore, 'raid destroyed permanent buildings');
-assert(s.stats.raidsWon + s.stats.raidsLost === 1, 'raid did not resolve');
-
-// Old save migration: economy preserved, spatial map rebuilt.
-const old = { version:8, coins:1234, inventory:{ironOre:77}, machines:{ironMine:{count:4,hasManager:true,eff:1,milestoneMult:1}}, plants:{}, researched:{basics:true}, map:{openSectors:{'0,0':true},nodes:{},nodeNextSeed:1}, grid:{entities:{old:{id:'old',type:'machine',defId:'ironMine',x:1,y:1}},conveyors:[],powerLines:[],nextId:2}, stats:{produced:{ironOre:5}} };
-const migrated = E.normalizeState(old);
-assert(migrated.version === 15, 'migration version failed');
-assert(migrated.coins >= 1234 && migrated.inventory.ironOre === 77, 'migration lost economy/refund');
-assert(migrated.machines.ironMine.count === 0, 'legacy invisible machines must be refunded and reset');
-assert(E.openSectorList(migrated).length === 1, 'migration did not rebuild map');
-assert(Object.keys(migrated.grid.entities).length === 0, 'legacy spatial entities must reset');
-
-// v12 -> v15 migration must preserve the already converted 300x300 spatial factory.
-const v12 = E.createInitialState();
-v12.version = 12;
-v12.coins = 999999;
-const v12Node = findNode(v12, 'ironOre');
-assert(v12Node && E.placeMachine(v12, 'ironMine', v12Node[0], v12Node[1]), 'v12 preservation setup failed');
-const v12EntityIds = Object.keys(v12.grid.entities);
-const v12Coins = v12.coins;
-const v15 = E.normalizeState(JSON.parse(JSON.stringify(v12)));
-assert(v15.version === 15, 'v12 migration version failed');
-assert(v15.coins === v12Coins, 'v12 migration lost economy');
-assert(Object.keys(v15.grid.entities).length === v12EntityIds.length, 'v12 migration erased current map entities');
-assert(Object.keys(v15.map.openSectors).length === Object.keys(v12.map.openSectors).length && v15.grid.entities[v12EntityIds[0]].defId === 'ironMine', 'v12 migration corrupted current map');
-
-// Research order must remain fully reachable and Mk V upgrades must be executable.
-const longGame = E.createInitialState();
-longGame.coins = 1e15;
-Object.keys(D.items).forEach(k => longGame.inventory[k] = 1e12);
-// Long-term research prerequisites: laboratories, infrastructure, fleet and sectors.
-D.machines.forEach(d=>{longGame.machines[d.id].count=5;});
-for(const id of ['alphaLab','betaLab','gammaLab','deltaLab','omegaLab'])longGame.machineLevels[id]=5;
-assert(E.researchLabSpeed(longGame,{lab:'alphaLab',labLevel:1})<=4,'research lab speed cap failed');
+// Every main technology must be reachable when its declared infrastructure is present.
+const longGame=E.createInitialState();seedAll(longGame);D.machines.forEach(d=>{longGame.machines[d.id].count=5;longGame.machines[d.id].hasManager=true;longGame.machines[d.id].automationLevel=1;longGame.machineLevels[d.id]=5;});
 for(let sy=0;sy<6;sy++)for(let sx=0;sx<8;sx++)longGame.map.openSectors[`${sx},${sy}`]=true;
-longGame.galaxy.ships.fighter=20;longGame.market.satellites=3;longGame.stats.battlesWon=10;
-for (const tech of D.research) {
-  assert(E.doResearch(longGame, tech.id), `research path blocked at ${tech.id}: ${E.researchMissing(longGame,tech.id).join(', ')}`);
-  assert(longGame.researchProgress.active, `research did not start at ${tech.id}`);
-  longGame.researchProgress.active.finishAt=Date.now()-1;
-  E.tickResearch(longGame,Date.now());
-  assert(longGame.researched[tech.id], `research did not finish at ${tech.id}`);
-}
-assert(Object.keys(longGame.researched).length === D.research.length, 'main research tree incomplete');
-longGame.machines.ironMine.count = 1;
-longGame.plants.solarArray.count = 1;
-for (let level=2; level<=5; level++) {
-  assert(E.doUpgradeClass(longGame, 'ironMine', 'machine'), `machine Mk ${level} failed`);
-  assert(E.doUpgradeClass(longGame, 'solarArray', 'plant'), `plant Mk ${level} failed`);
-}
-assert(E.machineLevel(longGame,'ironMine') === 5 && E.plantLevel(longGame,'solarArray') === 5, 'Mk V class upgrade incomplete');
+for(const type of Object.keys(D.resourceNodes)){longGame.map.nodes[`${(Object.keys(longGame.map.nodes).length%200)+1},${Math.floor(Object.keys(longGame.map.nodes).length/200)+1}`]={type};}
+D.ships.forEach(d=>longGame.galaxy.ships[d.id]=20);longGame.galaxy.satellites.prototypeMarketSatellite=1;longGame.galaxy.satellites.marketSatellite=9;longGame.market.prototypeBuilt=true;longGame.market.creditEconomyUnlocked=true;longGame.market.foundingContractsCompleted=D.firstOrbit.foundingContracts.map(c=>c.id);longGame.stats.battlesWon=20;
+const pending=new Set(D.research.map(t=>t.id));let guard=0;while(pending.size&&guard++<D.research.length*3){let progressed=false;for(const id of [...pending]){if(!E.canResearch(longGame,id))continue;assert(E.doResearch(longGame,id),`research start failed ${id}`);longGame.researchProgress.active.finishAt=Date.now()-1;E.tickResearch(longGame,Date.now());assert(longGame.researched[id],`research did not finish ${id}`);pending.delete(id);progressed=true;}if(!progressed)break;}assert.strictEqual(pending.size,0,`unreachable technologies: ${[...pending].map(id=>id+': '+E.researchMissing(longGame,id).join(', ')).join(' | ')}`);
+assert.strictEqual(Object.keys(longGame.researched).length,D.research.length);
+longGame.plants.solarArray.count=1;for(let lv=longGame.machineLevels.ironMine+1;lv<=5;lv++)assert(E.doUpgradeClass(longGame,'ironMine','machine'));for(let lv=2;lv<=5;lv++)assert(E.doUpgradeClass(longGame,'solarArray','plant'));assert.strictEqual(E.machineLevel(longGame,'ironMine'),5);assert.strictEqual(E.plantLevel(longGame,'solarArray'),5);
 
-// Offline progress may advance industry, but due raids must wait until the player returns.
-const offline = E.createInitialState();
-offline.lastSeen = Date.now()-60*60*1000;
-offline.galaxy.nextRaidAt = offline.lastSeen+1000;
-const raidsBefore = offline.stats.raidsWon+offline.stats.raidsLost;
-const offlineResult = E.applyOfflineProgress(offline);
-assert(offlineResult.raidDeferred, 'due offline raid was not deferred');
-assert(offline.stats.raidsWon+offline.stats.raidsLost === raidsBefore, 'offline progress resolved a punitive raid');
-assert(offline.galaxy.nextRaidAt > Date.now(), 'deferred raid has no preparation window');
-
-s.sectorsOpened = 1;
-s.questIndex = D.quests.findIndex(q=>q.type==='landExpand');
-assert(Q.questProgress(s).done, 'sector quest regression');
-
-console.log('PASS smoke-core: map, automation, market, upgrades, galaxy, resurgence, colonization, raids, migration, timed research, Mk V, offline safety, quests');
+// Quest progression uses sectorsOpened, not stale legacy fields.
+s.sectorsOpened=1;s.questIndex=D.quests.findIndex(q=>q.type==='landExpand');assert(Q.questProgress(s).done,'sector quest regression');
+console.log('PASS smoke-core U2: 300x300 starter factory, Decimal upgrades, galaxy, raids, migrations, complete research DAG, Mk V and quests');

@@ -1,19 +1,19 @@
 'use strict';
-const fs=require('fs'),vm=require('vm'),path=require('path'),assert=require('assert'),crypto=require('crypto');
-const root=path.resolve(__dirname,'..'),store=new Map();
-const localStorage={getItem:k=>store.has(k)?store.get(k):null,setItem:(k,v)=>store.set(k,String(v)),removeItem:k=>store.delete(k),clear:()=>store.clear(),key:i=>[...store.keys()][i]??null,get length(){return store.size;}};
-const ctx={console,Date,Math,localStorage,setTimeout,clearTimeout,btoa:s=>Buffer.from(s,'binary').toString('base64'),atob:s=>Buffer.from(s,'base64').toString('binary'),alert:()=>{}};ctx.globalThis=ctx;vm.createContext(ctx);
-const scripts=['data/feature-flags.js','vendor/break_eternity/break_eternity.min.js','src/core/economy-number.js','src/core/lossless-json.js','src/services/save-migrator-v16.js','data/canonical/game-data.v4.4.final.js','src/core/canonical-data-loader.js','src/core/numbers.js','data/config.js','src/core/economy.js','src/services/save-service.js'];
-for(const f of scripts)vm.runInContext(fs.readFileSync(path.join(root,f),'utf8'),ctx,{filename:f});
-const {SaveService:S,SaveMigratorV16:M,Canonical:C,EconomyNumber:EN}=ctx.Axyon;
-assert.strictEqual(M.sha256('abc'),crypto.createHash('sha256').update('abc').digest('hex'),'browser SHA-256 mismatch');
+const fs=require('fs'),path=require('path'),assert=require('assert'),crypto=require('crypto');
+const {root,loadRuntime,memoryStorage,decimalEq,decimalToString}=require('./runtime-loader');
+const localStorage=memoryStorage(),ctx=loadRuntime({localStorage,saveService:true});
+const {SaveService:S,SaveMigratorV16:M,Canonical:C,EconomyNumber:EN,Numbers:N}=ctx.Axyon;
+assert.strictEqual(M.sha256('abc'),crypto.createHash('sha256').update('abc').digest('hex'));
 assert.strictEqual(C.version,'4.4.0');assert.strictEqual(C.counts.items,52);assert.strictEqual(C.counts.machines,50);assert.strictEqual(C.counts.technologies,52);assert.strictEqual(C.counts.repeatableTechnologies,12);
-const created=S.createProfile('U1 Test');assert(created.ok);
-let raw=JSON.parse(S.rawActiveSave());assert.strictEqual(raw.version,16);assert.strictEqual(typeof raw.economy.credits,'string');assert.strictEqual(typeof raw.inventory.ironOre,'string');assert.strictEqual(raw.economy.credits,'180');
-let state=S.load();state.coins=123456;state.inventory.ironOre=987;assert(S.save(state));raw=JSON.parse(S.rawActiveSave());assert.strictEqual(raw.economy.credits,'123456');assert.strictEqual(raw.inventory.ironOre,'987');
+const created=S.createProfile('U2 Test');assert(created.ok);
+let raw=JSON.parse(S.rawActiveSave());assert.strictEqual(raw.version,16);assert.strictEqual(raw.economy.credits,'0');assert.strictEqual(typeof raw.inventory.ironOre,'string');assert(raw.firstOrbit&&raw.firstOrbit.starterApplied);
+let state=S.load();state.coins=EN.safe('1e100');state.inventory.ironOre=EN.safe('9e88');assert(S.save(state));raw=JSON.parse(S.rawActiveSave());assert.strictEqual(raw.economy.credits,'1e100');assert(EN.eq(EN.fromStorage(raw.inventory.ironOre),'9e88'));
+state=S.load();assert.strictEqual(decimalToString(ctx,state.coins),'1e100');assert(EN.eq(state.inventory.ironOre,'9e88'),'Decimal runtime round-trip lost precision');
+
 const activeKey=S.keys.SAVE_PREFIX+S.currentProfileId();
-const unsafe=fs.readFileSync(path.join(root,'tests/fixtures/v15/legacy-market-mk2-unsafe.json'),'utf8');localStorage.setItem(activeKey,unsafe);state=S.load();assert(!S.hasBlockingError(),'unsafe v15 migration blocked');raw=JSON.parse(localStorage.getItem(activeKey));assert.strictEqual(raw.version,16);assert.strictEqual(raw.economy.credits,'9007199254740993123456789');assert([...store.keys()].some(k=>k.startsWith(activeKey+'.backup.v15.')),'immutable v15 backup missing');assert.strictEqual(state.coins,Number.MAX_SAFE_INTEGER,'runtime bridge did not clamp unsafe value');assert(S.save(state),'save after unsafe migration failed');assert.strictEqual(JSON.parse(localStorage.getItem(activeKey)).economy.credits,'9007199254740993123456789','exact shadow was lost on unchanged save');
-const exported=S.exportString(state);const imported=S.importString(exported);assert(imported.ok);assert.strictEqual(imported.state.coins,Number.MAX_SAFE_INTEGER);
-const corrupt=fs.readFileSync(path.join(root,'tests/fixtures/v15/corrupt-truncated.json'),'utf8');localStorage.setItem(activeKey,corrupt);const recovery=S.load();assert(S.hasBlockingError(),'corrupt save did not block autosave');assert.strictEqual(localStorage.getItem(activeKey),corrupt,'corrupt original was overwritten');assert.strictEqual(S.save(recovery),false,'autosave was not suspended after corruption');const reset=S.resetCurrent({theme:'dark'});assert(!S.hasBlockingError());raw=JSON.parse(localStorage.getItem(activeKey));assert.strictEqual(raw.version,16);assert.strictEqual(raw.economy.credits,'180');
-assert.strictEqual(EN.engine,'break_eternity.js@2.1.3');assert.strictEqual(ctx.Axyon.Numbers.runtimeMode,'number-compat-u1');
-console.log('PASS u1-foundation: canonical loader, SHA-256, v16 storage, exact unsafe migration shadow, rollback block, reset recovery and export/import');
+const unsafe=fs.readFileSync(path.join(root,'tests/fixtures/v15/legacy-market-mk2-unsafe.json'),'utf8');localStorage.setItem(activeKey,unsafe);state=S.load();assert(!S.hasBlockingError(),'unsafe v15 migration blocked');raw=JSON.parse(localStorage.getItem(activeKey));assert.strictEqual(raw.version,16);assert.strictEqual(raw.economy.credits,'9007199254740993123456789');assert([...localStorage._store.keys()].some(k=>k.startsWith(activeKey+'.backup.v15.')),'immutable v15 backup missing');assert(EN.eq(state.coins,'9007199254740993123456789'),'unsafe integer changed numerically at runtime');assert(state.market.legacyAccess&&state.market.networkMk>=1,'legacy market inheritance missing');assert(S.save(state));assert.strictEqual(JSON.parse(localStorage.getItem(activeKey)).economy.credits,'9007199254740993123456789');
+const exported=S.exportString(state),imported=S.importString(exported);assert(imported.ok);assert(EN.eq(imported.state.coins,'9007199254740993123456789'));assert.strictEqual(S._test.encodeRuntime(imported.state).economy.credits,'9007199254740993123456789');
+
+const corrupt=fs.readFileSync(path.join(root,'tests/fixtures/v15/corrupt-truncated.json'),'utf8');localStorage.setItem(activeKey,corrupt);const recovery=S.load();assert(S.hasBlockingError());assert.strictEqual(localStorage.getItem(activeKey),corrupt);assert.strictEqual(S.save(recovery),false);const reset=S.resetCurrent({theme:'dark'});assert(!S.hasBlockingError());raw=JSON.parse(localStorage.getItem(activeKey));assert.strictEqual(raw.version,16);assert.strictEqual(raw.economy.credits,'0');assert.strictEqual(Object.keys(reset.grid.entities).length,0);assert.strictEqual(ctx.Axyon.Economy.starterFreeRemaining(reset,'ironMine'),1);
+assert.strictEqual(EN.engine,'break_eternity.js@2.1.3');assert.strictEqual(N.runtimeMode,'decimal-native-u2');
+console.log('PASS U2 foundation: canonical loader, Decimal-native v16 storage, exact unsafe migration, rollback, reset recovery and export/import');
