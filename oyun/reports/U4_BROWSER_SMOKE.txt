@@ -1,0 +1,6 @@
+PASS U4 Chromium smoke
+storage=indexeddb-primary
+durableRevision=3
+recoveredCredits=90002
+fallback=localstorage-fallback
+mobileOverflow=0

@@ -1,0 +1,112 @@
+<!doctype html><html lang="tr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>AXYON U4.2 Entegrasyon Raporu</title><style>body{margin:0;background:#08111e;color:#dce8f7;font:15px/1.65 system-ui,Segoe UI,Arial}main{max-width:1100px;margin:auto;padding:30px 20px 70px}header,article{background:#101b2d;border:1px solid #263a56;border-radius:18px;padding:26px;margin-bottom:18px}h1{font-size:38px;line-height:1.15}h2{margin-top:34px;border-left:5px solid #38bdf8;padding-left:12px}h3{color:#fbbf24}p,li{color:#cedaeb}strong{color:white}code,pre{background:#07101b;border:1px solid #263a56;border-radius:7px}code{padding:2px 5px}pre{padding:14px;overflow:auto}.badge{display:inline-block;padding:6px 10px;border-radius:999px;background:#163a2b;color:#86efac;font-weight:800}</style></head><body><main><header><span class="badge">U4.2 ACCEPTANCE · PASS</span><h1>AXYON: Orbital Ascendancy</h1><p>v4.5.2 · Authoritative Server Prototype & CAS Reconciliation</p></header><article><h1>AXYON: Orbital Ascendancy v4.5.2 U4.2</h1>
+<h2>Authoritative Server Prototype &amp; CAS Reconciliation — Entegrasyon ve Kabul Raporu</h2>
+<p><strong>Sürüm:</strong> <code>4.5.2-u4.2</code></p>
+<p><strong>Save şeması:</strong> <code>v16</code></p>
+<p><strong>Taban:</strong> U4.1 Command Authority</p>
+<p><strong>Durum:</strong> U4.2 kabul kapıları geçti</p>
+<h2>Yönetici özeti</h2>
+<p>U4.2, U4.1&#x27;de kurulan idempotent istemci komut sözleşmesini gerçek bir Node HTTP yetkili sunucu prototipine bağlar. Server kendi canonical state kopyasını kullanır; istemcinin kredi, envanter veya üretim sonucu otorite kabul edilmez.</p>
+<p>Aynı actor için eşzamanlı istekler actor-keyed mutex ile sıraya alınır. <code>(actorId, commandId)</code> command ledger, <code>(actorId, sourceId, sequence)</code> sequence claim ve <code>expectedRevision</code> CAS kontrolü birlikte çalışır. Başarılı komutta yetkili state, receipt ve domain event-outbox tek senkron kritik bölümde commit edilir.</p>
+<h2>Tamamlanan ana sistemler</h2>
+<ul>
+<li>UI&#x27;sız canonical ekonomi/domain server runtime</li>
+<li>Actor başına transaction kuyruğu</li>
+<li>Command ID unique ledger ve fingerprint conflict</li>
+<li>Source/sequence unique claim</li>
+<li>Server revision CAS</li>
+<li>State + receipt + event-outbox birlikte commit</li>
+<li>Commit öncesi rollback/failpoint güvenliği</li>
+<li>Gerçek Node HTTP command/snapshot/health endpointleri</li>
+<li>Actor header kontrolü, 64 KiB body sınırı ve rate limit</li>
+<li>Server snapshot client reconciliation</li>
+<li>Client command revision ile server revision hizalama</li>
+<li>Fabrika ve kalan değerli kullanıcı işlemlerinin command katmanına taşınması</li>
+<li>Receipt ve snapshot JSON Schema sözleşmeleri</li>
+</ul>
+<h2>Bağımsız yarış sonuçları</h2>
+<h3>Aynı komut, iki eşzamanlı istek</h3>
+<ul>
+<li>Uygulanan: 1</li>
+<li>Duplicate receipt: 1</li>
+<li>Üretilen gemi kuyruğu: 1</li>
+<li>Server revision: 1</li>
+<li>Event-outbox kaydı: 1</li>
+</ul>
+<h3>Farklı komutlar, aynı expected revision</h3>
+<ul>
+<li>Commit olan: 1</li>
+<li><code>stale_revision</code>: 1</li>
+<li>Kayıp güncelleme: yok</li>
+<li>Reddedilen komuttan event üretimi: yok</li>
+</ul>
+<h3>Zorlanmış commit hatası</h3>
+<p><code>before_commit</code> failpoint sonucunda:</p>
+<ul>
+<li>Actor state değişmedi</li>
+<li>Server revision değişmedi</li>
+<li>Command ledger değişmedi</li>
+<li>Sequence ledger değişmedi</li>
+<li>Event-outbox değişmedi</li>
+<li>Aynı komut sonraki denemede başarıyla uygulandı</li>
+</ul>
+<h2>Command kapsamı</h2>
+<p>U4.2 ile kalan değer etkili yollar da merkezi command katmanına alındı:</p>
+<ul>
+<li>Bina yerleştirme, taşıma ve silme</li>
+<li>Konveyör ve enerji hattı ekleme/silme</li>
+<li>Sektör açma</li>
+<li>Manuel üretim</li>
+<li>Otomasyon çekirdeği yükseltme</li>
+<li>Makine ve santral sınıf yükseltme</li>
+<li>Depo yükseltme</li>
+<li>Araştırma iptali ve %70 iade</li>
+<li>Ürün bazlı otomatik satış</li>
+<li>Ürün bazlı elde tutma oranı</li>
+</ul>
+<p><code>main.js</code> içinde bu işlemler için doğrudan Economy mutasyon çağrısı kalmadığı regresyon testiyle doğrulandı.</p>
+<h2>Reconciliation davranışı</h2>
+<ul>
+<li>Yanlış actor snapshot&#x27;ı reddedilir.</li>
+<li>Eski server revision snapshot&#x27;ı reddedilir.</li>
+<li>Server state normalize edilerek uygulanır.</li>
+<li>Cihaza ait tema/ayarlar korunur.</li>
+<li>Eski local outbox temizlenir.</li>
+<li><code>needsReconcile</code> kapanır.</li>
+<li>Local command revision, server revision&#x27;a eşitlenir.</li>
+</ul>
+<h2>Test matrisi</h2>
+<ul>
+<li>Node/regresyon dosyası: <strong>17/17 PASS</strong></li>
+<li>Stabilite: <strong>3.000 deterministik çevrim PASS</strong></li>
+<li>U1–U4.1 regresyonları: <strong>PASS</strong></li>
+<li>U4.2 gerçek HTTP duplicate yarışı: <strong>PASS</strong></li>
+<li>Unique command ve source-sequence conflict: <strong>PASS</strong></li>
+<li>CAS yarış testi: <strong>PASS</strong></li>
+<li>Transaction rollback: <strong>PASS</strong></li>
+<li>Actor izolasyonu ve farklı actor paralelliği: <strong>PASS</strong></li>
+<li>Event-outbox publish idempotency: <strong>PASS</strong></li>
+<li>HTTP actor auth / invalid JSON / rate limit: <strong>PASS</strong></li>
+<li>Chromium U4.2 command + reconciliation: <strong>PASS</strong></li>
+<li>Mobil 390 px yatay taşma: <strong>yok</strong></li>
+<li>Beklenmeyen browser hatası: <strong>0</strong></li>
+</ul>
+<p>Toplu <code>run-acceptance.sh</code>, çalışma ortamının süre sınırında U4 Chromium çıktısından sonra sonlanmıştır. U4.1 ve U4.2 Chromium testleri ayrıca ayrı çalıştırılarak PASS alınmıştır; bu durum ürün hatası olarak değerlendirilmemiştir.</p>
+<h2>Mimari sınırlar</h2>
+<p>1. Server repository bellek içidir; süreç kapanınca server state kaybolur.</p>
+<p>2. İstemci henüz HTTP server&#x27;a canlı bağlanmıyor; client ve server kabul kapıları ayrıdır.</p>
+<p>3. <code>x-axyon-actor</code> yalnız prototip kimliğidir; JWT/OAuth değildir.</p>
+<p>4. Gerçek PostgreSQL/CockroachDB unique constraint ve transaction izolasyonu henüz sınanmadı.</p>
+<p>5. Shard router, global pazar, savaş servisi, leaderboard ve çok-bölge failover yoktur.</p>
+<p>6. U4.2 ölçek mimarisini doğrular fakat milyon kullanıcı yük testi değildir.</p>
+<h2>Başkan kararı</h2>
+<p><strong>U4.2 kabul edildi.</strong> Sunucu prototipi, idempotency ve CAS ilkelerini gerçek eşzamanlı HTTP isteklerinde doğrulamıştır. Üretim backend iddiası yapılmaz.</p>
+<h2>Sıradaki aşama</h2>
+<h3>U4.3 — Persistent Transaction Store &amp; Client Network Adapter</h3>
+<ul>
+<li>Kalıcı transaction repository arayüzü</li>
+<li>PostgreSQL uyumlu unique command/sequence tabloları</li>
+<li>State + receipt + event-outbox tek DB transaction</li>
+<li>Client HTTP adapter, retry ve ACK/snapshot akışı</li>
+<li>Çevrimdışı outbox gönderimi ve reconciliation</li>
+<li>100+ eşzamanlı komut ve crash/restart testleri</li>
+</ul></article></main></body></html>

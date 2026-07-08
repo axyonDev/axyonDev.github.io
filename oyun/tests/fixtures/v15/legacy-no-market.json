@@ -1,0 +1,15 @@
+{
+  "version": 15,
+  "coins": 5790,
+  "totalEarned": 5610,
+  "runEarned": 5610,
+  "topScore": 8000,
+  "inventory": {"ironOre": 500, "copperOre": 300, "coal": 250},
+  "flow": {"ironOre": 2.5, "copperOre": 1.5, "coal": 1.2},
+  "researched": {"basics": true, "steel": true},
+  "stats": {"playTimeSec": 4000, "produced": {"ironOre": 1200}},
+  "market": {"enabled": false, "level": 1, "lastRevenue": 0, "lastUnits": 0, "totalRevenue": 0},
+  "galaxy": {"ships": {}, "defenses": {}, "targets": [], "missions": [], "reports": [], "colonies": 1},
+  "maintenance": {"damagedShips": {}, "damagedDefenses": {}, "repairQueue": []},
+  "lastSeen": 1780000000000
+}
