@@ -1,0 +1,133 @@
+<!doctype html><html lang="tr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>AXYON U4 Kabul Raporu</title><style>body{margin:0;background:#07101b;color:#e8f1ff;font:15px/1.65 system-ui,Segoe UI,Arial}main{max-width:1100px;margin:auto;padding:28px 18px 70px}article{background:#111a29;border:1px solid #26344b;border-radius:18px;padding:28px}h1{font-size:38px}h2{margin-top:34px;border-left:5px solid #f59e0b;padding-left:12px}h3{color:#bae6fd}p,li{color:#d7e2f2}code,pre{background:#06101c;color:#d8f4ff}code{padding:2px 5px;border-radius:5px}pre{padding:14px;border:1px solid #263a55;border-radius:10px;overflow:auto}hr{border:0;border-top:1px solid #26344b;margin:28px 0}blockquote{border-left:4px solid #38bdf8;padding:10px 14px;background:#0b1726;font-weight:700}strong{color:#fff}@media(max-width:650px){main{padding:8px}article{padding:17px;border-radius:10px}h1{font-size:29px}}</style></head><body><main><article><h1>AXYON: Orbital Ascendancy v4.5.0 U4</h1>
+<h2>Save Recovery &amp; Accessibility Hotfix — Entegrasyon ve Kabul Raporu</h2>
+<p><strong>Sürüm:</strong> <code>4.5.0-u4</code>  </p>
+<p><strong>Save şeması:</strong> <code>v16</code>  </p>
+<p><strong>Taban:</strong> <code>4.4.0-u3 Planetary Bastions</code>  </p>
+<p><strong>Durum:</strong> Kabul edildi — U4 öncesi hotfix kapısı geçti</p>
+<hr>
+<h2>1. Yönetici özeti</h2>
+<p>U3 bağımsız incelemesinde bulunan geçici kayıt hatası sonrası oturum boyu autosave kilidi kapatılmıştır. Oyun içeriği, ekonomi dengesi, save şeması ve Planetary Bastions runtime değiştirilmemiştir.</p>
+<p>U4 ile:</p>
+<ul>
+<li>Geçici `save` hataları 30 saniyelik kontrollü cooldown sonrasında otomatik olarak yeniden denenir.</li>
+<li>Kullanıcı kırmızı uyarı panelindeki **Tekrar Dene** düğmesiyle sayfa yenilemeden anında yeniden yazma deneyebilir.</li>
+<li>Başarılı kurtarmada `blockingError` temizlenir, kayıt doğrulanır ve uyarı kapanır.</li>
+<li>`migration`, `load` ve `legacy` türü yapısal hatalar retry veya genel temizleme ile gevşetilemez.</li>
+<li>Fabrika zoom ve üst ikon butonları gerçek hesaplanan ölçüde en az `44×44 px` yapılmıştır.</li>
+<li>Canlı Cephe açılır alanı `aria-expanded` ve `aria-controls` ile DOM durumuna bağlanmıştır.</li>
+<li>Milyonlarca kayıtlı kullanıcı / binlerce eşzamanlı oyuncu hedefi proje içine kalıcı ölçek mimarisi belgesi olarak eklenmiştir.</li>
+</ul>
+<hr>
+<h2>2. Kayıt kurtarma davranışı</h2>
+<h3>Geçici hata</h3>
+<ol>
+<li>İlk yazma hatası `blockingError.type = &quot;save&quot;` oluşturur.</li>
+<li>Kalıcı kırmızı uyarı görünür.</li>
+<li>Cooldown dolmadan normal autosave depolamayı tekrar tekrar zorlamaz.</li>
+<li>Kullanıcı **Tekrar Dene** ile cooldown beklemeden güvenli deneme yapabilir.</li>
+<li>Otomatik kayıt 30 saniye sonra sıradan `save()` yolu üzerinden tekrar dener.</li>
+<li>Başarıda hata ve retry zamanı temizlenir, `axyon:save-success` yayımlanır.</li>
+<li>Hata sürerse yeni 30 saniyelik retry penceresi oluşturulur.</li>
+</ol>
+<h3>Yapısal hata</h3>
+<p>Aşağıdaki hata türleri güvenlik nedeniyle retry ile açılamaz:</p>
+<ul>
+<li>`migration`</li>
+<li>`load`</li>
+<li>`legacy`</li>
+</ul>
+<p>Böylece bozuk veya dönüştürülemeyen kayıt üzerine otomatik yazma yapılmaz.</p>
+<hr>
+<h2>3. Erişilebilirlik ve mobil düzeltmeler</h2>
+<ul>
+<li>`.icon-btn`: `44×44 px`</li>
+<li>`.fx-zoom`: `44×44 px`</li>
+<li>`#save-warning`: `aria-live=&quot;assertive&quot;`</li>
+<li>`#ticker-toggle`: `aria-expanded=&quot;false&quot;` başlangıcı</li>
+<li>`#ticker-toggle`: `aria-controls=&quot;ticker-list&quot;`</li>
+<li>Aç/kapat işleminde `aria-expanded` gerçek collapsed durumuyla senkronize edilir.</li>
+<li>390 px mobil görünümde yatay taşma oluşmamıştır.</li>
+</ul>
+<hr>
+<h2>4. Test sonuçları</h2>
+<h3>Node/regresyon</h3>
+<p>Toplam <strong>11 test paketi</strong> geçti:</p>
+<ul>
+<li>Core ekonomi, üretim, araştırma ve galaksi</li>
+<li>Profil izolasyonu ve tam sıfırlama</li>
+<li>v16 migrasyon, rollback ve exact integer koruması</li>
+<li>First Orbit ve sıfır kredili başlangıç</li>
+<li>Warfront, savaş, enkaz ve bakım</li>
+<li>3.000 deterministik stabilite çevrimi</li>
+<li>Canonical veri ve araştırma DAG doğrulaması</li>
+<li>DOM/PWA/offline cache sözleşmeleri</li>
+<li>Arka plan ilerlemesi, görünür kayıt hatası ve marka</li>
+<li>U4 manuel/otomatik save recovery ve erişilebilirlik</li>
+<li>Çok eksenli kapasite ve 1.000.000 birim cohort</li>
+</ul>
+<p>Son cohort ölçümü:</p>
+<pre><code>1.000.000 birim cohort
+Yaklaşık hesap süresi: 0.30 ms
+Tekil nesne/dizi üretimi: yok</code></pre>
+<h3>Gerçek Chromium</h3>
+<pre><code>Pinch zoom:               1.00 → 1.92 PASS
+10 dakika background:     PASS
+İkinci ödeme:             yok
+Save warning:             görünür PASS
+Sayfa yenilemeden retry:  PASS
+blockingError sonrası:    null
+Ticker aria-expanded:     false → true PASS
+Icon touch target:        44×44 px
+Zoom touch target:        44×44 px
+Viewport adayı:           228 / 90000 hücre
+Ortalama draw:            ~0.98 ms
+Mobil 390 px overflow:    yok
+Beklenmeyen page error:   0
+Beklenmeyen console error:0
+Codex kırık bağlantı:     0</code></pre>
+<hr>
+<h2>5. Ölçek hedefi</h2>
+<p>Proje hedefi artık paket içinde <code>docs/SCALABILITY_GUARDRAILS.md</code> ile kayıtlıdır:</p>
+<ul>
+<li>Milyonlarca kayıtlı kullanıcı</li>
+<li>Binlerce eşzamanlı aktif oyuncu</li>
+<li>Sunucu otoriteli ekonomi, zaman, pazar, savaş ve mülkiyet</li>
+<li>İdempotent işlem kimlikleri</li>
+<li>Sürekli oyuncu başı tick yerine lazy production</li>
+<li>Sektör/shard ile yatay ölçeklenebilir evren</li>
+<li>Event-driven servis sınırları</li>
+<li>Cohort/aggregate büyük sayı modeli</li>
+<li>Anti-cheat ve istemci verisine güvensizlik</li>
+</ul>
+<p>Mevcut U4 paket local-first prototiptir; çok oyunculu backend hazır olduğu iddia edilmemektedir.</p>
+<hr>
+<h2>6. Bilinen sınırlar</h2>
+<ol>
+<li>IndexedDB ana kayıt/fallback henüz yoktur; U4 kapsamındadır.</li>
+<li>Gerçek çok oyunculu backend ve sunucu otoritesi henüz yoktur.</li>
+<li>Gerçek düşük seviye Android/iOS cihaz testi yapılmamıştır.</li>
+<li>Local save gelecekteki ortak evrende otorite kabul edilmeyecektir.</li>
+<li>Gerçek PvP, pazar ve inaktif oyuncu işgali sunucu doğrulaması olmadan açılmayacaktır.</li>
+</ol>
+<hr>
+<h2>7. Başkan kararı</h2>
+<p><strong>U4 kabul edildi.</strong> Claude bağımsız incelemesindeki geçici kayıt hatası, 44 px ve <code>aria-expanded</code> açıkları kapatılmıştır.</p>
+<p>Sıradaki ana geliştirme:</p>
+<blockquote>t; <strong>U4 — Data Durability &amp; Server-Ready Domain Foundation</strong></blockquote>
+<p>Öncelik:</p>
+<ol>
+<li>IndexedDB storage adapter + localStorage compatibility</li>
+<li>Kayıpsız v16 geçiş ve rollback</li>
+<li>Ekonomi/savaş kurallarının UI ve storage katmanından ayrılması</li>
+<li>İşlem kimliği ve event kayıt sözleşmesi</li>
+<li>Gerçek cihaz/PWA dayanıklılık testleri</li>
+</ol>
+<hr>
+<h2>8. Durum kaydı</h2>
+<p><strong>Source of truth:</strong> <code>AXYON_Orbital_Ascendancy_v4.4.1_U4_Save_Recovery_Hotfix.zip</code>  </p>
+<p><strong>Sürüm:</strong> <code>4.5.0-u4</code>  </p>
+<p><strong>Save şeması:</strong> <code>v16</code>  </p>
+<p><strong>Son karar:</strong> U4 hotfix kabul edildi.  </p>
+<p><strong>Sıradaki iş:</strong> U4 P0 — IndexedDB storage adapter.  </p>
+<p><strong>Kritik risk:</strong> Ortak evrene geçmeden önce istemci kayıtlarının sunucu otoritesinden kesin ayrılması.  </p>
+<p><strong>Bitiş kriteri:</strong> Eski kayıt kaybolmadan IndexedDB geçişi, rollback ve gerçek cihaz testleri.</p></article></main></body></html>

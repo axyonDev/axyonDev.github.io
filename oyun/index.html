@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="tr" data-theme="dark">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+<meta name="theme-color" content="#0f1115" />
+<title>AXYON: Orbital Ascendancy — Factory Intelligence</title>
+<link rel="manifest" href="manifest.json" />
+<link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+<div class="app">
+  <header class="topbar">
+    <div class="brand"><span class="brand-icon">🪐</span><div><div class="brand-name">AXYON: Orbital Ascendancy</div><div class="brand-sub">v4.5.6 U4.3.3 · FACTORY INTELLIGENCE</div></div></div>
+    <div class="topbar-actions"><button id="btn-profiles" class="profile-chip" data-help="ui:profiles"><span>👤</span><b id="active-profile-name">Komutan</b></button><a href="encyclopedia.html" class="icon-btn" data-help="ui:encyclopedia" title="Teknoloji ve makine ağacı">📚</a><button id="btn-achievements" class="icon-btn" aria-label="Başarımlar" data-help="ui:achievements" title="Başarımlar">🏆</button><button id="btn-settings" class="icon-btn" aria-label="Ayarlar" data-help="ui:settings" title="Ayarlar">⚙️</button></div>
+  </header>
+
+  <section id="save-warning" class="save-warning hidden" role="alert" aria-live="assertive"><div><b>⚠️ Kayıt başarısız</b><span id="save-warning-text">Tarayıcı depolaması kullanılamıyor. Tekrar deneyin veya kaydı dışa aktarın.</span></div><div class="save-warning-actions"><button id="save-warning-retry" class="btn-setting compact">Tekrar Dene</button><button id="save-warning-export" class="btn-setting compact">Kaydı Dışa Aktar</button></div></section>
+
+  <section id="live-ticker" class="live-ticker collapsed" data-help="ui:liveTicker"><button id="ticker-toggle" class="ticker-toggle" aria-expanded="false" aria-controls="ticker-list">📡 Stratejik Haber Akışı <b id="ticker-count">0</b></button><div id="ticker-list" class="ticker-list"></div></section>
+
+  <section class="hud">
+    <div class="hud-coin"><span class="coin-val" data-help="ui:coins"><span id="coin-display">0</span> 🪙</span>
+      <div class="hud-chips">
+        <span class="hchip" data-help="ui:coins">Toplam <b id="total-earned">0</b></span>
+        <span class="hchip" data-help="ui:productionMultiplier">Üretim <b id="multiplier-display">x1.00</b></span>
+        <span class="hchip danger-chip" data-help="ui:threat">Tehdit <b id="threat-display">0.0</b> ☠️</span>
+        <span class="hchip" data-help="ui:fleet">Filo <b id="fleet-display">0</b> 🚀</span>
+        <span class="hchip hchip-score" data-help="ui:score">🏅 <b id="score-display">0</b> <small>/ <span id="topscore-display">0</span></small></span>
+      </div>
+    </div>
+    <div class="hud-meters">
+      <div class="meter"><div class="meter-top"><span>⚡ Güç</span><span class="stat-status ok" id="power-status">yeterli</span></div><div class="bar"><div class="bar-fill power" id="power-bar"></div></div><div class="meter-sub"><span id="power-supply">0</span> / <span id="power-demand">0</span> kW</div></div>
+      <div class="meter"><div class="meter-top"><span>🧭 Gezegen</span><button class="mini-btn" id="land-expand-btn" data-help="ui:openSector">Bölge Aç · <span id="land-expand-cost">0</span>🪙</button></div><div class="bar"><div class="bar-fill land" id="land-bar"></div></div><div class="meter-sub"><span id="land-used">0</span> açık / <span id="land-total">0</span> bölge · 300×300</div></div>
+    </div>
+  </section>
+
+  <section class="quest-box" data-help="ui:quest"><div class="quest-head"><span class="quest-tag">GÖREV</span><span class="quest-desc" id="quest-desc">—</span><span class="quest-progress-text" id="quest-progress-text"></span></div><div class="bar"><div class="bar-fill quest" id="quest-bar"></div></div></section>
+
+  <nav class="tabs">
+    <button class="tab-btn active" role="tab" aria-selected="true" id="tab-factory" data-tab="factory" data-help="ui:factory">🏭 Fabrika</button>
+    <button class="tab-btn" role="tab" aria-selected="false" id="tab-report" data-tab="report" data-help="ui:report">📊 Rapor</button>
+    <button class="tab-btn" id="tab-power" data-tab="power" data-help="ui:power" role="tab" aria-selected="false">⚡ Güç</button><button class="tab-btn" id="tab-infrastructure" data-tab="infrastructure" data-help="ui:infrastructure" role="tab" aria-selected="false">🏗️ Altyapı</button>
+    <button class="tab-btn" role="tab" aria-selected="false" id="tab-research" data-tab="research" data-help="ui:research">🔬 Teknoloji</button>
+    <button class="tab-btn" role="tab" aria-selected="false" id="tab-storage" data-tab="storage" data-help="ui:storage">📦 Depo & Pazar</button>
+    <button class="tab-btn galaxy-tab" role="tab" aria-selected="false" id="tab-galaxy" data-tab="galaxy" data-help="ui:galaxy">🛡️ Cephe</button>
+    <button class="tab-btn combat-tab" role="tab" aria-selected="false" id="tab-combat" data-tab="combat" data-help="ui:battleReports">⚔️ Savaş</button>
+  </nav>
+
+  <div class="tab-content">
+    <div class="tab-panel active" id="panel-factory">
+      <div class="factory-view">
+        <div class="fx-toolbar">
+          <button class="fx-tool active" data-mode="select" data-help="ui:selectTool">✋ Seç</button><button class="fx-tool" data-mode="conveyor" data-help="ui:conveyorTool">🔗 Konveyör</button><button class="fx-tool" data-mode="power" data-help="ui:powerTool">⚡ Hat</button><button class="fx-tool danger" data-mode="delete" data-help="ui:deleteTool">🗑️ Sil</button>
+          <div class="fx-spacer"></div><button class="fx-tool" id="fx-status-toggle" aria-expanded="false" aria-controls="fx-status-panel">📈 Durum</button><button class="fx-tool" id="fx-build-toggle" data-help="ui:buildTool">🏗️ İnşa</button><button class="fx-zoom" id="fx-zoomin" data-help="ui:zoomIn">+</button><button class="fx-zoom" id="fx-zoomout" data-help="ui:zoomOut">−</button><button class="fx-zoom" id="fx-recenter" data-help="ui:recenter">⊙</button>
+        </div>
+        <div class="fx-stage" data-help="ui:factoryCanvas"><canvas id="factory-canvas"></canvas>
+          <div class="fx-palette hidden" id="fx-palette"><div class="fx-palette-head">Yapı Seç <button class="x" id="fx-palette-close">✕</button></div><div class="fx-palette-tabs"><button class="fx-pt active" data-ptab="machines">Makineler</button><button class="fx-pt" data-ptab="plants">Santraller</button></div><div class="fx-palette-list" id="fx-palette-machines"></div><div class="fx-palette-list hidden" id="fx-palette-plants"></div></div>
+          <aside class="fx-status-panel hidden" id="fx-status-panel" aria-label="Anlık fabrika durum raporu"><div class="fx-status-head"><div><b>📈 Fabrika Durumu</b><small>Son güncelleme <span id="fx-status-updated">—</span></small></div><button class="x" id="fx-status-close" aria-label="Fabrika durum raporunu kapat">✕</button></div><div class="fx-status-summary" id="fx-status-summary"></div><div class="fx-status-list" id="fx-status-list"></div></aside><div class="fx-inspector hidden" id="fx-inspector"></div><div class="fx-hint" id="fx-hint"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="tab-panel" id="panel-report"><p class="panel-hint">Üretim hatları, bina seviyeleri ve darboğazlar. Satırdan yapı sınıfının durumunu inceleyebilirsin.</p><div id="report-summary" class="report-summary"></div><div id="report-list" class="report-list"></div></div>
+
+    <div class="tab-panel" id="panel-power"><p class="panel-hint"><b>Gerçek enerji kuralı:</b> Santral kurmak tek başına yetmez. ⚡ Hat aracıyla santralden makineye bağlantı çekilmeli; yakıtlı santralin yakıtı yoksa veya hat kopuksa üretim sıfırdır. İlk kuruluşta 1 ücretsiz Kömür Jeneratörü hakkı ve 12 kömür kargosu bulunur.</p><div id="plants-container" class="plants"></div></div>
+
+    <div class="tab-panel" id="panel-infrastructure">
+      <div class="infrastructure-hero"><div><span class="market-kicker">GEZEGEN MÜHENDİSLİĞİ</span><h2>Planetary Bastions</h2><p>Yüzey alanı, altyapı, yörünge, komuta, enerji, ısı ve bakım birbirinden bağımsız fiziksel limitlerdir. Eski yapılar silinmez; miras aşımında yeni inşa durur.</p></div><span id="capacity-health" class="badge">Dengeli</span></div>
+      <div id="capacity-grid" class="capacity-grid"></div>
+      <div class="infrastructure-layout">
+        <section class="space-card"><div class="space-head"><h3>🏗️ Kapasite Araştırmaları</h3></div><div id="capacity-upgrades" class="capacity-upgrades"></div></section>
+        <section class="space-card"><div class="space-head"><h3>🧊 Altyapı Tesisleri</h3></div><div id="infrastructure-assets" class="infrastructure-assets"></div></section>
+      </div>
+      <div class="infrastructure-layout">
+        <section class="space-card"><div class="space-head"><h3>🏰 Savunma Kompleksleri</h3></div><div id="defense-complex-list" class="complex-list"></div></section>
+        <section class="space-card"><div class="space-head"><h3>🛡️ Savunma Hazırlığı</h3><span id="cohort-readiness" class="badge">%100</span></div><div id="defense-readiness" class="defense-readiness"></div></section>
+      </div>
+      <section class="space-card"><div class="space-head"><div><span class="market-kicker">COHORT / STACK</span><h3>Milyon Ölçekli Savunma Üretimi</h3></div></div><div id="cohort-defense-list" class="cohort-defense-list"></div></section>
+    </div>
+
+    <div class="tab-panel" id="panel-research">
+      <p class="panel-hint">Alfa → Beta → Gama → Delta → Omega zinciri kalıcıdır; ilerleme sıfırlanmaz. Ana teknoloji tamamlandıktan sonra sonsuz araştırmalar devam eder.</p>
+      <div id="research-active" class="research-active empty" data-help="ui:researchActive"><span>🔬</span><div><b>Laboratuvarlar hazır</b><small>Bir teknoloji seçerek araştırmayı başlat.</small></div></div><h3 class="section-title">Ana Teknoloji Ağı</h3><div id="research-list" class="research research-roadmap"></div>
+      <h3 class="section-title">Sınırsız Araştırmalar</h3><div id="repeat-research-list" class="research repeat-research"></div>
+    </div>
+
+    <div class="tab-panel" id="panel-storage">
+      <p class="panel-hint">Yerel satış kapalıdır. Bütün ticaret Pazar Uydusu üzerinden, kota ve sefer süresiyle yürür.</p>
+      <section class="market-card">
+        <div class="market-head"><div><span class="market-kicker">YÖRÜNGE TİCARETİ</span><h3>Pazar Uydusu <span id="market-level">Mk I</span><span data-help="ui:marketSatellites">Uydu <b id="market-satellites">0/0</b></span></h3></div><button id="market-master" class="btn-setting" data-help="ui:marketAuto">AUTO KAPALI</button></div>
+        <div class="market-stats"><span data-help="ui:marketCapacity">Kota <b id="market-capacity">0</b></span><span data-help="ui:marketCooldown">Sefer <b id="market-cooldown">0sn</b></span><span data-help="ui:marketLast">Son satış <b id="market-last">0</b>🪙</span><span data-help="ui:marketNext">Sonraki <b id="market-next">—</b></span></div><div id="first-orbit-status" class="first-orbit-status"></div><div id="founding-contracts" class="founding-contracts"></div>
+        <div class="market-controls"><label>Elde tut:</label><button class="keep-global" data-help="ui:keepRatio" data-globalkeep="0">%0</button><button class="keep-global" data-help="ui:keepRatio" data-globalkeep="25">%25</button><button class="keep-global active" data-help="ui:keepRatio" data-globalkeep="50">%50</button><button class="keep-global" data-help="ui:keepRatio" data-globalkeep="75">%75</button><button class="keep-global" data-help="ui:keepRatio" data-globalkeep="100">%100</button><button id="market-all-on" data-help="ui:marketAll" class="bulk-btn oto">Tüm ürünler açık</button><button id="market-upgrade" data-help="ui:marketUpgrade" class="bulk-btn">Uyduyu geliştir</button></div>
+      </section>
+      <div class="bulk-bar"><label class="bulk-selall"><input type="checkbox" id="bulk-selall" /> Tümü</label><span class="bulk-label" id="bulk-count">0 seçili</span><div class="bulk-actions"><span class="bulk-grp">Yerel satış kapalıdır; tüm ticaret Pazar Uydusu üzerinden yapılır.</span></div></div>
+      <div id="inventory-list" class="inv-list"></div>
+    </div>
+
+    <div class="tab-panel" id="panel-galaxy">
+      <div class="galaxy-hero"><div><span id="frontier-kicker" class="market-kicker">YERYÜZÜ KOMUTANLIĞI</span><h2 id="frontier-title">Yeryüzü Cephesi</h2><p id="frontier-description">İlk Yörünge tamamlanana kadar fabrikanı yerel sabotaj, yağma ve rakip güçlere karşı koru.</p></div><div class="raid-clock" data-help="ui:raidTimer"><span id="raid-label">Sonraki tehdit</span><b id="raid-timer">—</b></div></div>
+      <div class="galaxy-grid">
+        <section class="space-card"><div class="space-head"><h3>🔭 Yıldız Haritası</h3><button id="scan-system" data-help="ui:scan" class="btn-setting">Sistem Tara</button></div><div id="scan-cost" class="space-sub"></div><div id="target-list" class="target-list"></div></section>
+        <section class="space-card"><div class="space-head"><h3>🚀 Yörünge Tersanesi</h3></div><div id="shipyard-list" class="shipyard-list"></div><div id="ship-queue" class="queue-list" data-help="ui:shipQueue"></div></section>
+        <section class="space-card"><div class="space-head"><h3>🛡️ Gezegen Savunması</h3><span id="defense-power" class="badge">0 güç</span></div><div id="defense-list" class="shipyard-list"></div></section>
+        <section class="space-card"><div class="space-head"><h3>🛰️ Aktif Görevler</h3></div><div id="mission-list" class="mission-list" data-help="ui:missions"></div></section>
+      </div>
+      <section class="space-card reports-card compact-report-card"><div class="space-head"><h3>📡 Son Cephe Haberleri</h3><button class="btn-setting" data-go-combat="1">Tüm Savaş Raporları</button></div><div id="galaxy-reports" class="galaxy-reports" data-help="ui:battleReports"></div></section>
+    </div>
+
+    <div class="tab-panel" id="panel-combat">
+      <div class="combat-hero"><div><span class="market-kicker">SAVAŞ KOMUTA MERKEZİ</span><h2>Savaş, Enkaz ve Tamirat</h2><p>Uzay savaşları ve gezegen baskınları tur tur hesaplanır. Kayıplar enkaza, sağ kalan hasarlı birimler tamir kuyruğuna dönüşür.</p></div><div class="combat-kpis"><span>Zafer <b id="combat-wins">0</b></span><span>Hurda <b id="combat-salvage-total">0</b></span><span>Tamir <b id="combat-repairs-total">0</b></span></div></div>
+      <section class="combat-section"><div class="section-head"><div><span class="market-kicker">ALTYAPI BÜTÜNLÜĞÜ</span><h3>Gezegen, Yörünge ve Uydu Hasarı</h3></div></div><div id="integrity-grid" class="integrity-grid"></div></section>
+      <div class="combat-layout">
+        <section class="combat-section"><div class="section-head"><h3>🛠️ Bakım Tesisleri</h3></div><div id="facility-list" class="facility-list"></div><div class="section-head sub"><h3>⏳ Tamir Kuyruğu</h3></div><div id="repair-queue" class="queue-list"></div></section>
+        <section class="combat-section"><div class="section-head"><h3>♻️ Enkaz ve Bakım Malzemeleri</h3></div><div id="salvage-summary" class="salvage-summary"></div><div class="section-head sub"><h3>🚀 Hasarlı Gemiler</h3></div><div id="damaged-ship-list" class="damage-list"></div><div class="section-head sub"><h3>🛡️ Hasarlı Savunmalar</h3></div><div id="damaged-defense-list" class="damage-list"></div></section>
+      </div>
+      <section id="combat-simulator-explain" class="combat-simulator"></section>
+      <section class="combat-section reports-workspace"><div class="section-head report-toolbar"><div><span class="market-kicker">AYRINTILI KAYIT</span><h3>Savaş ve Baskın Raporları</h3></div><div class="report-filters"><button class="active" data-report-filter="all">Tümü</button><button data-report-filter="battle">Savaş</button><button data-report-filter="raid">Baskın</button><button data-report-filter="maintenance">Tamir</button><button data-report-filter="intel">İstihbarat</button></div></div><div class="report-workspace"><div id="combat-report-list" class="combat-report-list"></div><article id="combat-report-detail" class="combat-report-detail"><div class="report-empty">Detay için bir rapor seç.</div></article></div></section>
+    </div>
+  </div>
+
+  <footer class="foot">AXYON: Orbital Ascendancy · Build Worlds. Command the Orbit.</footer>
+</div>
+
+<div id="commander-onboarding" class="modal hidden mandatory-modal"><div class="modal-card commander-card"><div class="commander-emblem">🧑‍🚀</div><span class="market-kicker">AXYON ORBITAL COMMAND</span><h2>Komutanını Oluştur</h2><p>Bu cihazdaki ilk yerel hesabın. Fabrika, teknoloji, filo ve savaş kayıtları bu komutan adına kaydedilecek.</p><label class="setting-label" for="first-commander-name">Komutan adı</label><input id="first-commander-name" class="text-input" maxlength="32" autocomplete="off" placeholder="Örn. Ahmet"><label class="setting-label" for="first-planet-type">Başlangıç gezegeni</label><select id="first-planet-type" class="text-input"><option value="temperate">🌍 Ilıman Endüstri Dünyası</option><option value="mineral">🪨 Maden Zengini Dünya</option><option value="frontier">🪐 Sınır Kolonisi</option><option value="oceanic">🌊 Okyanus Ayı</option></select><label class="setting-label" for="first-start-region">Başlangıç bölgesi</label><select id="first-start-region" class="text-input"><option value="center">Merkez</option><option value="north">Kuzey</option><option value="south">Güney</option><option value="west">Batı</option><option value="east">Doğu</option></select><small id="first-commander-error" class="form-error"></small><button id="first-commander-create" class="btn-modal">İmparatorluğu Başlat</button></div></div>
+<div id="iteminfo-modal" class="modal hidden"><div class="modal-card"><div class="modal-head"><h2 id="iteminfo-title">—</h2><button class="x" aria-label="Pencereyi kapat" data-close="iteminfo-modal">✕</button></div><div id="iteminfo-body" class="iteminfo-body"></div></div></div>
+<div id="fleet-modal" class="modal hidden"><div class="modal-card wide"><div class="modal-head"><h2 id="fleet-title">Filo Gönder</h2><button class="x" aria-label="Pencereyi kapat" data-close="fleet-modal">✕</button></div><div id="fleet-body"></div><button id="fleet-send" class="btn-modal">Saldırı Filosunu Gönder</button></div></div>
+
+<div id="ach-modal" class="modal hidden"><div class="modal-card wide"><div class="modal-head"><h2>Başarımlar 🏆</h2><button class="x" aria-label="Pencereyi kapat" data-close="ach-modal">✕</button></div><div id="ach-grid" class="ach-grid"></div></div></div>
+<div id="profiles-modal" class="modal hidden"><div class="modal-card wide profile-modal-card"><div class="modal-head"><h2>Komutan Profilleri 👤</h2><button class="x" aria-label="Pencereyi kapat" data-close="profiles-modal">✕</button></div><p class="panel-hint">Her profil bu cihazda ayrı fabrika, depo, teknoloji, filo ve ayar kaydı tutar.</p><div id="profile-list" class="profile-list"></div><div class="profile-create"><input id="new-profile-name" maxlength="32" placeholder="Yeni komutan adı"><button id="create-profile" class="btn-setting">Profil Oluştur</button></div><p class="danger-note">Profil silme kalıcıdır. Önce dışa aktarma yapman önerilir.</p></div></div>
+<div id="settings-modal" class="modal hidden"><div class="modal-card wide"><div class="modal-head"><h2>Ayarlar ⚙️</h2><button class="x" aria-label="Pencereyi kapat" data-close="settings-modal">✕</button></div><div class="settings-section"><p class="panel-hint"><b>U4 Data Vault:</b> IndexedDB ana kayıt kasasıdır; localStorage hızlı uyumluluk aynası ve kontrollü fallback olarak korunur. <span id="storage-backend-status">Veri katmanı hazırlanıyor…</span><br><b>U4.3 Kalıcı Sunucu Köprüsü:</b> Değerli işlemler offline outbox üzerinden yetkili HTTP sunucusuna gönderilir; ACK ve snapshot ile uzlaştırılır. <span id="command-runtime-status">Komut katmanı hazırlanıyor…</span></p></div><div class="settings-section"><label class="setting-label" for="authority-url">Yetkili sunucu adresi</label><input id="authority-url" class="text-input" inputmode="url" placeholder="https://authority.example.com"><div class="settings-links"><button id="authority-connect" class="btn-setting">Bağlan ve Senkronize Et</button><button id="authority-disconnect" class="btn-setting">Yerel Moda Dön</button></div><small id="authority-network-status" class="panel-hint">Bağlantı yapılandırılmadı</small></div><div class="settings-section settings-links"><button id="theme-toggle" class="btn-setting">🌙 Koyu tema</button><a href="encyclopedia.html" class="btn-setting link-btn">📚 Teknoloji ve Makine Ansiklopedisi</a></div><div class="settings-section"><label class="setting-label">Aktif profili dışa aktar</label><textarea id="export-code" class="code-area" readonly></textarea><button id="do-export" class="btn-setting">Dışa Aktar</button></div><div class="settings-section"><label class="setting-label">Kaydı aktif profile içe aktar</label><textarea id="import-code" class="code-area"></textarea><button id="do-import" class="btn-setting">İçe Aktar</button></div><div class="settings-section danger-zone"><h3>Tehlikeli Bölge</h3><p>Bu işlem aktif hesabın parasını, deposunu, 🏅 puanını, bölgelerini, teknolojisini, fabrikasını, filosunu ve bütün istatistiklerini siler. Harita boş açılır; yedi ücretsiz kuruluş makinesini ve bir ücretsiz Kömür Jeneratörünü yeniden kendin yerleştirirsin. Başlangıçtaki 12 kömür yalnız ilk gerçek enerji ağını kurmak içindir.</p><label class="setting-label">Onay için <b>SIFIRLA</b> yaz</label><input id="reset-confirm-text" class="text-input" autocomplete="off"><button id="do-reset" class="btn-danger" disabled>Tüm İlerlemeyi Gerçekten Sıfırla</button></div></div></div>
+<div id="toast-layer" class="toast-layer"></div><div id="float-layer" class="float-layer"></div>
+
+<script src="data/feature-flags.js"></script><script src="vendor/break_eternity/break_eternity.min.js"></script><script src="src/core/economy-number.js"></script><script src="src/core/lossless-json.js"></script><script src="src/services/save-migrator-v16.js"></script><script src="src/services/storage-vault.js"></script><script src="data/canonical/game-data.v4.4.final.js"></script><script src="src/core/canonical-data-loader.js"></script><script src="src/core/numbers.js"></script><script src="data/config.js"></script><script src="data/u2-first-orbit-data.js"></script><script src="data/u3-planetary-bastions-data.js"></script><script src="src/core/economy.js"></script><script src="src/core/u2-first-orbit-runtime.js"></script><script src="src/core/u3-planetary-bastions-runtime.js"></script><script src="src/core/gameplay-phase-runtime.js"></script><script src="src/core/quests.js"></script><script src="src/core/domain-command.js"></script><script src="src/core/server-time.js"></script><script src="src/core/server-reconciliation.js"></script><script src="src/core/server-network.js"></script><script src="src/services/save-service.js"></script><script src="src/ui/toast.js"></script><script src="src/ui/help-system.js"></script><script src="src/canvas/factory-canvas.js"></script><script src="src/ui/ui.js"></script><script src="src/ui/combat-ui.js"></script><script src="src/main.js"></script>
+<script>if('serviceWorker' in navigator&&location.protocol!=='file:'){navigator.serviceWorker.register('sw.js').catch(()=>{});}</script>
+</body></html>

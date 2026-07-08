@@ -1,0 +1,30 @@
+PASS U4.3.1 clean authoritative reset, silent resume and ground-first threat gate
+{
+  "initial": {
+    "entities": 0,
+    "machines": 0,
+    "rights": 1,
+    "raidAt": 0,
+    "phase": "ground",
+    "offlineModal": false
+  },
+  "reset": {
+    "localEntities": 0,
+    "serverEntities": 0,
+    "serverRevision": 3,
+    "rights": 1
+  },
+  "silentResumeToast": "👤 Hoş geldin Komutan Groundfront Pilot\n🧹 Profil sıfırlandı: harita boş; 7 ücretsiz makine, 1 ücretsiz kömür jeneratörü ve 12 kömürlük kuruluş yakıtı hazır",
+  "groundUI": {
+    "title": "Yeryüzü Cephesi",
+    "scanDisabled": true,
+    "phase": "ground",
+    "alienReports": 0
+  },
+  "overflow": {
+    "scroll": 390,
+    "inner": 390
+  },
+  "errors": [],
+  "consoleErrors": []
+}
