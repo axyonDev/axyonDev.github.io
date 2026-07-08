@@ -1,1 +1,0 @@
-PASS native IndexedDB adapter: open/upgrade, records, backup index, mirror hydrate and tombstone
