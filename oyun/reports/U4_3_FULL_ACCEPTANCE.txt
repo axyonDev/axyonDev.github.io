@@ -1,0 +1,29 @@
+AXYON: ORBITAL ASCENDANCY U4.3 FULL ACCEPTANCE
+
+Version: 4.5.3-u4.3
+Save schema: v16
+
+PASS Node/regression suites: 22/22
+PASS deterministic stability cycles: 3000
+PASS non-test JavaScript syntax checks: 36
+PASS Chromium suites: 5/5
+PASS SQLite/WAL process restart durability
+PASS 128 concurrent duplicate HTTP requests: one commit
+PASS two-worker SQLite CAS race: one commit, one stale
+PASS commit-then-lost-ACK restart retry: duplicate receipt
+PASS offline outbox and same-DB restart delivery
+PASS authoritative snapshot reconciliation
+PASS signed negative flow v16 save/reload
+PASS 390px mobile overflow checks
+
+AXYON U4.3 CHROMIUM ACCEPTANCE
+
+PASS U3 regression: U3_1_BROWSER_SMOKE_FINAL.json (page errors=0, unexpected console errors=0)
+PASS U4 data vault: U4_BROWSER_SMOKE.json (page errors=0, unexpected console errors=0)
+PASS U4.1 command authority: U4_1_BROWSER_SMOKE.json (page errors=0, unexpected console errors=0)
+PASS U4.2 server reconciliation: U4_2_BROWSER_SMOKE.json (page errors=0, unexpected console errors=0)
+PASS U4.3 persistent network: U4_3_BROWSER_SMOKE.json (page errors=0, unexpected console errors=0)
+
+PASS 5/5 Chromium suites
+PASS 390 px mobile overflow checks
+PASS real browser -> HTTP -> SQLite -> restart/outbox delivery

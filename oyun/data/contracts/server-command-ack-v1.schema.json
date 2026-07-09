@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://axyondev.com/contracts/server-command-ack-v1.schema.json",
+  "title": "AXYON Server Command ACK v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "commandId", "fingerprint", "status", "serverRevision", "serverTime", "receivedAt"],
+  "properties": {
+    "schemaVersion": {"const": 1},
+    "commandId": {"type": "string", "minLength": 3, "maxLength": 192},
+    "fingerprint": {"type": "string", "minLength": 8, "maxLength": 128},
+    "status": {"enum": ["accepted", "rejected"]},
+    "serverRevision": {"type": "integer", "minimum": 0},
+    "serverTime": {"type": "integer", "minimum": 0},
+    "sentAt": {"type": "integer", "minimum": 0},
+    "receivedAt": {"type": "integer", "minimum": 0},
+    "reason": {"type": "string", "maxLength": 160}
+  }
+}

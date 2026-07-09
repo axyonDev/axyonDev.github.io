@@ -1,0 +1,44 @@
+PASS U4.2 Chromium authoritative server bridge
+{
+  "version": "v4.5.6 U4.3.3 · FACTORY INTELLIGENCE",
+  "coveredCommands": {
+    "before": 0,
+    "after": 1,
+    "first": {
+      "ok": true,
+      "applied": true
+    },
+    "second": {
+      "duplicate": true
+    },
+    "auto": {
+      "ok": true
+    },
+    "opened": {
+      "ok": true,
+      "code": "applied"
+    },
+    "revision": 3
+  },
+  "reconciliation": {
+    "result": {
+      "ok": true,
+      "code": "snapshot_applied",
+      "serverRevision": 5,
+      "serverTime": 1783469457577,
+      "droppedOutbox": 1
+    },
+    "theme": "light",
+    "pending": 0,
+    "revision": 5,
+    "needs": false,
+    "coins": "987654321"
+  },
+  "status": "Komut revizyonu 5 · 0 istemci kaynağı · 0 ACK bekliyor · Yerel mod",
+  "overflow": {
+    "scroll": 390,
+    "inner": 390
+  },
+  "errors": [],
+  "consoleErrors": []
+}

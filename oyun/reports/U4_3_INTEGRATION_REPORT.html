@@ -1,0 +1,177 @@
+<!doctype html><html lang="tr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>AXYON U4.3 Entegrasyon Raporu</title><style>body{margin:0;background:#08111e;color:#dce8f7;font:15px/1.65 system-ui,Segoe UI,Arial}main{max-width:1120px;margin:auto;padding:28px 18px 70px}header,article{background:#101b2d;border:1px solid #263a56;border-radius:18px;padding:26px;margin-bottom:18px}header{background:linear-gradient(135deg,rgba(56,189,248,.13),rgba(34,197,94,.09))}h1{line-height:1.15}h2{margin-top:34px;border-left:5px solid #38bdf8;padding-left:12px}h3{color:#fbbf24}p,li{color:#cedaeb}strong{color:#fff}code,pre{background:#07101b;border:1px solid #263a56;border-radius:7px}code{padding:2px 5px}pre{padding:14px;overflow:auto}.badge{display:inline-block;padding:6px 10px;border-radius:999px;background:#163a2b;color:#86efac;font-weight:800}.table-wrap{overflow:auto;border:1px solid #263a56;border-radius:10px}.table-wrap table{border-collapse:collapse;width:100%;min-width:600px}th,td{padding:9px 11px;border-bottom:1px solid #263a56;text-align:left}th{background:#172338}blockquote{border-left:4px solid #f59e0b;padding:10px 14px;background:#0d1828;font-weight:700}@media(max-width:650px){main{padding:10px}header,article{padding:17px;border-radius:12px}}</style></head><body><main><header><span class="badge">U4.3 ACCEPTANCE · PASS</span><h1>AXYON: Orbital Ascendancy</h1><p>v4.5.3 U4.3 · Persistent Transaction Store & Client Network Adapter</p></header><article><h1>AXYON: Orbital Ascendancy v4.5.3 U4.3</h1>
+<h2>Persistent Transaction Store &amp; Client Network Adapter — Entegrasyon ve Kabul Raporu</h2>
+<p><strong>Sürüm:</strong> <code>4.5.3-u4.3</code>  </p>
+<p><strong>Save şeması:</strong> <code>v16</code>  </p>
+<p><strong>Taban:</strong> <code>v4.5.2-u4.2 Authoritative Server Prototype</code>  </p>
+<p><strong>Durum:</strong> Release adayı — U4.3 kabul kapıları geçti</p>
+<hr>
+<h2>1. Yönetici özeti</h2>
+<p>U4.3, U4.2&#x27;de bellek içinde çalışan yetkili sunucu prototipini süreç yeniden başlatıldığında da state, command receipt ve event-outbox bilgisini koruyan gerçek bir transaction deposuna bağlar. Oyun istemcisi ilk kez gerçek HTTP authority adapter üzerinden offline outbox, ACK ve snapshot reconciliation akışını kullanır.</p>
+<p>SQLite/WAL kabul ve tek-node referans deposudur. Milyonlarca kullanıcı ve binlerce eşzamanlı oyuncu hedefi için production yönü PostgreSQL, shard router ve ayrı servis sınırlarıdır; SQLite production yatay ölçek deposu olarak sunulmamaktadır.</p>
+<p>Ana sonuçlar:</p>
+<ul>
+<li>Yetkili actor state, command ledger, source-sequence ledger, receipt ve event-outbox ACID transaction içinde kalıcıdır.</li>
+<li>Process restart sonrasında aynı komut tekrar gönderildiğinde handler yeniden çalışmaz; saklı duplicate receipt döner.</li>
+<li>Commit tamamlanıp ACK kaybolduğunda restart + retry çift uygulama üretmez.</li>
+<li>128 eşzamanlı aynı HTTP komutu yalnız bir commit üretir.</li>
+<li>İki bağımsız Node worker/SQLite bağlantısının aynı revision yarışında yalnız biri commit olur; diğeri <code>stale_revision</code> alır.</li>
+<li>Oyun istemcisi gerçek HTTP sunucusuna bağlanır; sunucu kapalıyken komut outbox&#x27;ta kalır ve aynı DB ile restart sonrası gönderilir.</li>
+<li>Server reddi/stale revision durumunda authoritative snapshot uygulanır; local tema korunur ve eski outbox temizlenir.</li>
+<li>Negatif üretim/tüketim akışları <code>v16 flow.*</code> alanlarında signed Decimal olarak kayıpsız saklanır.</li>
+<li>Eski <code>queueServerCommand</code> köprüsü geriye uyumlu tutulmuştur.</li>
+</ul>
+<hr>
+<h2>2. Kalıcı authority repository</h2>
+<p><code>server/sqlite-authority-repository.js</code>, Node 22 <code>node:sqlite</code> ile aşağıdaki güvenlik ayarlarını kullanır:</p>
+<ul>
+<li>WAL journal</li>
+<li><code>synchronous=FULL</code></li>
+<li>Busy timeout</li>
+<li>Foreign key kontrolü</li>
+<li>Tek transaction içinde CAS + ledger + receipt + event-outbox</li>
+</ul>
+<p>Kalıcı tablolar:</p>
+<div class="table-wrap"><table>
+<tr><th>Tablo</th><th>Rol</th></tr>
+<tr><td>`actors`</td><td>Yetkili oyuncu snapshot ve server revision</td></tr>
+<tr><td>`command_ledger`</td><td>`(actor_id, command_id)` unique receipt</td></tr>
+<tr><td>`sequence_ledger`</td><td>`(actor_id, source_id, sequence)` replay koruması</td></tr>
+<tr><td>`event_outbox`</td><td>Transaction ile birlikte oluşan domain olayları</td></tr>
+<tr><td>`authority_meta`</td><td>Repository sürümü ve metadata</td></tr>
+</table></div>
+<h3>Transaction garantisi</h3>
+<pre><code>
+BEGIN IMMEDIATE
+→ command/sequence conflict kontrolü
+→ actor revision CAS
+→ yetkili domain handler
+→ state update
+→ command receipt
+→ sequence claim
+→ event-outbox
+→ COMMIT
+</code></pre>
+<p><code>before_commit</code> failpoint&#x27;inde hiçbir kalıcı tablo değişmez. <code>after_commit</code> hata/ACK kaybında commit korunur ve retry saklı receipt üzerinden duplicate döner.</p>
+<hr>
+<h2>3. Süreç yeniden başlatma ve event-outbox</h2>
+<p>Gerçek child process testinde:</p>
+<p>1. Sunucu SQLite DB ile başlatıldı.</p>
+<p>2. Komut commit edildi.</p>
+<p>3. Sunucu süreci tamamen kapatıldı.</p>
+<p>4. Aynı DB ile yeni process başlatıldı.</p>
+<p>5. Actor snapshot, revision ve receipt bulundu.</p>
+<p>6. Aynı komut tekrar gönderildiğinde ikinci uygulama yapılmadı.</p>
+<p>Event publisher mesajı işaretlemeden çökerse event <code>pending</code> kalır. <code>published</code> işareti uygulandıktan sonra süreç yeniden başlatılsa da korunur.</p>
+<hr>
+<h2>4. Gerçek HTTP client adapter</h2>
+<p><code>src/core/server-network.js</code> aşağıdakileri sağlar:</p>
+<ul>
+<li>Ayarlanabilir HTTP/HTTPS authority URL</li>
+<li>Gerçek <code>fetch</code> ve timeout</li>
+<li>Tek eşzamanlı sync kilidi</li>
+<li>5 saniyelik kontrollü auto-sync</li>
+<li>Offline outbox batch gönderimi</li>
+<li>Actor/fingerprint doğrulamalı ACK</li>
+<li>Sunucu kapalıyken pending komut koruması</li>
+<li>Server rejection sonrası snapshot çekme</li>
+<li>Authoritative snapshot reconciliation</li>
+<li>Local UI ayarlarını koruma</li>
+<li>Server revision ile local command revision eşitleme</li>
+</ul>
+<p>Profil oluşmadan çalışan erken auto-sync artık hata üretmez; <code>waiting_actor</code> durumunda bekler. Promise <code>inFlight</code> kilidi her dönüş yolunda güvenli biçimde bırakılır.</p>
+<h3>Bağlantı modları</h3>
+<ul>
+<li>Authority URL yok: yerel çevrimdışı mod</li>
+<li>URL var, sunucu açık: optimistic command + outbox + ACK</li>
+<li>URL var, sunucu kapalı: optimistic command pending kalır</li>
+<li>Sunucu yeniden açılır: pending komut otomatik veya manuel sync ile gönderilir</li>
+<li>Server stale/reject: authoritative snapshot uygulanır</li>
+</ul>
+<hr>
+<h2>5. PostgreSQL production sözleşmesi</h2>
+<p><code>server/postgres/001_authority_schema.sql</code>, production geçişi için tablo ve unique constraint sözleşmesini içerir:</p>
+<ul>
+<li>Actor hash partition</li>
+<li><code>(actor_id, command_id)</code> unique ledger</li>
+<li><code>(actor_id, source_id, sequence)</code> unique sequence claim</li>
+<li>Event-outbox</li>
+<li>Transaction ve <code>FOR UPDATE</code>/CAS yönlendirmesi</li>
+<li>Publisher için <code>FOR UPDATE SKIP LOCKED</code></li>
+</ul>
+<p>Bu sürümde gerçek PostgreSQL cluster testi yapılmamıştır. SQLite kabul/reference adapter&#x27;ıdır; production hedefi değildir.</p>
+<hr>
+<h2>6. Save v16 signed-flow düzeltmesi</h2>
+<p>Eski v16 doğrulayıcı tüm ekonomi map&#x27;lerini unsigned kabul ettiği için üretimden daha yüksek tüketim oluştuğunda negatif <code>flow.*</code> değeri autosave doğrulamasını durdurabiliyordu.</p>
+<p>U4.3 ile:</p>
+<ul>
+<li><code>EconomyNumber.isValidSignedStorage()</code> eklendi.</li>
+<li><code>flow.*</code> signed Decimal olarak doğrulanır.</li>
+<li>Negatif ve pozitif akış değerleri save/reload sırasında kayıpsız round-trip yapar.</li>
+<li>Legacy signed flow literal&#x27;i migrasyonda sıfıra çevrilmez.</li>
+<li>Inventory, kredi ve diğer unsigned ekonomi alanları negatif değeri reddetmeye devam eder.</li>
+</ul>
+<hr>
+<h2>7. Eşzamanlılık ve yük kabul sonuçları</h2>
+<div class="table-wrap"><table>
+<tr><th>Senaryo</th><th>Sonuç</th></tr>
+<tr><td>Aynı komut, 128 eşzamanlı HTTP istek</td><td>1 commit, 127 duplicate</td></tr>
+<tr><td>İki farklı komut, aynı expected revision</td><td>1 commit, 1 stale</td></tr>
+<tr><td>İki worker / bağımsız SQLite bağlantısı</td><td>1 commit, kayıp güncelleme yok</td></tr>
+<tr><td>Commit sonrası ACK kaybı + restart + retry</td><td>Duplicate receipt, ikinci uygulama yok</td></tr>
+<tr><td>Commit öncesi zorlanmış hata</td><td>State/ledger/sequence/event değişmedi</td></tr>
+<tr><td>Event publisher crash</td><td>Pending event korundu</td></tr>
+<tr><td>Server restart</td><td>State, receipt, revision ve event durumu korundu</td></tr>
+<tr><td>Offline browser command</td><td>Outbox&#x27;ta kaldı</td></tr>
+<tr><td>Aynı DB ile server restart</td><td>Pending komut ACK aldı</td></tr>
+</table></div>
+<hr>
+<h2>8. Kabul matrisi</h2>
+<h3>Node ve regresyon</h3>
+<ul>
+<li><strong>22/22</strong> Node/regresyon paketi PASS</li>
+<li><strong>3.000</strong> deterministik stabilite çevrimi PASS</li>
+<li>U1, U2, U3, U3.1, U4, U4.1 ve U4.2 regresyonları PASS</li>
+<li>Tüm non-test JavaScript dosyalarında syntax kontrolü PASS</li>
+</ul>
+<h3>Chromium</h3>
+<ul>
+<li>U3 background/pinch/save/accessibility: PASS</li>
+<li>U4 IndexedDB/fallback: PASS</li>
+<li>U4.1 command/outbox/ACK: PASS</li>
+<li>U4.2 command coverage/snapshot CAS: PASS</li>
+<li>U4.3 gerçek browser → HTTP → SQLite → process restart: PASS</li>
+<li>390 px mobil yatay taşma: yok</li>
+<li>Beklenmeyen page/console hatası: 0</li>
+</ul>
+<p>Node <code>node:sqlite</code> çalışma sırasında <code>ExperimentalWarning</code> üretir. Bu test hatası değildir; Node 22 API durumudur ve production PostgreSQL hedefinin yerine geçmez.</p>
+<hr>
+<h2>9. Bilinen sınırlar</h2>
+<p>1. SQLite/WAL repository tek-node kabul/reference deposudur; yatay production ölçeği değildir.</p>
+<p>2. JWT/OAuth ve gerçek hesap servisi yoktur; prototip actor header kullanılır.</p>
+<p>3. PostgreSQL adapter, connection pool, shard router ve multi-region failover henüz çalışır runtime değildir.</p>
+<p>4. Stale offline komutlarda semantic merge/rebase yoktur; server snapshot otoritedir.</p>
+<p>5. Global pazar, savaş ve leaderboard servisleri ayrıştırılmamıştır.</p>
+<p>6. Gerçek Android cihaz ve production HTTPS origin kabul testi sonraki cihaz kapısıdır.</p>
+<hr>
+<h2>10. Başkan kararı</h2>
+<p><strong>U4.3 kabul edildi.</strong> Kalıcı transaction deposu, process restart dayanıklılığı, gerçek HTTP client adapter, offline outbox ve snapshot reconciliation aynı pakette çalışmaktadır.</p>
+<p>Sıradaki ana geliştirme:</p>
+<blockquote>**U4.4 — PostgreSQL Authority, Authentication &amp; Shard Readiness**</blockquote>
+<p>Öncelikler:</p>
+<ul>
+<li>PostgreSQL repository adapter ve gerçek DB integration testleri</li>
+<li>JWT/OAuth tabanlı hesap/actor doğrulaması</li>
+<li>Connection pool, transaction retry ve deadlock politikası</li>
+<li>Shard/sector router sözleşmesi</li>
+<li>Event-outbox publisher worker</li>
+<li>1.000+ eşzamanlı komut yük ve soak testleri</li>
+<li>Server-authoritative pazar/savaş servis sınırları</li>
+</ul>
+<hr>
+<h2>11. Durum kaydı</h2>
+<p><strong>Source of truth:</strong> <code>AXYON_Orbital_Ascendancy_v4.5.3_U4.3_Persistent_Authority.zip</code>  </p>
+<p><strong>Sürüm:</strong> <code>4.5.3-u4.3</code>  </p>
+<p><strong>Save şeması:</strong> <code>v16</code>  </p>
+<p><strong>Son karar:</strong> U4.3 kalıcı authority ve network adapter kabul edildi.  </p>
+<p><strong>Kritik sınır:</strong> SQLite production shard deposu değildir; auth ve PostgreSQL runtime henüz yoktur.  </p>
+<p><strong>Bitiş kriteri:</strong> Restart, duplicate, CAS, rollback, event-outbox, browser-network, offline retry, snapshot ve eski regresyon testleri geçti.</p></article></main></body></html>

@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://axyondev.com/contracts/server-snapshot-v1.schema.json",
+  "title": "AXYON Authoritative Player Snapshot v1",
+  "type": "object",
+  "required": ["schemaVersion","actorId","serverRevision","serverTime","state","updatedAt"],
+  "properties": {
+    "schemaVersion": {"const":1},
+    "actorId": {"type":"string","minLength":1,"maxLength":128},
+    "serverRevision": {"type":"integer","minimum":0},
+    "serverTime": {"type":"integer","minimum":0},
+    "state": {"type":"object"},
+    "updatedAt": {"type":"integer","minimum":0}
+  },
+  "additionalProperties": false
+}
