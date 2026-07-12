@@ -1,0 +1,8 @@
+AXYON.DEV — GitHub Pages güvenli yeniden yayın tetikleyicisi
+
+1. Bu ZIP'i bilgisayarında aç.
+2. İçindeki gizli ".nojekyll" dosyasını axyonDev/axyonDev.github.io deposunun KÖK dizinine yükle.
+3. Commit mesajı: fix: retrigger GitHub Pages deployment
+4. GitHub > Settings > Pages bölümünde kaynak ayarı "Deploy from a branch", Branch "main", Folder "/ (root)" olmalı.
+
+Bu dosya mevcut site kodunu değiştirmez. GitHub Pages'i yeniden yayınlatır ve statik dosyaların Jekyll tarafından işlenmesini kapatır.
