@@ -1,0 +1,28 @@
+AXYONDEV.COM 404 / ESKİ SÜRÜM KURTARMA
+======================================
+
+DOĞRULANAN DURUM
+- Public GitHub deposunda index.html mevcut.
+- CNAME dosyası www.axyondev.com değerini içeriyor.
+- .nojekyll dosyası mevcut.
+- Canlı alan adı bazı kontrollerde eski sürümü gösteriyor; bu, GitHub Pages kaynağının yanlış branch/klasör seçmesi veya deploy'un güncellenmemesi ihtimalini gösterir.
+
+GITHUB AYARI
+Repository: axyonDev/axyonDev.github.io
+Settings > Pages
+Source: Deploy from a branch
+Branch: main
+Folder: /(root)
+Save
+
+YENİDEN DEPLOY TETİĞİ
+1. Bu paketteki PUBLIC_SITE_REDEPLOY_TRIGGER.txt dosyasını public repo köküne kopyala.
+2. GitHub Desktop'ta commit mesajı: Trigger GitHub Pages redeploy
+3. Push origin.
+4. Actions veya Settings > Pages alanında deployment tamamlanmasını bekle.
+5. Gizli sekmede https://www.axyondev.com/ aç.
+
+DNS
+- GitHub repo kökündeki CNAME: www.axyondev.com
+- DNS tarafındaki www kaydı GitHub Pages hedefine yönlenmeli.
+- GitHub Pages ayarında custom domain www.axyondev.com görünmeli.
