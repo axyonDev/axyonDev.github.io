@@ -393,11 +393,11 @@ footer strong { color: #fff; }
 }
 
 /* ================================================================
-   v3.1 — mobile-first experience patch
+   v3.1 — original mobile-first experience patch
    Keeps the desktop composition above 768px, but replaces the phone
    layout with touch-sized controls, readable cards and a bottom sheet.
    ================================================================ */
-@media (max-width: 768px) {
+@media (max-width: 768px), (hover: none) and (pointer: coarse) {
   :root {
     --mobile-pad: 14px;
     --mobile-radius: 18px;
@@ -1002,7 +1002,7 @@ footer strong { color: #fff; }
   .node { padding-right: 30px; }
 }
 
-@media (max-width: 768px) {
+@media (max-width: 768px), (hover: none) and (pointer: coarse) {
   .panel-close {
     position: sticky;
     top: 10px;
@@ -1013,7 +1013,7 @@ footer strong { color: #fff; }
   }
 }
 
-@media (max-width: 768px) {
+@media (max-width: 768px), (hover: none) and (pointer: coarse) {
   .node.route-dim { opacity: .82; }
   .node.route-dim:active,
   .node.route-dim.active { opacity: 1; }
@@ -1031,4 +1031,115 @@ html, body { max-width: 100%; overflow-x: clip; }
   .ambient { width: 300px; height: 300px; }
   .ambient-a { left: 0; }
   .ambient-b { right: 0; }
+}
+
+
+/* ================================================================
+   v3.2 — real-device viewport recovery
+   Some Android/WebView configurations report an 800–980 CSS-pixel
+   layout viewport on a phone. The old 768px-only breakpoint therefore
+   rendered the tablet/desktop composition. Touch capability now forces
+   the compact UI, and all root containers explicitly fill the viewport.
+   ================================================================ */
+#app,
+#app > main,
+.topbar,
+.hero,
+.timeline-area,
+.timeline-shell,
+.timeline-column,
+.timeline-list,
+.source-section,
+footer {
+  min-width: 0;
+  max-width: 100%;
+}
+
+#app {
+  width: 100%;
+  overflow-x: clip;
+}
+
+@supports not (overflow: clip) {
+  #app { overflow-x: hidden; }
+}
+
+html.touch-ui,
+html.touch-ui body {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  overflow-x: clip;
+}
+
+html.touch-ui #app,
+html.touch-ui #app > main,
+html.touch-ui .topbar,
+html.touch-ui .hero,
+html.touch-ui .timeline-area,
+html.touch-ui .timeline-shell,
+html.touch-ui .timeline-column,
+html.touch-ui .timeline-list {
+  width: 100%;
+  min-width: 0;
+  max-width: none;
+}
+
+/* Class fallback mirrors the critical mobile shell even if a browser
+   misreports pointer media features. */
+html.touch-ui .topbar {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 10px;
+  padding: max(10px, env(safe-area-inset-top)) 14px 11px;
+}
+html.touch-ui .toolbar {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 8px;
+  width: 100%;
+}
+html.touch-ui .search {
+  width: 100%;
+  min-width: 0;
+  min-height: 44px;
+  border-radius: 14px;
+}
+html.touch-ui .segmented {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  width: 100%;
+  overflow: visible;
+  border-radius: 16px;
+}
+html.touch-ui .mode {
+  min-width: 0;
+  min-height: 42px;
+  white-space: normal;
+}
+html.touch-ui .hero {
+  display: block;
+  min-height: 0;
+  padding-inline: 14px;
+}
+html.touch-ui .dna-hero { display: none; }
+html.touch-ui .timeline-shell { display: block; }
+html.touch-ui .timeline-area { padding-inline: 9px; }
+html.touch-ui .timeline-branch { width: 100%; }
+html.touch-ui .node {
+  width: 100%;
+  min-width: 0;
+}
+html.touch-ui .node-main b,
+html.touch-ui .node-main small {
+  white-space: normal;
+}
+html.touch-ui .guide-strip article {
+  flex-basis: calc(100dvw - 42px);
+  max-width: calc(100dvw - 42px);
+}
+html.touch-ui .leaf-panel {
+  width: 100dvw;
+  max-width: 100dvw;
 }

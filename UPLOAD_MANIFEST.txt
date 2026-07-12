@@ -1,16 +1,13 @@
-AXYON.DEV Marvel İzleme Ağacı v3.1 Mobile Publish Bundle
+AXYON.DEV Marvel v3.2 yayın paketi
 
-Yüklenecek hedef: axyonDev/axyonDev.github.io deposunun kökü
+Değişen canlı klasör:
+- /marvel/  → Marvel İzleme Ağacı v3.2
 
-İçerik:
-- marvel/  -> https://www.axyondev.com/marvel/
-- axyon-map-5fa0de6fef10d6b7/ -> bağlantısız özel site haritası
-- sitemap.xml -> Marvel sayfası eklenmiş XML sitemap
+v3.2 düzeltmesi:
+- Telefon tarayıcısı 800–980 CSS px bildirse bile mobil arayüz zorlanır.
+- Sağ boş alan kaldırıldı.
+- Üst görünüm sekmeleri 2×2 mobil düzene geçer.
+- Zaman çizgisi kartları ekranın tam genişliğini kullanır.
+- CSS/JS bağlantılarında v3.2 cache-busting vardır.
 
-Mobil doğrulama:
-- 360 / 390 / 430 / 768 px: yatay taşma yok
-- Mobil yapım detayı: alttan açılan panel
-- Dokunma ile açma ve × ile kapatma: PASS
-- JavaScript page error: 0
-
-Not: GitHub App yazma izni 403 verdiği için otomatik yükleme yapılamadı.
+Mevcut gizli AXYON site haritası ve sitemap.xml korunmuştur.

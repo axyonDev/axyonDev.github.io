@@ -6,8 +6,18 @@
   <meta name="referrer" content="strict-origin-when-cross-origin">
   <meta name="theme-color" content="#090b11">
   <meta name="description" content="Marvel film, dizi ve animasyonlarını hikâye dalları, yayın yılları ve önerilen başlangıç rotasıyla gösteren interaktif izleme ağacı.">
-  <title>Marvel İzleme Ağacı 2026 — Beginner Map v3.1</title>
-  <link rel="stylesheet" href="./assets/css/style.css">
+  <title>Marvel İzleme Ağacı 2026 — Beginner Map v3.2</title>
+  <script>
+    (function () {
+      var touchLike = false;
+      try {
+        touchLike = matchMedia('(hover: none) and (pointer: coarse)').matches ||
+          /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
+      } catch (e) {}
+      if (touchLike) document.documentElement.classList.add('touch-ui');
+    }());
+  </script>
+  <link rel="stylesheet" href="./assets/css/style.css?v=3.2.0">
 </head>
 <body>
   <div class="ambient ambient-a" aria-hidden="true"></div>
@@ -27,7 +37,7 @@
     <header class="topbar">
       <a class="brand" href="#top" aria-label="Marvel İzleme Ağacı ana sayfa">
         <span class="brand-mark">M</span>
-        <span><strong>MARVEL İZLEME AĞACI</strong><small>Beginner Map · v3.1</small></span>
+        <span><strong>MARVEL İZLEME AĞACI</strong><small>Beginner Map · v3.2</small></span>
       </a>
 
       <div class="toolbar">
@@ -147,19 +157,19 @@
     <footer>
       <strong>Marvel İzleme Ağacı 2026</strong>
       <span>Marvel yapımlarını kronoloji ve hikâye bağlantılarıyla açıklayan bağımsız bilgi rehberi.</span>
-      <span>v3.1.0 · Axyon</span>
+      <span>v3.2.0 · Axyon</span>
     </footer>
   </div>
 
-  <script src="./data/meta.js" defer></script>
-  <script src="./data/mcu.js" defer></script>
-  <script src="./data/television.js" defer></script>
-  <script src="./data/xmen.js" defer></script>
-  <script src="./data/spider.js" defer></script>
-  <script src="./data/legacy.js" defer></script>
-  <script src="./data/animation.js" defer></script>
-  <script src="./js/catalog.js" defer></script>
-  <script src="./js/trailer-player.js" defer></script>
-  <script src="./js/app.js" defer></script>
+  <script src="./data/meta.js?v=3.2.0" defer></script>
+  <script src="./data/mcu.js?v=3.2.0" defer></script>
+  <script src="./data/television.js?v=3.2.0" defer></script>
+  <script src="./data/xmen.js?v=3.2.0" defer></script>
+  <script src="./data/spider.js?v=3.2.0" defer></script>
+  <script src="./data/legacy.js?v=3.2.0" defer></script>
+  <script src="./data/animation.js?v=3.2.0" defer></script>
+  <script src="./js/catalog.js?v=3.2.0" defer></script>
+  <script src="./js/trailer-player.js?v=3.2.0" defer></script>
+  <script src="./js/app.js?v=3.2.0" defer></script>
 </body>
 </html>
