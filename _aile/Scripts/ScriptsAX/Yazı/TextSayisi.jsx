@@ -1,2 +1,0 @@
-#target illustrator
-try{ if(app.documents.length==0) throw 'Dosya yok'; var doc=app.documents[0]; var c=doc.textFrames.length; alert('Belgede toplam ' + c + ' adet metin kutusu (TextFrame) var.'); }catch(e){ alert('Hata: '+e); }

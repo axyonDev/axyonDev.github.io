@@ -1,2 +1,0 @@
-#target illustrator
-try{ if(app.documents.length==0) throw 'Dosya yok'; var doc=app.documents[0]; var c=doc.selection.length; alert(c > 0 ? (c + ' adet ana obje seçili.') : 'Hiçbir şey seçmedin.'); }catch(e){ alert('Hata: '+e); }
