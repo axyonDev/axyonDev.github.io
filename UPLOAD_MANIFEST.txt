@@ -1,0 +1,17 @@
+AXYON.DEV Marvel Publish Bundle
+Date: 2026-07-12
+Target repository: axyonDev/axyonDev.github.io
+Target branch: main
+
+Copy paths exactly to repository root:
+- marvel/**
+- axyon-map-5fa0de6fef10d6b7/index.html
+- sitemap.xml (replace existing file)
+
+Live URLs after GitHub Pages deployment:
+- https://www.axyondev.com/marvel/
+- https://www.axyondev.com/marvel/?selftest=1
+- https://www.axyondev.com/axyon-map-5fa0de6fef10d6b7/
+
+The hidden map is unlinked, omitted from sitemap.xml, and marked noindex/nofollow.
+It is not a security boundary because the GitHub repository is public.

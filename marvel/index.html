@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="referrer" content="strict-origin-when-cross-origin">
+  <meta name="theme-color" content="#090b11">
+  <meta name="description" content="Marvel film, dizi ve animasyonlarını hikâye dalları, yayın yılları ve önerilen başlangıç rotasıyla gösteren interaktif izleme ağacı.">
+  <link rel="canonical" href="https://www.axyondev.com/marvel/">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Marvel İzleme Ağacı 2026 — Beginner Map v3">
+  <meta property="og:description" content="Marvel film, dizi ve animasyonlarını hikâye dalları, yayın yılları ve önerilen başlangıç rotasıyla keşfet.">
+  <meta property="og:url" content="https://www.axyondev.com/marvel/">
+  <meta name="twitter:card" content="summary">
+  <title>Marvel İzleme Ağacı 2026 — Beginner Map v3</title>
+  <link rel="stylesheet" href="./assets/css/style.css">
+</head>
+<body>
+  <div class="ambient ambient-a" aria-hidden="true"></div>
+  <div class="ambient ambient-b" aria-hidden="true"></div>
+
+  <div id="fileProtocolBanner" class="protocol-banner" hidden>
+    <strong>Yerel dosya modu:</strong>
+    YouTube fragmanları <code>file://</code> altında güvenilir çalışmaz.
+    Bu klasörde terminal açıp <code>python3 -m http.server 8765</code> çalıştır, sonra
+    <a href="http://localhost:8765/">localhost:8765</a> adresini aç. Axyondev.com’a yüklediğinde bu uyarı görünmez.
+  </div>
+  <script>
+    if (!/^https?:$/.test(location.protocol)) document.getElementById('fileProtocolBanner').hidden = false;
+  </script>
+
+  <div id="app">
+    <header class="topbar">
+      <a class="brand" href="#top" aria-label="Marvel İzleme Ağacı ana sayfa">
+        <span class="brand-mark">M</span>
+        <span><strong>MARVEL İZLEME AĞACI</strong><small>Beginner Map · v3</small></span>
+      </a>
+
+      <div class="toolbar">
+        <label class="search">
+          <span>⌕</span>
+          <input id="searchInput" type="search" placeholder="Yapım, karakter kolu, evren…" autocomplete="off">
+        </label>
+        <div class="segmented" aria-label="Görünüm seçimi">
+          <button class="mode active" type="button" data-mode="all">Tüm Marvel</button>
+          <button class="mode" type="button" data-mode="route">Önerilen sıra</button>
+          <button class="mode" type="button" data-mode="mcu">Resmî MCU</button>
+          <button class="mode" type="button" data-mode="upcoming">Yakında</button>
+        </div>
+      </div>
+    </header>
+
+    <main id="top">
+      <section class="hero">
+        <div class="hero-copy">
+          <p class="eyebrow">FİLMLER · DİZİLER · ANİMASYONLAR · PARALEL EVRENLER</p>
+          <h1>Marvel’ı bir liste değil, <em>yaşayan bir hikâye ağacı</em> olarak izle.</h1>
+          <p class="hero-text">Şirket isimlerini ezberlemek zorunda değilsin. Ana gövde MCU’yu, yan dallar X-Men, Spider-Man, Sony, eski filmler ve animasyon evrenlerini gösterir. Parlayan düğümler yeni başlayan biri için önerilen tek rotadır.</p>
+          <div class="hero-actions">
+            <button type="button" class="primary" onclick="document.querySelector('#timeline').scrollIntoView({behavior:'smooth'})">Ağacı aç</button>
+            <a class="secondary" href="#scope">Kapsamı gör</a>
+          </div>
+          <div class="stats" aria-label="Katalog özeti">
+            <div><strong id="totalCount">0</strong><span>toplam yapım</span></div>
+            <div><strong id="routeCount">0</strong><span>önerilen rota</span></div>
+            <div><strong id="trailerCount">0</strong><span>hazır fragman ID</span></div>
+          </div>
+        </div>
+
+        <div class="dna-hero" aria-hidden="true">
+          <div class="helix helix-a"></div>
+          <div class="helix helix-b"></div>
+          <div class="core"><span>2026</span><small>DOOMSDAY</small></div>
+          <div class="orbit orbit-one"></div>
+          <div class="orbit orbit-two"></div>
+        </div>
+      </section>
+
+      <section class="guide-strip" aria-label="Kullanım bilgisi">
+        <article><b>01</b><div><strong>Üzerine gel</strong><span>Bilgi kartı açılır; hazır fragman varsa sessiz başlar.</span></div></article>
+        <article><b>02</b><div><strong>Tıklayıp sabitle</strong><span>Kart açık kalır; ×, Esc veya panel dışı tıklamayla kapanır.</span></div></article>
+        <article><b>03</b><div><strong>Rota ile resmî sırayı ayır</strong><span>Editoryal başlangıç sırası ve Marvel’ın resmî MCU numarası aynı şey değildir.</span></div></article>
+      </section>
+
+      <section id="timeline" class="timeline-area">
+        <div class="filter-row">
+          <div class="media-filters" aria-label="Yapım türü filtresi">
+            <button class="chip active" type="button" data-media="all">Tümü</button>
+            <button class="chip" type="button" data-media="film">Filmler</button>
+            <button class="chip" type="button" data-media="series">Diziler</button>
+            <button class="chip" type="button" data-media="animation">Animasyonlar</button>
+            <button class="chip" type="button" data-media="special">Özel / kısa</button>
+          </div>
+          <div class="sort-tools">
+            <label class="toggle"><input id="highlightRoute" type="checkbox" checked><span>Önerilen yolu vurgula</span></label>
+            <label class="sort-label">Sırala
+              <select id="sortSelect">
+                <option value="story">Hikâye zamanı</option>
+                <option value="release">Yayın yılı</option>
+                <option value="official">Resmî MCU sırası</option>
+                <option value="route">Önerilen rota</option>
+              </select>
+            </label>
+          </div>
+        </div>
+
+        <header class="result-head">
+          <div><small>AKTİF GÖRÜNÜM</small><h2 id="resultTitle">Tüm Marvel ekran kataloğu</h2></div>
+          <p id="resultText"></p>
+          <div class="visible-counter"><strong id="visibleCount">0</strong><span>görünür</span></div>
+        </header>
+
+        <div class="timeline-shell">
+          <div class="timeline-column">
+            <div id="timelineList" class="timeline-list" aria-live="polite"></div>
+          </div>
+          <aside id="leafPanel" class="leaf-panel" aria-live="polite">
+            <div class="leaf-empty">
+              <div class="mini-dna" aria-hidden="true"></div>
+              <span>Bir yapımın üzerine gel</span>
+              <p>Bilgi kartı yaprak gibi açılır. Tıklarsan sabitlenir; × veya panel dışı tıklama ile kapanır.</p>
+            </div>
+          </aside>
+        </div>
+      </section>
+
+      <section id="scope" class="source-section">
+        <div>
+          <p class="eyebrow">KAPSAM KURALI</p>
+          <h2>Tek katalog, ayrı evren dalları.</h2>
+          <p id="scopeText"></p>
+        </div>
+        <div class="scope-rule">
+          <strong>Temel ilke</strong>
+          <p>Yapımlar stüdyoya göre değil, hikâye sürekliliğine göre ayrılır. Earth-616 dışındaki bir yapım ana çizgiye sahte bir kronoloji numarasıyla gömülmez.</p>
+        </div>
+        <div id="sourceLinks" class="source-links"></div>
+      </section>
+
+      <section id="diagnosticsPanel" class="diagnostics" hidden>
+        <header>
+          <div><small>GERÇEK YOUTUBE IFRAME TESTİ</small><h2>Fragman tanılama</h2></div>
+          <div><button id="runDiagnostics" type="button">Tekrar başlat</button><button id="stopDiagnostics" type="button">Durdur</button></div>
+        </header>
+        <p data-test-summary>Test hazırlanıyor…</p>
+        <div class="test-stage" data-test-stage>
+          <div data-video-mount></div><span data-video-status></span>
+        </div>
+        <div class="test-table-wrap"><table><thead><tr><th>#</th><th>Yapım</th><th>YouTube ID</th><th>Sonuç</th></tr></thead><tbody data-test-rows></tbody></table></div>
+      </section>
+    </main>
+
+    <footer>
+      <strong>Marvel İzleme Ağacı 2026</strong>
+      <span>Marvel yapımlarını kronoloji ve hikâye bağlantılarıyla açıklayan bağımsız bilgi rehberi.</span>
+      <span>v3.0.0 · Axyon</span>
+    </footer>
+  </div>
+
+  <script src="./data/meta.js" defer></script>
+  <script src="./data/mcu.js" defer></script>
+  <script src="./data/television.js" defer></script>
+  <script src="./data/xmen.js" defer></script>
+  <script src="./data/spider.js" defer></script>
+  <script src="./data/legacy.js" defer></script>
+  <script src="./data/animation.js" defer></script>
+  <script src="./js/catalog.js" defer></script>
+  <script src="./js/trailer-player.js" defer></script>
+  <script src="./js/app.js" defer></script>
+</body>
+</html>
