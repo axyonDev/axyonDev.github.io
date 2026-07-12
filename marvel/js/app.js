@@ -317,7 +317,7 @@
     if (!item) return;
     state.pinnedId = item.id;
     state.activeId = item.id;
-    history.replaceState(null, '', `#${encodeURIComponent(item.id)}`);
+    safeReplaceUrl(`#${encodeURIComponent(item.id)}`);
     renderPanel(item, true);
     markActive(item.id);
     scheduleVideo(item, 0);
@@ -365,11 +365,19 @@
     window.clearTimeout(state.closeTimer);
   }
 
+  function safeReplaceUrl(url) {
+    try {
+      history.replaceState(null, '', url);
+    } catch (_) {
+      /* file:// and embedded previews may block History API writes. */
+    }
+  }
+
   function unpinAndClose() {
     state.pinnedId = null;
     state.activeId = null;
     player.destroy();
-    history.replaceState(null, '', location.pathname + location.search);
+    safeReplaceUrl(location.pathname + location.search);
     els.panel.classList.remove('open');
     renderEmptyPanel();
     markActive(null);
@@ -379,8 +387,8 @@
     els.panel.innerHTML = `
       <div class="leaf-empty">
         <div class="mini-dna" aria-hidden="true"></div>
-        <span>Bir yapımın üzerine gel</span>
-        <p>Bilgi kartı yaprak gibi açılır. Tıklarsan sabitlenir; × veya panel dışı tıklama ile kapanır.</p>
+        <span>Bir yapıma dokun</span>
+        <p>Masaüstünde üzerine gel; mobilde karta dokun. Bilgi paneli alttan açılır.</p>
       </div>`;
   }
 
@@ -409,7 +417,7 @@
           <div class="yt-mount" data-video-mount></div>
           <img class="yt-poster" src="${poster}" alt="${escapeHtml(item.title)} fragman önizlemesi" referrerpolicy="strict-origin-when-cross-origin">
           <div class="video-shield" aria-hidden="true"></div>
-          <div class="play-hint"><i>▶</i><span data-video-status>${item.trailer?.idVerified ? 'Üzerine gelince sessiz fragman başlar.' : 'Doğrulanmış gömülü fragman yok.'}</span></div>
+          <div class="play-hint"><i>▶</i><span data-video-status>${item.trailer?.idVerified ? 'Kart açıldığında sessiz fragman hazırlanır.' : 'Doğrulanmış gömülü fragman yok.'}</span></div>
         </div>
         <div class="leaf-copy">
           <div class="leaf-kicker"><span>${escapeHtml(item.branch)}</span><span>${escapeHtml(item.mediaType)}</span></div>

@@ -391,3 +391,644 @@ footer strong { color: #fff; }
   *, *::before, *::after { animation-duration: .001ms !important; animation-iteration-count: 1 !important; scroll-behavior: auto !important; transition-duration: .001ms !important; }
   .reveal, .reveal-node { opacity: 1; transform: none; }
 }
+
+/* ================================================================
+   v3.1 — mobile-first experience patch
+   Keeps the desktop composition above 768px, but replaces the phone
+   layout with touch-sized controls, readable cards and a bottom sheet.
+   ================================================================ */
+@media (max-width: 768px) {
+  :root {
+    --mobile-pad: 14px;
+    --mobile-radius: 18px;
+  }
+
+  html {
+    scroll-padding-top: 12px;
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
+
+  body {
+    min-width: 0;
+    width: 100%;
+    overscroll-behavior-x: none;
+  }
+
+  .ambient {
+    width: 260px;
+    height: 260px;
+    filter: blur(80px);
+    opacity: .12;
+  }
+
+  .protocol-banner {
+    padding: 10px var(--mobile-pad);
+    font-size: 11px;
+  }
+
+  /* Compact mobile header: no desktop-width toolbar. */
+  .topbar {
+    position: relative;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 10px;
+    width: 100%;
+    padding: max(10px, env(safe-area-inset-top)) var(--mobile-pad) 11px;
+    background: rgba(7, 9, 15, .96);
+    backdrop-filter: blur(14px);
+  }
+
+  .brand {
+    min-width: 0;
+    gap: 9px;
+  }
+
+  .brand-mark {
+    width: 36px;
+    height: 36px;
+    border-radius: 12px 4px 12px 4px;
+  }
+
+  .brand strong {
+    overflow: hidden;
+    font-size: 11px;
+    letter-spacing: .055em;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .brand small {
+    font-size: 9px;
+  }
+
+  .toolbar {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 8px;
+    width: 100%;
+  }
+
+  .search {
+    width: 100%;
+    min-width: 0;
+    min-height: 44px;
+    padding: 10px 13px;
+    border-radius: 14px;
+  }
+
+  .search input {
+    min-width: 0;
+    font-size: 16px; /* Prevents iOS input zoom. */
+  }
+
+  .segmented {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    width: 100%;
+    padding: 4px;
+    border-radius: 16px;
+    overflow: visible;
+  }
+
+  .mode {
+    min-width: 0;
+    min-height: 42px;
+    padding: 8px 6px;
+    font-size: 10px;
+    line-height: 1.2;
+    white-space: normal;
+  }
+
+  /* Phone hero: artwork is removed so content reads like a native page. */
+  .hero {
+    display: block;
+    min-height: 0;
+    padding: 31px var(--mobile-pad) 25px;
+  }
+
+  .hero-copy {
+    width: 100%;
+  }
+
+  .eyebrow {
+    margin-bottom: 10px;
+    font-size: 9px;
+    line-height: 1.55;
+    letter-spacing: .12em;
+  }
+
+  .hero h1 {
+    max-width: none;
+    font-size: clamp(34px, 10.5vw, 46px);
+    line-height: 1.01;
+    letter-spacing: -.045em;
+  }
+
+  .hero-text {
+    margin-top: 17px;
+    font-size: 15px;
+    line-height: 1.56;
+  }
+
+  .hero-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 9px;
+    margin-top: 22px;
+  }
+
+  .primary,
+  .secondary {
+    min-width: 0;
+    min-height: 46px;
+    padding-inline: 12px;
+    font-size: 12px;
+  }
+
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+    margin-top: 24px;
+  }
+
+  .stats div {
+    min-width: 0;
+    padding: 12px 8px;
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    background: rgba(255,255,255,.035);
+    text-align: center;
+  }
+
+  .stats strong {
+    font-size: 23px;
+  }
+
+  .stats span {
+    font-size: 8px;
+    line-height: 1.35;
+  }
+
+  .dna-hero {
+    display: none;
+  }
+
+  /* Swipeable onboarding cards instead of three desktop columns. */
+  .guide-strip {
+    display: flex;
+    width: auto;
+    margin: 0 0 24px;
+    padding: 0 var(--mobile-pad) 6px;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none;
+  }
+
+  .guide-strip::-webkit-scrollbar { display: none; }
+
+  .guide-strip article {
+    flex: 0 0 min(82vw, 330px);
+    min-height: 100px;
+    margin-right: 10px;
+    padding: 18px;
+    border: 1px solid var(--line);
+    border-radius: var(--mobile-radius);
+    background: rgba(16,19,29,.9);
+    scroll-snap-align: start;
+  }
+
+  .guide-strip article:last-child {
+    margin-right: 0;
+    border: 1px solid var(--line);
+  }
+
+  .guide-strip span {
+    font-size: 11px;
+  }
+
+  /* Filters stay readable and horizontally scroll where appropriate. */
+  .timeline-area {
+    padding: 12px 9px 68px;
+  }
+
+  .filter-row {
+    gap: 10px;
+    padding: 10px;
+    border-radius: var(--mobile-radius);
+  }
+
+  .media-filters {
+    display: flex;
+    flex-wrap: nowrap;
+    width: 100%;
+    padding-bottom: 3px;
+    overflow-x: auto;
+    scroll-snap-type: x proximity;
+    scrollbar-width: none;
+  }
+
+  .media-filters::-webkit-scrollbar { display: none; }
+
+  .chip {
+    flex: 0 0 auto;
+    min-height: 40px;
+    padding: 9px 13px;
+    scroll-snap-align: start;
+  }
+
+  .sort-tools {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 9px;
+    width: 100%;
+  }
+
+  .toggle,
+  .sort-label {
+    min-height: 44px;
+    padding: 0 11px;
+    border: 1px solid var(--line);
+    border-radius: 13px;
+    background: rgba(255,255,255,.025);
+  }
+
+  .toggle input {
+    width: 18px;
+    height: 18px;
+  }
+
+  .sort-label {
+    justify-content: space-between;
+  }
+
+  .sort-label select {
+    min-width: 0;
+    max-width: 68%;
+    min-height: 40px;
+    font-size: 12px;
+  }
+
+  .result-head {
+    gap: 10px;
+    padding: 27px 5px 16px;
+  }
+
+  .result-head h2 {
+    font-size: 29px;
+    line-height: 1.04;
+  }
+
+  .result-head p {
+    font-size: 12px;
+    line-height: 1.52;
+  }
+
+  .visible-counter {
+    display: flex;
+    align-items: baseline;
+    gap: 7px;
+    min-width: 0;
+    text-align: left;
+  }
+
+  .visible-counter strong { font-size: 24px; }
+
+  /* Compact tree branches and cards; titles wrap instead of looking clipped. */
+  .timeline-shell {
+    display: block;
+  }
+
+  .timeline-branch {
+    margin-bottom: 18px;
+    padding: 18px 8px 16px 34px;
+    border-radius: 19px;
+  }
+
+  .timeline-branch::before {
+    left: 17px;
+    top: 31px;
+    bottom: 21px;
+    width: 2px;
+  }
+
+  .branch-head {
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+
+  .branch-dot {
+    left: -25px;
+    top: 4px;
+    width: 16px;
+    height: 16px;
+    border-width: 3px;
+  }
+
+  .branch-head h3 {
+    margin-top: 3px;
+    font-size: 19px;
+    line-height: 1.15;
+  }
+
+  .branch-head p {
+    font-size: 11px;
+    line-height: 1.48;
+  }
+
+  .branch-nodes {
+    gap: 8px;
+  }
+
+  .node {
+    grid-template-columns: 42px minmax(0, 1fr);
+    gap: 10px;
+    min-height: 78px;
+    padding: 11px 34px 11px 10px;
+    border-radius: 15px;
+    touch-action: manipulation;
+  }
+
+  .node::before {
+    left: -24px;
+    width: 10px;
+    height: 10px;
+    border-width: 3px;
+  }
+
+  .node::after {
+    content: "›";
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    color: var(--branch-color);
+    font-size: 23px;
+    transform: translateY(-50%);
+  }
+
+  .node:hover,
+  .node:focus-visible,
+  .node.active {
+    transform: none;
+  }
+
+  .node-num b { font-size: 16px; }
+  .node-num small { font-size: 7px; }
+
+  .node-main b,
+  .node-main small {
+    overflow: visible;
+    text-overflow: initial;
+    white-space: normal;
+  }
+
+  .node-main b {
+    display: -webkit-box;
+    font-size: 14px;
+    line-height: 1.25;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+  }
+
+  .node-main small {
+    display: -webkit-box;
+    margin-top: 4px;
+    font-size: 10px;
+    line-height: 1.35;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+  }
+
+  .node-badges {
+    grid-column: 2;
+    justify-content: flex-start;
+    gap: 4px;
+    max-width: none;
+    margin-top: -2px;
+  }
+
+  .badge {
+    padding: 4px 6px;
+    font-size: 8px;
+  }
+
+  .node-badges > .badge:first-child,
+  .badge.no-video {
+    display: none;
+  }
+
+  /* Mobile information panel becomes a familiar bottom sheet. */
+  .leaf-panel {
+    position: fixed;
+    z-index: 120;
+    inset: auto 0 0;
+    display: none;
+    width: 100%;
+    max-height: min(88dvh, 760px);
+    min-height: 0;
+    border: 1px solid rgba(255,255,255,.16);
+    border-bottom: 0;
+    border-radius: 25px 25px 0 0;
+    box-shadow: 0 -24px 90px rgba(0,0,0,.68);
+    overflow-x: hidden;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .leaf-panel.open {
+    display: block;
+    animation: mobileSheetIn .26s cubic-bezier(.2,.8,.2,1);
+  }
+
+  body:has(.leaf-panel.open) {
+    overflow: hidden;
+  }
+
+  body:has(.leaf-panel.open)::before {
+    content: "";
+    position: fixed;
+    z-index: 110;
+    inset: 0;
+    background: rgba(0,0,0,.66);
+    backdrop-filter: blur(3px);
+  }
+
+  @keyframes mobileSheetIn {
+    from { opacity: 0; transform: translateY(24px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .leaf-content {
+    padding-bottom: env(safe-area-inset-bottom);
+    animation: none;
+  }
+
+  .leaf-content::before {
+    content: "";
+    display: block;
+    position: sticky;
+    z-index: 15;
+    top: 0;
+    width: 46px;
+    height: 5px;
+    margin: 9px auto -14px;
+    border-radius: 999px;
+    background: rgba(255,255,255,.34);
+  }
+
+  .panel-close {
+    position: fixed;
+    top: auto;
+    right: 13px;
+    bottom: calc(min(88dvh, 760px) - 52px);
+    width: 42px;
+    height: 42px;
+    background: rgba(4,6,11,.92);
+  }
+
+  .video-wrap {
+    margin-top: 18px;
+    aspect-ratio: 16 / 9;
+  }
+
+  .play-hint {
+    left: 12px;
+    right: 55px;
+    bottom: 10px;
+    font-size: 10px;
+  }
+
+  .play-hint i {
+    min-width: 31px;
+    height: 31px;
+  }
+
+  .leaf-copy {
+    padding: 19px var(--mobile-pad) 26px;
+  }
+
+  .leaf-kicker {
+    padding-right: 35px;
+    font-size: 9px;
+  }
+
+  .leaf-copy h2 {
+    margin-top: 8px;
+    font-size: clamp(27px, 8vw, 36px);
+    line-height: 1.03;
+  }
+
+  .leaf-tags span { font-size: 8px; }
+
+  .summary {
+    font-size: 14px;
+    line-height: 1.62;
+  }
+
+  .info-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 7px;
+  }
+
+  .info-card {
+    min-height: 76px;
+    padding: 10px;
+  }
+
+  .trailer-link {
+    min-height: 50px;
+  }
+
+  /* Remaining content and tables. */
+  .source-section {
+    gap: 17px;
+    margin: 0 9px 56px;
+    padding: 22px var(--mobile-pad);
+    border-radius: 20px;
+  }
+
+  .source-section h2 { font-size: 30px; }
+  .source-section p { font-size: 13px; }
+  .scope-rule { padding: 15px; }
+
+  .source-links {
+    flex-wrap: nowrap;
+    padding-bottom: 3px;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .source-links::-webkit-scrollbar { display: none; }
+  .source-links a { flex: 0 0 auto; }
+
+  .diagnostics {
+    margin: 0 9px 55px;
+    padding: 18px 12px;
+    border-radius: 20px;
+  }
+
+  .diagnostics header {
+    flex-direction: column;
+  }
+
+  .test-table-wrap {
+    width: 100%;
+    overflow-x: auto;
+  }
+
+  .diagnostics table { min-width: 620px; }
+
+  .empty-state {
+    padding: 38px 16px;
+  }
+
+  footer {
+    padding: 24px var(--mobile-pad) max(24px, env(safe-area-inset-bottom));
+    text-align: center;
+  }
+}
+
+@media (max-width: 390px) {
+  .hero h1 { font-size: 34px; }
+  .hero-actions { grid-template-columns: 1fr; }
+  .stats strong { font-size: 20px; }
+  .stats span { letter-spacing: .02em; }
+  .info-grid { grid-template-columns: 1fr; }
+  .node { padding-right: 30px; }
+}
+
+@media (max-width: 768px) {
+  .panel-close {
+    position: sticky;
+    top: 10px;
+    right: auto;
+    bottom: auto;
+    margin-left: calc(100% - 55px);
+    margin-bottom: -52px;
+  }
+}
+
+@media (max-width: 768px) {
+  .node.route-dim { opacity: .82; }
+  .node.route-dim:active,
+  .node.route-dim.active { opacity: 1; }
+  button, .node, a, select, input { touch-action: manipulation; }
+}
+
+/* Prevent decorative artwork from widening tablet/mobile viewports. */
+html, body { max-width: 100%; overflow-x: clip; }
+@supports not (overflow: clip) {
+  html, body { overflow-x: hidden; }
+}
+
+@media (max-width: 1120px) {
+  .dna-hero { display: none; }
+  .ambient { width: 300px; height: 300px; }
+  .ambient-a { left: 0; }
+  .ambient-b { right: 0; }
+}
