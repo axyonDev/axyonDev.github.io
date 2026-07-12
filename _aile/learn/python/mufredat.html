@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<title>PyLab — Tam Müfredat</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:system-ui,sans-serif;background:#0f1320;color:#eaedff;padding:24px;max-width:760px;margin:0 auto}
+h1{font-size:1.4rem;font-weight:700;color:#f0a500;margin-bottom:6px}
+.sub{font-size:13px;color:#8090c0;margin-bottom:20px}
+.stats{display:flex;gap:8px;margin-bottom:24px;flex-wrap:wrap}
+.stat{background:#1e2740;border:1px solid #2c3655;border-radius:8px;padding:8px 14px;font-size:12px;color:#8090c0}
+.stat strong{color:#eaedff}
+.mod{margin-bottom:20px}
+.mod-head{display:flex;align-items:center;gap:8px;padding:9px 14px;border-radius:8px;margin-bottom:6px;border:1px solid #2c3655;background:#171e2e}
+.mod-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#adb5d8;flex:1}
+.mod-count{font-size:10px;color:#6878a8;font-family:monospace}
+.lesson{display:flex;align-items:flex-start;gap:10px;padding:7px 12px;border-radius:6px;border:1px solid #2c3655;background:#171e2e;margin-bottom:3px}
+.lesson.done{border-color:#136a38}
+.ln{font-size:10px;font-family:monospace;color:#6878a8;width:28px;flex-shrink:0;padding-top:2px}
+.li{font-size:13px;flex-shrink:0;width:18px}
+.ltitle{font-size:13px;color:#eaedff}
+.lsub{font-size:11px;color:#6878a8;margin-top:2px}
+.badge{font-size:9px;padding:2px 7px;border-radius:10px;font-weight:700;flex-shrink:0;text-transform:uppercase;letter-spacing:.04em;margin-left:auto}
+.b-done{background:rgba(19,106,56,.3);color:#3dd68c}
+.b-todo{background:#1e2740;color:#6878a8}
+</style>
+</head>
+<body>
+<h1>🐍 PyLab — Tam Müfredat</h1>
+<div class="sub" id="mufredat-sub">axyon.dev · Derinlemesine Python · <span id="total-count">110</span> Ders</div>
+<div class="stats">
+  <div class="stat"><strong id="done-count">—</strong> tamamlandı</div>
+  <div class="stat"><strong id="total-count2">110</strong> toplam ders</div>
+  <div class="stat"><strong id="pct-count" style="color:#3dd68c">—%</strong> ilerleme</div>
+</div>
+<div class="mod"><div class="mod-head"><span>🚀</span><span class="mod-label">M0 · Başlangıç</span><span class="mod-count">4 ders</span></div>
+<div class="lesson"><span class="ln">1</span><span class="li">🖨️</span><div><div class="ltitle">print() Fonksiyonu</div><div class="lsub">Ekrana bir şeyler yazdırmak — Python'ın sana seslenmesi.</div></div><span class="badge b-todo">—</span></div>
+<div class="lesson"><span class="ln">2</span><span class="li">⌨️</span><div><div class="ltitle">input() ve Yorumlar</div><div class="lsub">Kullanıcıdan veri al, koduna açıklama ekle — ve neden her zaman str döner?</div></div><span class="badge b-todo">—</span></div>
+<div class="lesson"><span class="ln">3</span><span class="li">🔢</span><div><div class="ltitle">Sayılarla İşlemler</div><div class="lsub">Toplama'dan üsse, tam bölmeden kalan'a — ve float'ın gizli tehlikesi.</div></div><span class="badge b-todo">—</span></div>
+<div class="lesson"><span class="ln">4</span><span class="li">🏗️</span><div><div class="ltitle">İlk Adımlar — Küçük Projeler</div><div class="lsub">Hesap makinesi, BMI hesaplayıcı ve döviz çevirici — öğrendiklerini birleştir.</div></div><span class="badge b-todo">—</span></div>
+</div>
+<div class="mod"><div class="mod-head"><span>📦</span><span class="mod-label">M1 · Temel Yapılar</span><span class="mod-count">10 ders</span></div>
+<div class="lesson"><span class="ln">5</span><span class="li">📦</span><div><div class="ltitle">Değişkenler</div><div class="lsub">İsim-nesne ilişkisi, bellek modeli ve Python'ın dinamik tiplemesi.</div></div><span class="badge b-todo">—</span></div>
+<div class="lesson"><span class="ln">6</span><span class="li">🔢</span><div><div class="ltitle">Veri Tipleri</div><div class="lsub">int/float/str/bool — iç yapı, tuzaklar ve Python'a özgü davranışlar.</div></div><span class="badge b-todo">—</span></div>
+<div class="lesson"><span class="ln">7</span><span class="li">🔀</span><div><div class="ltitle">Koşullar — İlk Bakış</div><div class="lsub">Karar mekanizması, kısa devre mantığı ve Pythonic koşullar.</div></div><span class="badge b-todo">—</span></div>
+<div class="lesson"><span class="ln">8</span><span class="li">🔁</span><div><div class="ltitle">for Döngüsü — Temeller</div><div class="lsub">Iteratörler, range'in iç yapısı ve Pythonic döngü kalıpları.</div></div><span class="badge b-todo">—</span></div>
+<div class="lesson"><span class="ln">9</span><span class="li">⏳</span><div><div class="ltitle">while Döngüsü — Temeller</div><div class="lsub">Belirsiz tekrar, sentinel kalıpları ve sonsuz döngü yönetimi.</div></div><span class="badge b-todo">—</span></div>
+<div class="lesson"><span class="ln">10</span><span class="li">⚙️</span><div><div class="ltitle">Fonksiyonlar — İlk Bakış</div><div class="lsub">Stack frame, kapsam, DRY prensibi ve tehlikeli varsayılan argüman tuzağı.</div></div><span class="badge b-todo">—</span></div>
+<div class="lesson"><span class="ln">11</span><span class="li">🔢</span><div><div class="ltitle">Sayı Sistemleri</div><div class="lsub">Binary, octal, hex — bilgisayar neden 0 ve 1 kullanır, Python nasıl yönetir?</div></div><span class="badge b-todo">—</span></div>
+<div class="lesson"><span class="ln">12</span><span class="li">⚡</span><div><div class="ltitle">Operatörler Derinlemesine</div><div class="lsub">Aritmetik, karşılaştırma, mantıksal, atama kısaltmaları ve walrus := operatörü.</div></div><span class="badge b-todo">—</span></div>
+<div class="lesson"><span class="ln">13</span><span class="li">🎯</span><div><div class="ltitle">Truthy / Falsy & None</div><div class="lsub">Hangi değerler False sayılır, None nedir ve bu tasarım neden bu kadar akıllıca?</div></div><span class="badge b-todo">—</span></div>
+<div class="lesson"><span class="ln">14</span><span class="li">🔄</span><div><div class="ltitle">Tip Dönüşümleri</div><div class="lsub">Implicit vs explicit dönüşüm, tehlikeli köşeler ve type() ile isinstance() farkı.</div></div><span class="badge b-todo">—</span></div>
+</div>
+<div class="mod"><div class="mod-head"><span>📝</span><span class="mod-label">M2 · Karakter Dizileri</span><span class="mod-count">10 ders</span></div>
+<div class="lesson"><span class="ln">15</span><span class="li">🔤</span><div><div class="ltitle">String Temelleri</div><div class="lsub">Immutability, Unicode modeli, dilimleme ve f-string'in gücü.</div></div><span class="badge b-todo">—</span></div>
+<div class="lesson"><span class="ln">16</span><span class="li">🔧</span><div><div class="ltitle">String Metodları I</div><div class="lsub">upper, lower, strip, split, join, replace — günlük hayatta en çok kullanılan 6 metod.</div></div><span class="badge b-todo">—</span></div>
+<div class="lesson"><span class="ln">17</span><span class="li">🔧</span><div><div class="ltitle">String Metodları II</div><div class="lsub">find, count, startswith, endswith, zfill, center — ve string'in arama gücü.</div></div><span class="badge b-todo">—</span></div>
+<div class="lesson"><span class="ln">18</span><span class="li">✨</span><div><div class="ltitle">f-string Derinlemesine</div><div class="lsub">Format spec, sayı formatları, hizalama, debug modu ve f-string'in tüm gücü.</div></div><span class="badge b-todo">—</span></div>
+<div class="lesson"><span class="ln">19</span><span class="li">✂️</span><div><div class="ltitle">Dilimleme & Tersine Çevirme</div><div class="lsub">[::-1], adımlı dilim, negatif indeks — string dilimlemenin tüm incelikleri.</div></div><span class="badge b-todo">—</span></div>
+<div class="lesson"><span class="ln">20</span><span class="li">🌐</span><div><div class="ltitle">Unicode & Encoding</div><div class="lsub">ord(), chr(), encode/decode, UTF-8 — bilgisayar metni nasıl saklar?</div></div><span class="badge b-todo">—</span></div>
+<div class="lesson"><span class="ln">21</span><span class="li">🏷️</span><div><div class="ltitle">Ham String & Çok Satırlı String</div><div class="lsub">r'...', docstring, kaçış karakterleri — regex için raw string neden şart?</div></div><span class="badge b-todo">—</span></div>
+<div class="lesson"><span class="ln">22</span><span class="li">📐</span><div><div class="ltitle">Regex Temelleri</div><div class="lsub">re.search, findall, sub — ve \\d, \\w, \\s ile temel desen yazımı.</div></div><span class="badge b-todo">—</span></div>
+<div class="lesson"><span class="ln">23</span><span class="li">📐</span><div><div class="ltitle">Regex İleri</div><div class="lsub">Gruplar, isimli gruplar, flags, lookahead — regex'in tam gücü.</div></div><span class="badge b-todo">—</span></div>
+<div class="lesson"><span class="ln">24</span><span class="li">🏗️</span><div><div class="ltitle">Proje: Metin İşleme Aracı</div><div class="lsub">Şifre analizörü, metin istatistiği ve veri temizleyici — M2'nin tam pratiği.</div></div><span class="badge b-todo">—</span></div>
+</div>
+<div class="mod"><div class="mod-head"><span>🔀</span><span class="mod-label">M3 · Koşullar & Döngüler</span><span class="mod-count">8 ders</span></div>
+<div class="lesson"><span class="ln">25</span><span class="li">🔀</span><div><div class="ltitle">Koşullar (if/elif/else)</div><div class="lsub">Karar mekanizması, kısa devre mantığı ve Pythonic koşullar.</div></div><span class="badge b-todo">—</span></div>
+<div class="lesson"><span class="ln">26</span><span class="li">🔁</span><div><div class="ltitle">for Döngüsü</div><div class="lsub">Iteratörler, range'in iç yapısı ve Pythonic döngü kalıpları.</div></div><span class="badge b-todo">—</span></div>
+<div class="lesson"><span class="ln">27</span><span class="li">⏳</span><div><div class="ltitle">while Döngüsü</div><div class="lsub">Belirsiz tekrar, sentinel kalıpları ve sonsuz döngü yönetimi.</div></div><span class="badge b-todo">—</span></div>
+<div class="lesson"><span class="ln">28</span><span class="li">⚡</span><div><div class="ltitle">break, continue, pass</div><div class="lsub">Döngü kontrolü, iç içe döngülerde break ve pass'in doğru kullanımı.</div></div><span class="badge b-todo">—</span></div>
+<div class="lesson"><span class="ln">29</span><span class="li">🔗</span><div><div class="ltitle">zip() ve map() ile Döngüler</div><div class="lsub">Paralel iterasyon, zip ile dict oluşturma, map ve lambda kombinasyonu.</div></div><span class="badge b-todo">—</span></div>
+<div class="lesson"><span class="ln">30</span><span class="li">🎯</span><div><div class="ltitle">List Comprehension</div><div class="lsub">Tek satır liste üretimi, koşullu filtreleme ve iç içe comprehension.</div></div><span class="badge b-todo">—</span></div>
+<div class="lesson"><span class="ln">31</span><span class="li">🎯</span><div><div class="ltitle">Dict & Set Comprehension</div><div class="lsub">{k:v for ...}, {x for ...}, generator expression — comprehension ailesinin tamamı.</div></div><span class="badge b-todo">—</span></div>
+<div class="lesson"><span class="ln">32</span><span class="li">🏗️</span><div><div class="ltitle">Proje: Sayı Tahmin Oyunu</div><div class="lsub">random, döngü, break, list comprehension — hepsi bir arada gerçek oyun.</div></div><span class="badge b-todo">—</span></div>
+</div>
+<div class="mod"><div class="mod-head"><span>🗂️</span><span class="mod-label">M4 · Veri Yapıları</span><span class="mod-count">13 ders</span></div>
+<div class="lesson"><span class="ln">33</span><span class="li">📋</span><div><div class="ltitle">Listeler I — Temel</div><div class="lsub">Oluşturma, CRUD, indeksleme, dilimleme ve kopyalama tuzağı.</div></div><span class="badge b-todo">—</span></div>
+<div class="lesson"><span class="ln">34</span><span class="li">📋</span><div><div class="ltitle">Listeler II — Metodlar</div><div class="lsub">append, extend, insert, remove, pop, sort — ve sort() vs sorted() farkı.</div></div><span class="badge b-todo">—</span></div>
+<div class="lesson"><span class="ln">35</span><span class="li">📋</span><div><div class="ltitle">Listeler III — İleri</div><div class="lsub">Derin kopya, 2D listeler, matrix işlemleri ve liste oluşturma tuzakları.</div></div><span class="badge b-todo">—</span></div>
+<div class="lesson"><span class="ln">36</span><span class="li">📌</span><div><div class="ltitle">Demetler (Tuple)</div><div class="lsub">Immutability, paketleme/çözme, namedtuple — ve tuple neden listeye tercih edilir?</div></div><span class="badge b-todo">—</span></div>
+<div class="lesson"><span class="ln">37</span><span class="li">🔑</span><div><div class="ltitle">Sözlükler I — Temel</div><div class="lsub">key-value, .get(), .keys(), .values(), .items() — ve dict'in O(1) gücü.</div></div><span class="badge b-todo">—</span></div>
+<div class="lesson"><span class="ln">38</span><span class="li">🔑</span><div><div class="ltitle">Sözlükler II — İleri</div><div class="lsub">| birleştirme, defaultdict, OrderedDict ve iç içe sözlük kalıpları.</div></div><span class="badge b-todo">—</span></div>
+<div class="lesson"><span class="ln">39</span><span class="li">🎯</span><div><div class="ltitle">Kümeler (set)</div><div class="lsub">Tekrarsız koleksiyon, union, intersection, difference ve frozenset.</div></div><span class="badge b-todo">—</span></div>
+<div class="lesson"><span class="ln">40</span><span class="li">📊</span><div><div class="ltitle">Sıralama & Arama</div><div class="lsub">sorted() key parametresi, çok kriterli sıralama, bisect ile ikili arama.</div></div><span class="badge b-todo">—</span></div>
+<div class="lesson"><span class="ln">41</span><span class="li">🧩</span><div><div class="ltitle">collections Modülü</div><div class="lsub">Counter, deque, ChainMap, namedtuple — Python'ın güçlü hazır veri yapıları.</div></div><span class="badge b-todo">—</span></div>
+<div class="lesson"><span class="ln">42</span><span class="li">🔗</span><div><div class="ltitle">İteratörler</div><div class="lsub">iter(), next(), __iter__/__next__ protokolü ve itertools hazır araçları.</div></div><span class="badge b-todo">—</span></div>
+<div class="lesson"><span class="ln">43</span><span class="li">⚡</span><div><div class="ltitle">Jeneratörler</div><div class="lsub">yield, yield from, generator expression ve lazy evaluation'ın gücü.</div></div><span class="badge b-todo">—</span></div>
+<div class="lesson"><span class="ln">44</span><span class="li">🧲</span><div><div class="ltitle">Yüksek Fonksiyonlar</div><div class="lsub">map, filter, reduce ve functools — lru_cache ile memoization.</div></div><span class="badge b-todo">—</span></div>
+<div class="lesson"><span class="ln">45</span><span class="li">📦</span><div><div class="ltitle">Yığın, Kuyruk & Not Defteri Projesi</div><div class="lsub">Stack LIFO, Queue FIFO, deque ile uygulama — M4 final projesi.</div></div><span class="badge b-todo">—</span></div>
+</div>
+<div class="mod"><div class="mod-head"><span>⚙️</span><span class="mod-label">M5 · Fonksiyonlar</span><span class="mod-count">11 ders</span></div>
+<div class="lesson"><span class="ln">46</span><span class="li">🌀</span><div><div class="ltitle">*args & **kwargs</div><div class="lsub">Değişken sayıda argüman, keyword-only parametreler ve * ile ** unpacking.</div></div><span class="badge b-todo">—</span></div>
+<div class="lesson"><span class="ln">47</span><span class="li">📦</span><div><div class="ltitle">Scope & LEGB Kuralı</div><div class="lsub">Local, Enclosing, Global, Built-in — Python değişkeni nerede arar?</div></div><span class="badge b-todo">—</span></div>
+<div class="lesson"><span class="ln">48</span><span class="li">🪞</span><div><div class="ltitle">Özyinelemeli Fonksiyonlar</div><div class="lsub">Base case, call stack, memoization ve ikili arama — recursion'ın tüm yönleri.</div></div><span class="badge b-todo">—</span></div>
+<div class="lesson"><span class="ln">49</span><span class="li">🔒</span><div><div class="ltitle">Closure</div><div class="lsub">İç fonksiyon dış değişkeni hatırlar, nonlocal ve closure ile durum saklama.</div></div><span class="badge b-todo">—</span></div>
+<div class="lesson"><span class="ln">50</span><span class="li">🎁</span><div><div class="ltitle">Dekoratörler I</div><div class="lsub">Fonksiyon sarma, @ syntax, functools.wraps ve zamanlayıcı dekoratör.</div></div><span class="badge b-todo">—</span></div>
+<div class="lesson"><span class="ln">51</span><span class="li">🎁</span><div><div class="ltitle">Dekoratörler II</div><div class="lsub">Parametreli dekoratörler, sınıf dekoratörü ve stacking.</div></div><span class="badge b-todo">—</span></div>
+<div class="lesson"><span class="ln">52</span><span class="li">⚡</span><div><div class="ltitle">Lambda Fonksiyonlar</div><div class="lsub">Anonim fonksiyon, sorted/map/filter ile kullanım ve lambda ne zaman tercih edilir?</div></div><span class="badge b-todo">—</span></div>
+<div class="lesson"><span class="ln">53</span><span class="li">⚠️</span><div><div class="ltitle">Hata Yönetimi I</div><div class="lsub">try/except/else/finally, exception türleri ve güvenli veri okuma kalıbı.</div></div><span class="badge b-todo">—</span></div>
+<div class="lesson"><span class="ln">54</span><span class="li">⚠️</span><div><div class="ltitle">Hata Yönetimi II</div><div class="lsub">raise, özel exception sınıfı ve context manager ile with ifadesi.</div></div><span class="badge b-todo">—</span></div>
+<div class="lesson"><span class="ln">55</span><span class="li">🏷️</span><div><div class="ltitle">Type Hints</div><div class="lsub">Tip ipuçları, typing modülü, Optional/Union ve dataclass.</div></div><span class="badge b-todo">—</span></div>
+<div class="lesson"><span class="ln">56</span><span class="li">🏗️</span><div><div class="ltitle">Proje: Dekoratör Kütüphanesi</div><div class="lsub">retry, cache, validate_args ve type-safe config — M5'in tam pratiği.</div></div><span class="badge b-todo">—</span></div>
+</div>
+<div class="mod"><div class="mod-head"><span>📁</span><span class="mod-label">M6 · Modüller & Dosyalar</span><span class="mod-count">10 ders</span></div>
+<div class="lesson"><span class="ln">57</span><span class="li">📦</span><div><div class="ltitle">import Sistemi</div><div class="lsub">import, from/import, as, sys.path ve __name__ == '__main__' kalıbı.</div></div><span class="badge b-todo">—</span></div>
+<div class="lesson"><span class="ln">58</span><span class="li">🔋</span><div><div class="ltitle">Standart Kütüphane</div><div class="lsub">math, random, datetime, statistics, collections — pil dahil Python.</div></div><span class="badge b-todo">—</span></div>
+<div class="lesson"><span class="ln">59</span><span class="li">📄</span><div><div class="ltitle">Dosya Okuma & Yazma</div><div class="lsub">open(), okuma modları, with bloğu, satır satır okuma ve encoding.</div></div><span class="badge b-todo">—</span></div>
+<div class="lesson"><span class="ln">60</span><span class="li">🗂️</span><div><div class="ltitle">JSON</div><div class="lsub">json.dumps/loads/dump/load — Python dict ve JSON arasında hızlı dönüşüm.</div></div><span class="badge b-todo">—</span></div>
+<div class="lesson"><span class="ln">61</span><span class="li">📊</span><div><div class="ltitle">CSV</div><div class="lsub">csv.reader/writer ve DictReader/DictWriter — tablo verisi ile çalışmak.</div></div><span class="badge b-todo">—</span></div>
+<div class="lesson"><span class="ln">62</span><span class="li">📁</span><div><div class="ltitle">pathlib</div><div class="lsub">Path nesnesi, / operatörü, glob ve mkdir — modern dosya yolu yönetimi.</div></div><span class="badge b-todo">—</span></div>
+<div class="lesson"><span class="ln">63</span><span class="li">⚙️</span><div><div class="ltitle">os ve sys Modülleri</div><div class="lsub">Dizin işlemleri, çevre değişkenleri, sys.argv ve Python sürüm bilgisi.</div></div><span class="badge b-todo">—</span></div>
+<div class="lesson"><span class="ln">64</span><span class="li">📦</span><div><div class="ltitle">Paketler & __init__.py</div><div class="lsub">Paket yapısı, __init__.py, göreceli import ve -m bayrağı.</div></div><span class="badge b-todo">—</span></div>
+<div class="lesson"><span class="ln">65</span><span class="li">🌐</span><div><div class="ltitle">pip & Virtual Environment</div><div class="lsub">pip kurulum/kaldırma, venv ile sanal ortam ve requirements.txt.</div></div><span class="badge b-todo">—</span></div>
+<div class="lesson"><span class="ln">66</span><span class="li">🏗️</span><div><div class="ltitle">Proje: Dosya Analiz Aracı</div><div class="lsub">Log analizi, dizin envanteri, JSON rapor ve CSV çıktı — M6'nın tam pratiği.</div></div><span class="badge b-todo">—</span></div>
+</div>
+<div class="mod"><div class="mod-head"><span>🏛️</span><span class="mod-label">M7 · OOP — Nesne Yönelimli Programlama</span><span class="mod-count">14 ders</span></div>
+<div class="lesson"><span class="ln">67</span><span class="li">🏗️</span><div><div class="ltitle">Sınıf & Nesne</div><div class="lsub">class, __init__, self — nesne nedir, bellekte ne olur, instance vs class attribute.</div></div><span class="badge b-todo">—</span></div>
+<div class="lesson"><span class="ln">68</span><span class="li">🔒</span><div><div class="ltitle">Kapsülleme</div><div class="lsub">private attribute (_/__), @property getter/setter, name mangling — veriyi koru.</div></div><span class="badge b-todo">—</span></div>
+<div class="lesson"><span class="ln">69</span><span class="li">👨‍👩‍👧</span><div><div class="ltitle">Kalıtım I</div><div class="lsub">class Alt(Ust), super().__init__(), method override, MRO — kodu tekrar yazmadan genişlet.</div></div><span class="badge b-todo">—</span></div>
+<div class="lesson"><span class="ln">70</span><span class="li">🔄</span><div><div class="ltitle">Çok Biçimlilik</div><div class="lsub">duck typing, ABC, @abstractmethod — aynı arayüz, farklı sınıflarda farklı davranış.</div></div><span class="badge b-todo">—</span></div>
+<div class="lesson"><span class="ln">71</span><span class="li">✨</span><div><div class="ltitle">Magic Metodlar I</div><div class="lsub">__str__, __repr__, __len__, __eq__, __hash__, __bool__, __contains__ — Python'a davranış öğret.</div></div><span class="badge b-todo">—</span></div>
+<div class="lesson"><span class="ln">72</span><span class="li">✨</span><div><div class="ltitle">Magic Metodlar II</div><div class="lsub">__add__, __lt__, __iter__, __next__, __getitem__ — operatörler ve iterasyon.</div></div><span class="badge b-todo">—</span></div>
+<div class="lesson"><span class="ln">73</span><span class="li">🎭</span><div><div class="ltitle">Dataclass</div><div class="lsub">@dataclass, field(), frozen=True, __post_init__ — boilerplate kod yazmadan veri sınıfı.</div></div><span class="badge b-todo">—</span></div>
+<div class="lesson"><span class="ln">74</span><span class="li">🎭</span><div><div class="ltitle">@classmethod & @staticmethod</div><div class="lsub">Sınıf düzeyinde metodlar: cls parametresi, alternatif yapıcılar, yardımcı fonksiyonlar.</div></div><span class="badge b-todo">—</span></div>
+<div class="lesson"><span class="ln">75</span><span class="li">🔀</span><div><div class="ltitle">Kalıtım II — Çoklu Kalıtım</div><div class="lsub">Diamond problemi, MRO/C3 linearization, Mixin pattern — çoklu kalıtımı zarif kullan.</div></div><span class="badge b-todo">—</span></div>
+<div class="lesson"><span class="ln">76</span><span class="li">🏭</span><div><div class="ltitle">Tasarım Desenleri I</div><div class="lsub">Singleton, Factory Method, Builder — tekrar eden problemlerin kanıtlanmış çözümleri.</div></div><span class="badge b-todo">—</span></div>
+<div class="lesson"><span class="ln">77</span><span class="li">🏭</span><div><div class="ltitle">Tasarım Desenleri II</div><div class="lsub">Observer, Strategy, Decorator Pattern — davranışsal desenlerle esnek OOP mimarisi.</div></div><span class="badge b-todo">—</span></div>
+<div class="lesson"><span class="ln">78</span><span class="li">🧪</span><div><div class="ltitle">SOLID Prensipleri</div><div class="lsub">SRP, OCP, LSP, ISP, DIP — iyi OOP'ın 5 prensibi, Python örnekleriyle.</div></div><span class="badge b-todo">—</span></div>
+<div class="lesson"><span class="ln">79</span><span class="li">🔧</span><div><div class="ltitle">Descriptor Protokolü</div><div class="lsub">__get__, __set__, __delete__, __set_name__ — @property'nin altındaki gerçek mekanizma.</div></div><span class="badge b-todo">—</span></div>
+<div class="lesson"><span class="ln">80</span><span class="li">🏗️</span><div><div class="ltitle">Proje: Kütüphane Yönetim Sistemi</div><div class="lsub">ABC, kalıtım, @property, kapsülleme, polimorfizm, magic metodlar — hepsi bir arada.</div></div><span class="badge b-todo">—</span></div>
+</div>
+<div class="mod"><div class="mod-head"><span>🚀</span><span class="mod-label">M8 · İleri Python</span><span class="mod-count">16 ders</span></div>
+<div class="lesson"><span class="ln">81</span><span class="li">⚡</span><div><div class="ltitle">Async/Await Temelleri</div><div class="lsub">asyncio, coroutine, event loop, gather, create_task — I/O'yu beklemeden çalış.</div></div><span class="badge b-todo">—</span></div>
+<div class="lesson"><span class="ln">82</span><span class="li">🧵</span><div><div class="ltitle">Threading</div><div class="lsub">Thread, Lock, GIL, ThreadPoolExecutor — paralel görünümlü I/O programlama.</div></div><span class="badge b-todo">—</span></div>
+<div class="lesson"><span class="ln">83</span><span class="li">🧵</span><div><div class="ltitle">Multiprocessing</div><div class="lsub">Pool, Process, Queue, ProcessPoolExecutor — GIL'i aş, gerçek parallelism.</div></div><span class="badge b-todo">—</span></div>
+<div class="lesson"><span class="ln">84</span><span class="li">🧪</span><div><div class="ltitle">Unit Test</div><div class="lsub">unittest, assert metodları, setUp/tearDown, Mock — kodu güvenle değiştir.</div></div><span class="badge b-todo">—</span></div>
+<div class="lesson"><span class="ln">85</span><span class="li">📊</span><div><div class="ltitle">Logging</div><div class="lsub">logging modülü, handler, formatter, seviyeler — print'in ötesine geç.</div></div><span class="badge b-todo">—</span></div>
+<div class="lesson"><span class="ln">86</span><span class="li">⚡</span><div><div class="ltitle">Performans & Profiling</div><div class="lsub">timeit, cProfile, pstats — önce ölç sonra optimize et.</div></div><span class="badge b-todo">—</span></div>
+<div class="lesson"><span class="ln">87</span><span class="li">🗄️</span><div><div class="ltitle">SQLite & Veritabanı</div><div class="lsub">sqlite3, CRUD, parameterized query, transaction — kalıcı veri yönetimi.</div></div><span class="badge b-todo">—</span></div>
+<div class="lesson"><span class="ln">88</span><span class="li">🔍</span><div><div class="ltitle">Regex</div><div class="lsub">re modülü, search/match/findall, gruplar, compile — metin desenleri ve dönüşümler.</div></div><span class="badge b-todo">—</span></div>
+<div class="lesson"><span class="ln">89</span><span class="li">🌐</span><div><div class="ltitle">Web Scraping</div><div class="lsub">urllib, regex ile HTML parse, rate limiting, etik scraping kuralları.</div></div><span class="badge b-todo">—</span></div>
+<div class="lesson"><span class="ln">90</span><span class="li">🌐</span><div><div class="ltitle">REST API Kullanımı</div><div class="lsub">HTTP metodları, JSON, API istekleri, hata yönetimi, rate limiting.</div></div><span class="badge b-todo">—</span></div>
+<div class="lesson"><span class="ln">91</span><span class="li">🔧</span><div><div class="ltitle">Metaprogramlama</div><div class="lsub">type(), getattr/setattr, __slots__, dinamik kod — Python'un derin katmanları.</div></div><span class="badge b-todo">—</span></div>
+<div class="lesson"><span class="ln">92</span><span class="li">📈</span><div><div class="ltitle">Veri Analizi Temelleri</div><div class="lsub">statistics, csv, defaultdict — verideki deseni keşfet, hikâyeyi oku.</div></div><span class="badge b-todo">—</span></div>
+<div class="lesson"><span class="ln">93</span><span class="li">🖥️</span><div><div class="ltitle">tkinter ile GUI</div><div class="lsub">Pencere, buton, giriş alanı, grid layout, StringVar — masaüstü uygulama yap.</div></div><span class="badge b-todo">—</span></div>
+<div class="lesson"><span class="ln">94</span><span class="li">🎮</span><div><div class="ltitle">pygame Temelleri</div><div class="lsub">Game loop, sprite, çarpışma, klavye — Python ile 2D oyun geliştir.</div></div><span class="badge b-todo">—</span></div>
+<div class="lesson"><span class="ln">95</span><span class="li">🔄</span><div><div class="ltitle">Generatörler & itertools İleri</div><div class="lsub">yield, generator expression, islice, chain, combinations, groupby — bellek dostu akışlar.</div></div><span class="badge b-todo">—</span></div>
+<div class="lesson"><span class="ln">96</span><span class="li">🏆</span><div><div class="ltitle">Final Proje: Görev Yöneticisi</div><div class="lsub">SQLite, logging, unittest, regex, JSON — M8'in tüm konularını birleştiren kapsamlı proje.</div></div><span class="badge b-todo">—</span></div>
+</div>
+<div class="mod"><div class="mod-head"><span>🌟</span><span class="mod-label">M9 · Gerçek Dünya & Best Practices</span><span class="mod-count">14 ders</span></div>
+<div class="lesson"><span class="ln">97</span><span class="li">📁</span><div><div class="ltitle">Proje Yapılandırma</div><div class="lsub">Virtual environment, requirements.txt, paket yapısı, .env — profesyonel proje düzeni.</div></div><span class="badge b-todo">—</span></div>
+<div class="lesson"><span class="ln">98</span><span class="li">🌿</span><div><div class="ltitle">Git & Versiyon Kontrolü</div><div class="lsub">git init, commit, branch, merge, .gitignore — kodun zaman makinesi.</div></div><span class="badge b-todo">—</span></div>
+<div class="lesson"><span class="ln">99</span><span class="li">🛡️</span><div><div class="ltitle">Hata Yönetimi & Debugging</div><div class="lsub">Özel exception sınıfları, try/except/else/finally, hata zinciri, debug teknikleri.</div></div><span class="badge b-todo">—</span></div>
+<div class="lesson"><span class="ln">100</span><span class="li">🎨</span><div><div class="ltitle">Dekoratörler</div><div class="lsub">Fonksiyon dekoratörü, parametreli dekoratör, functools.wraps, yığma — DRY prensip.</div></div><span class="badge b-todo">—</span></div>
+<div class="lesson"><span class="ln">101</span><span class="li">🔒</span><div><div class="ltitle">Context Manager & with</div><div class="lsub">__enter__/__exit__, @contextmanager, suppress, ExitStack — kaynak sızıntısı yok.</div></div><span class="badge b-todo">—</span></div>
+<div class="lesson"><span class="ln">102</span><span class="li">📝</span><div><div class="ltitle">Type Hints & Mypy</div><div class="lsub">Optional, Union, TypeVar, TypedDict, dataclass — statik tip güvenliği.</div></div><span class="badge b-todo">—</span></div>
+<div class="lesson"><span class="ln">103</span><span class="li">λ</span><div><div class="ltitle">Fonksiyonel Programlama</div><div class="lsub">map/filter/reduce, closure, partial, pure fonksiyon, compose — FP teknikleri.</div></div><span class="badge b-todo">—</span></div>
+<div class="lesson"><span class="ln">104</span><span class="li">🏛️</span><div><div class="ltitle">Tasarım Örüntüleri</div><div class="lsub">Singleton, Factory, Observer, Strategy — kanıtlanmış yazılım tasarım çözümleri.</div></div><span class="badge b-todo">—</span></div>
+<div class="lesson"><span class="ln">105</span><span class="li">⌨️</span><div><div class="ltitle">CLI Uygulaması</div><div class="lsub">argparse, subcommand, renkli çıktı, sys.argv — profesyonel komut satırı araçları.</div></div><span class="badge b-todo">—</span></div>
+<div class="lesson"><span class="ln">106</span><span class="li">🌐</span><div><div class="ltitle">Web Geliştirme (Flask)</div><div class="lsub">@app.route, jsonify, request, REST API, middleware — Python ile web servisi.</div></div><span class="badge b-todo">—</span></div>
+<div class="lesson"><span class="ln">107</span><span class="li">🔄</span><div><div class="ltitle">Concurrency Patterns</div><div class="lsub">Producer-Consumer, Rate Limiter, Circuit Breaker — production hazır eşzamanlılık.</div></div><span class="badge b-todo">—</span></div>
+<div class="lesson"><span class="ln">108</span><span class="li">📦</span><div><div class="ltitle">Paket Yayınlama</div><div class="lsub">pyproject.toml, build, twine, PyPI, versiyon yönetimi — pip install ile dağıt.</div></div><span class="badge b-todo">—</span></div>
+<div class="lesson"><span class="ln">109</span><span class="li">🚀</span><div><div class="ltitle">CI/CD & Otomasyon</div><div class="lsub">pytest, GitHub Actions, Makefile, pre-commit — otomatik test ve dağıtım pipeline.</div></div><span class="badge b-todo">—</span></div>
+<div class="lesson"><span class="ln">110</span><span class="li">🏆</span><div><div class="ltitle">Final Proje — Tam Uygulama</div><div class="lsub">dataclass + dekoratör + tip hint + CLI + servis katmanı — M9 bilgilerini birleştir.</div></div><span class="badge b-todo">—</span></div>
+</div>
+
+<script>
+(function(){
+  try{
+    // Birden fazla key dene (ogretmen.html ile aynı mantık)
+    var keys=['axyon-python-v1','axyon-learn-v1','axyon-pylab-v1'];
+    var raw=null;
+    for(var i=0;i<keys.length;i++){raw=localStorage.getItem(keys[i]);if(raw)break;}
+    if(!raw) return;
+    var S = JSON.parse(raw);
+    var allLessons = document.querySelectorAll('.lesson');
+    var total = allLessons.length;
+    document.getElementById('total-count').textContent = total;
+    document.getElementById('total-count2').textContent = total;
+    var done = Object.values(S.progress||{}).filter(function(p){
+      var v = p.scores.filter(function(s){return s!==null;});
+      var avg = v.length ? v.reduce(function(a,b){return a+b;},0)/5 : 0;
+      return avg >= 50;
+    }).length;
+    document.getElementById('done-count').textContent = done;
+    document.getElementById('pct-count').textContent = total>0?Math.round(done/total*100)+'%':'0%';
+  }catch(e){}
+})();
+</script>
+</body>
+</html>

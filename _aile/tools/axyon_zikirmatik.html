@@ -1,0 +1,1064 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#0f1a14">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Zikirmatik">
+<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'%3E%3Crect width='180' height='180' rx='40' fill='%230f1a14'/%3E%3Ccircle cx='90' cy='90' r='62' fill='none' stroke='%232e7d4f' stroke-width='6'/%3E%3Ccircle cx='90' cy='90' r='50' fill='%231a2a1e'/%3E%3Ctext x='90' y='108' text-anchor='middle' font-size='52' font-family='serif'%3E%F0%9F%93%BF%3C/text%3E%3C/svg%3E">
+<title>Zikirmatik</title>
+<link href="https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+/* ── THEMES ──────────────────────────────────────────────────────────────── */
+:root{
+  --bg:#0f1a14;--bg2:#162010;--card:#1a2a1e;--card2:#1f3324;
+  --green:#2e7d4f;--green-light:#3ea86a;--green-bright:#4cca80;
+  --gold:#c9a84c;--gold-light:#e8c96a;
+  --red:#c0392b;--red-light:#e74c3c;
+  --text:#e8f0ea;--text-dim:#8ba898;--border:#2a4030;--shadow:rgba(0,0,0,.5);
+  --accent:var(--green);--accent-light:var(--green-light);--accent-bright:var(--green-bright);
+  --grad1:rgba(46,125,79,.08);--grad2:rgba(201,168,76,.05);
+}
+[data-theme="ocean"]{
+  --bg:#0a1520;--bg2:#0e1d2e;--card:#112436;--card2:#162d44;
+  --green:#1a6fa8;--green-light:#2190d8;--green-bright:#4db8ff;
+  --gold:#e8c96a;--gold-light:#f5d98a;
+  --text:#ddeeff;--text-dim:#7aa8cc;--border:#1e3a56;
+  --grad1:rgba(26,111,168,.1);--grad2:rgba(77,184,255,.04);
+}
+[data-theme="desert"]{
+  --bg:#1a1008;--bg2:#221608;--card:#2a1c0c;--card2:#352210;
+  --green:#9c6120;--green-light:#c07c28;--green-bright:#e8a84c;
+  --gold:#d4a44c;--gold-light:#f0c870;
+  --text:#f0e0c0;--text-dim:#a08060;--border:#4a3010;
+  --grad1:rgba(156,97,32,.1);--grad2:rgba(212,164,76,.06);
+}
+[data-theme="midnight"]{
+  --bg:#0a0a1a;--bg2:#0d0d22;--card:#111130;--card2:#16163c;
+  --green:#5533cc;--green-light:#7755ee;--green-bright:#9977ff;
+  --gold:#ffaa44;--gold-light:#ffcc66;
+  --text:#e0d8ff;--text-dim:#7766aa;--border:#222255;
+  --grad1:rgba(85,51,204,.1);--grad2:rgba(255,170,68,.05);
+}
+[data-theme="rose"]{
+  --bg:#1a0a10;--bg2:#220d14;--card:#2e1018;--card2:#3a141e;
+  --green:#c0336a;--green-light:#e0448a;--green-bright:#ff66aa;
+  --gold:#ffcc88;--gold-light:#ffddaa;
+  --text:#ffe0ee;--text-dim:#aa6688;--border:#4a1828;
+  --grad1:rgba(192,51,106,.1);--grad2:rgba(255,204,136,.05);
+}
+
+/* ── BASE ────────────────────────────────────────────────────────────────── */
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+body{
+  font-family:'Nunito',sans-serif;background:var(--bg);color:var(--text);
+  min-height:100vh;display:flex;flex-direction:column;align-items:center;
+  overflow-x:hidden;transition:background .4s,color .4s;
+  background-image:radial-gradient(ellipse at 20% 20%,var(--grad1) 0%,transparent 60%),
+    radial-gradient(ellipse at 80% 80%,var(--grad2) 0%,transparent 60%);
+}
+header{width:100%;max-width:420px;display:flex;align-items:center;justify-content:space-between;padding:18px 20px 10px;}
+.logo-wrap{display:flex;align-items:center;gap:10px;}
+.logo-icon{font-size:22px;}
+.logo-text{font-size:18px;font-weight:800;letter-spacing:.5px;color:var(--accent-bright);}
+.header-right{display:flex;gap:7px;}
+.header-btn{background:var(--card);border:1px solid var(--border);color:var(--text-dim);border-radius:10px;padding:7px 12px;font-size:13px;font-family:'Nunito',sans-serif;font-weight:700;cursor:pointer;transition:all .2s;}
+.header-btn:hover{background:var(--card2);color:var(--text);border-color:var(--accent);}
+.header-btn.active{background:var(--accent);color:#fff;border-color:var(--accent-light);}
+.tabs{display:flex;gap:8px;padding:0 20px 14px;width:100%;max-width:420px;}
+.tab{flex:1;background:var(--card);border:1.5px solid var(--border);color:var(--text-dim);border-radius:12px;padding:9px 0;font-size:13px;font-family:'Nunito',sans-serif;font-weight:700;cursor:pointer;transition:all .2s;text-align:center;}
+.tab.active{background:var(--accent);color:#fff;border-color:var(--accent-light);box-shadow:0 2px 12px rgba(0,0,0,.35);}
+.card{background:var(--card);border:1.5px solid var(--border);border-radius:20px;padding:20px;width:calc(100% - 32px);max-width:388px;box-shadow:0 4px 30px var(--shadow);transition:background .4s,border-color .4s;}
+.zikir-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text-dim);}
+.zikir-selector{display:flex;flex-direction:column;gap:8px;margin-bottom:16px;}
+.zikir-select{background:var(--bg2);border:1.5px solid var(--border);border-radius:12px;color:var(--text);padding:10px 32px 10px 14px;font-size:14px;font-family:'Nunito',sans-serif;font-weight:600;width:100%;cursor:pointer;outline:none;transition:border-color .2s;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%238ba898' d='M6 8L1 3h10z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;}
+.zikir-select:focus{border-color:var(--accent);}
+.arabic-display{text-align:center;padding:14px;background:var(--bg2);border-radius:12px;margin-bottom:16px;border:1px solid var(--border);transition:background .4s;}
+.arabic-text{font-family:'Amiri',serif;font-size:22px;color:var(--gold-light);line-height:1.7;direction:rtl;margin-bottom:6px;}
+.turkish-text{font-size:12px;color:var(--text-dim);font-style:italic;line-height:1.5;}
+.meaning-text{font-size:12px;color:var(--accent-bright);margin-top:4px;font-weight:600;}
+.targets{display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap;}
+.target-btn{flex:1;min-width:48px;background:var(--bg2);border:1.5px solid var(--border);border-radius:10px;color:var(--text-dim);padding:7px 0;font-size:13px;font-family:'Nunito',sans-serif;font-weight:700;cursor:pointer;transition:all .2s;text-align:center;}
+.target-btn.active{background:var(--card2);border-color:var(--accent);color:var(--accent-bright);}
+.custom-input{flex:1;min-width:50px;background:var(--bg2);border:1.5px solid var(--border);border-radius:10px;color:var(--text);padding:7px 8px;font-size:13px;font-family:'Nunito',sans-serif;font-weight:700;outline:none;text-align:center;transition:border-color .2s;}
+.custom-input:focus{border-color:var(--accent);}
+.counter-wrap{display:flex;flex-direction:column;align-items:center;margin-bottom:22px;}
+.circle-outer{position:relative;width:220px;height:220px;margin-bottom:12px;}
+.circle-bg{width:100%;height:100%;border-radius:50%;background:radial-gradient(circle at 35% 35%,var(--card2),var(--bg2));box-shadow:0 0 0 8px var(--bg2),0 0 0 10px var(--border),0 8px 40px rgba(0,0,0,.6),inset 0 2px 8px rgba(255,255,255,.04);display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;user-select:none;transition:transform .08s,box-shadow .08s,background .4s;position:relative;overflow:hidden;}
+.circle-bg::before{content:'';position:absolute;top:8px;left:8px;width:calc(100% - 16px);height:calc(100% - 16px);border-radius:50%;background:transparent;border:2px solid rgba(255,255,255,.07);}
+.circle-bg:active{transform:scale(.965);box-shadow:0 0 0 8px var(--bg2),0 0 0 10px var(--border),0 4px 20px rgba(0,0,0,.7),inset 0 2px 6px rgba(0,0,0,.3);}
+.ring-svg{position:absolute;top:0;left:0;width:100%;height:100%;transform:rotate(-90deg);pointer-events:none;}
+.ring-track{fill:none;stroke:rgba(255,255,255,.05);stroke-width:6;}
+.ring-fill{fill:none;stroke:var(--accent-bright);stroke-width:6;stroke-linecap:round;transition:stroke-dashoffset .3s ease,stroke .3s;}
+.count-number{font-size:62px;font-weight:800;color:#fff;line-height:1;letter-spacing:-2px;position:relative;z-index:1;transition:transform .1s;}
+.count-number.bump{transform:scale(1.12);}
+.count-target{font-size:14px;color:var(--text-dim);font-weight:700;position:relative;z-index:1;margin-top:2px;}
+.remaining-text{font-size:13px;color:var(--text-dim);font-weight:600;}
+.complete-badge{display:none;align-items:center;gap:8px;background:linear-gradient(135deg,rgba(0,0,0,.2),rgba(0,0,0,.1));border:1.5px solid var(--gold);border-radius:14px;padding:10px 18px;font-size:14px;font-weight:700;color:var(--gold-light);margin-bottom:14px;animation:fadeIn .4s ease;}
+.complete-badge.visible{display:flex;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:translateY(0)}}
+.action-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.action-btn{background:var(--card2);border:1.5px solid var(--border);border-radius:12px;color:var(--text-dim);padding:12px 0;font-size:14px;font-family:'Nunito',sans-serif;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:7px;transition:all .18s;}
+.action-btn:hover{background:var(--border);color:var(--text);}
+.action-btn:active{transform:scale(.97);}
+.action-btn.reset-btn{color:#e07070;}
+.action-btn.reset-btn:hover{border-color:#e07070;background:rgba(224,112,112,.1);}
+.total-row{margin-top:16px;background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:12px 16px;display:flex;justify-content:space-between;align-items:center;}
+.total-label{font-size:12px;color:var(--text-dim);font-weight:700;text-transform:uppercase;letter-spacing:.8px;}
+.total-value{font-size:18px;font-weight:800;color:var(--accent-bright);}
+
+/* ── REHBER ──────────────────────────────────────────────────────────────── */
+#rehber-view{display:none;width:calc(100% - 32px);max-width:388px;padding-bottom:30px;}
+#rehber-view.visible{display:block;}
+#main-view.hidden{display:none;}
+#settings-view{display:none;width:calc(100% - 32px);max-width:388px;padding-bottom:30px;}
+#settings-view.visible{display:block;}
+.rehber-topbar{display:flex;gap:8px;margin-bottom:12px;align-items:center;}
+.rehber-search{flex:1;background:var(--card);border:1.5px solid var(--border);border-radius:12px;color:var(--text);padding:11px 16px 11px 40px;font-size:14px;font-family:'Nunito',sans-serif;font-weight:600;outline:none;transition:border-color .2s;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%238ba898' stroke-width='2.5'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cpath d='m21 21-4.35-4.35'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:12px center;}
+.rehber-search:focus{border-color:var(--accent);}
+.add-zikir-btn{background:var(--accent);border:none;border-radius:12px;color:#fff;padding:11px 16px;font-size:20px;cursor:pointer;flex-shrink:0;transition:background .2s;line-height:1;font-weight:700;display:flex;align-items:center;justify-content:center;}
+.add-zikir-btn:hover{background:var(--accent-light);}
+.rehber-segs{display:flex;gap:6px;margin-bottom:14px;overflow-x:auto;padding-bottom:4px;scrollbar-width:none;}
+.rehber-segs::-webkit-scrollbar{display:none;}
+.seg-btn{background:var(--card);border:1.5px solid var(--border);border-radius:20px;color:var(--text-dim);padding:6px 14px;font-size:12px;font-family:'Nunito',sans-serif;font-weight:700;cursor:pointer;white-space:nowrap;transition:all .18s;}
+.seg-btn.active{background:var(--accent);color:#fff;border-color:var(--accent-light);}
+.rehber-list{display:flex;flex-direction:column;gap:10px;}
+.rehber-card{background:var(--card);border:1.5px solid var(--border);border-radius:16px;padding:14px 14px 14px 18px;position:relative;overflow:hidden;transition:border-color .2s,background .4s;}
+.rehber-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--accent);border-radius:3px 0 0 3px;}
+.rehber-card.custom-card::before{background:var(--gold);}
+.rehber-card:hover{border-color:var(--accent);}
+.rehber-card-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;gap:8px;}
+.rehber-card-title{font-size:13px;font-weight:800;color:var(--accent-bright);line-height:1.3;flex:1;}
+.rehber-card-title.custom-title{color:var(--gold-light);}
+.card-actions{display:flex;gap:5px;flex-shrink:0;align-items:center;}
+.use-btn{background:var(--accent);color:#fff;border:none;border-radius:8px;padding:5px 11px;font-size:12px;font-family:'Nunito',sans-serif;font-weight:700;cursor:pointer;transition:background .2s;}
+.use-btn:hover{background:var(--accent-light);}
+.icon-btn{background:rgba(255,255,255,.06);color:var(--text-dim);border:1.5px solid var(--border);border-radius:8px;padding:5px 8px;font-size:13px;cursor:pointer;transition:all .2s;line-height:1;}
+.icon-btn.edit:hover{background:rgba(201,168,76,.15);border-color:var(--gold);color:var(--gold-light);}
+.icon-btn.del:hover{background:rgba(192,57,43,.2);border-color:#e74c3c;color:#e74c3c;}
+.rehber-arabic{font-family:'Amiri',serif;font-size:18px;color:var(--gold-light);direction:rtl;text-align:right;margin-bottom:5px;line-height:1.8;}
+.rehber-okunuş{font-size:12px;color:var(--text-dim);font-style:italic;margin-bottom:3px;line-height:1.5;}
+.rehber-anlam{font-size:12px;color:var(--text);line-height:1.5;}
+.rehber-hadis{font-size:11px;color:var(--text-dim);margin-top:8px;padding-top:8px;border-top:1px solid var(--border);line-height:1.5;font-style:italic;}
+.expand-btn{background:none;border:none;color:var(--text-dim);font-size:11px;font-family:'Nunito',sans-serif;font-weight:700;cursor:pointer;margin-top:8px;padding:0;text-decoration:underline;text-underline-offset:2px;}
+.expand-btn:hover{color:var(--text);}
+.rehber-extra{display:none;}
+.rehber-extra.open{display:block;}
+.empty-state{text-align:center;padding:40px 20px;color:var(--text-dim);font-size:14px;line-height:2;}
+.empty-icon{font-size:40px;margin-bottom:10px;}
+
+/* ── SETTINGS ────────────────────────────────────────────────────────────── */
+.settings-section{background:var(--card);border:1.5px solid var(--border);border-radius:16px;padding:16px;margin-bottom:12px;transition:background .4s;}
+.settings-section-title{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:var(--text-dim);margin-bottom:14px;}
+.theme-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;}
+.theme-swatch{width:100%;aspect-ratio:1;border-radius:12px;cursor:pointer;border:2.5px solid transparent;transition:all .2s;display:flex;align-items:center;justify-content:center;font-size:16px;}
+.theme-swatch.active{border-color:var(--gold);transform:scale(1.08);}
+.theme-swatch:hover{transform:scale(1.05);}
+.setting-row{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border);}
+.setting-row:last-child{border-bottom:none;}
+.setting-label{font-size:14px;font-weight:700;color:var(--text);}
+.setting-desc{font-size:11px;color:var(--text-dim);margin-top:2px;}
+.toggle{width:44px;height:24px;background:var(--border);border-radius:12px;cursor:pointer;position:relative;transition:background .2s;flex-shrink:0;border:none;}
+.toggle::after{content:'';position:absolute;top:3px;left:3px;width:18px;height:18px;background:#fff;border-radius:50%;transition:transform .2s;}
+.toggle.on{background:var(--accent);}
+.toggle.on::after{transform:translateX(20px);}
+.data-btn{background:var(--card2);border:1.5px solid var(--border);border-radius:10px;color:var(--text-dim);padding:10px 16px;font-size:13px;font-family:'Nunito',sans-serif;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:8px;transition:all .2s;width:100%;margin-bottom:8px;}
+.data-btn:hover{border-color:var(--accent);color:var(--text);background:var(--card);}
+.data-btn.danger{color:#e07070;}
+.data-btn.danger:hover{border-color:#e07070;background:rgba(224,112,112,.1);}
+
+/* ── MODAL ───────────────────────────────────────────────────────────────── */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(4px);z-index:100;align-items:flex-end;justify-content:center;}
+.modal-overlay.open{display:flex;}
+.modal{background:var(--card);border:1.5px solid var(--border);border-radius:20px 20px 0 0;padding:24px 20px 34px;width:100%;max-width:420px;animation:slideUp .3s ease;max-height:90vh;overflow-y:auto;}
+@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.modal-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;}
+.modal-title{font-size:16px;font-weight:800;color:var(--text);}
+.modal-close{background:var(--card2);border:1.5px solid var(--border);border-radius:8px;color:var(--text-dim);width:32px;height:32px;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s;}
+.modal-close:hover{background:var(--border);color:var(--text);}
+.form-group{display:flex;flex-direction:column;gap:6px;margin-bottom:14px;}
+.form-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text-dim);}
+.form-input,.form-textarea{background:var(--bg2);border:1.5px solid var(--border);border-radius:10px;color:var(--text);padding:10px 12px;font-size:14px;font-family:'Nunito',sans-serif;font-weight:600;outline:none;transition:border-color .2s;width:100%;}
+.form-input:focus,.form-textarea:focus{border-color:var(--accent);}
+.form-textarea{resize:vertical;min-height:70px;}
+.form-arabic{font-family:'Amiri',serif;font-size:18px;direction:rtl;text-align:right;}
+.save-btn{width:100%;background:var(--accent);border:none;border-radius:12px;color:#fff;padding:14px;font-size:15px;font-family:'Nunito',sans-serif;font-weight:800;cursor:pointer;transition:background .2s;margin-top:6px;}
+.save-btn:hover{background:var(--accent-light);}
+
+/* ── NOTIFICATION ────────────────────────────────────────────────────────── */
+.notif{position:fixed;top:20px;left:50%;transform:translateX(-50%) translateY(-80px);background:var(--accent);color:#fff;padding:10px 22px;border-radius:12px;font-size:14px;font-weight:700;box-shadow:0 4px 20px rgba(0,0,0,.4);z-index:999;transition:transform .3s ease;pointer-events:none;white-space:nowrap;}
+.notif.show{transform:translateX(-50%) translateY(0);}
+
+/* ── HAPTIC FLASH ────────────────────────────────────────────────────────── */
+@keyframes milestone{0%{box-shadow:0 0 0 0 var(--accent-bright)}50%{box-shadow:0 0 0 18px transparent}100%{box-shadow:0 0 0 0 transparent}}
+.circle-bg.milestone{animation:milestone .4s ease;}
+::-webkit-scrollbar{width:4px;}
+::-webkit-scrollbar-track{background:var(--bg2);}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px;}
+
+/* PWA install banner */
+.install-banner{display:none;background:var(--card2);border:1.5px solid var(--accent);border-radius:14px;padding:12px 16px;margin:0 16px 12px;max-width:388px;width:calc(100% - 32px);align-items:center;gap:10px;font-size:13px;font-weight:700;}
+.install-banner.visible{display:flex;}
+.install-banner-text{flex:1;color:var(--text);}
+.install-banner-text span{display:block;font-size:11px;color:var(--text-dim);font-weight:600;margin-top:2px;}
+.install-btn{background:var(--accent);color:#fff;border:none;border-radius:8px;padding:7px 14px;font-size:12px;font-family:'Nunito',sans-serif;font-weight:800;cursor:pointer;white-space:nowrap;}
+.install-dismiss{background:none;border:none;color:var(--text-dim);font-size:18px;cursor:pointer;padding:4px;}
+</style>
+</head>
+<body>
+
+<div class="notif" id="notif"></div>
+
+<!-- PWA Install Banner -->
+<div class="install-banner" id="installBanner">
+  <span style="font-size:22px">📲</span>
+  <div class="install-banner-text">
+    Ana ekrana ekle
+    <span>Uygulama gibi çalışır, offline açılır</span>
+  </div>
+  <button class="install-btn" onclick="installPWA()">Ekle</button>
+  <button class="install-dismiss" onclick="dismissInstall()">✕</button>
+</div>
+
+<header>
+  <div class="logo-wrap">
+    <span class="logo-icon">📿</span>
+    <span class="logo-text">Zikirmatik</span>
+  </div>
+  <div class="header-right">
+    <button class="header-btn" id="soundBtn" onclick="SoundMgr.toggle()">🔔</button>
+    <button class="header-btn" onclick="showTab('settings')" id="tab-settings-btn">⚙️</button>
+  </div>
+</header>
+
+<div class="tabs">
+  <button class="tab active" onclick="showTab('main')" id="tab-main">📿 Zikir</button>
+  <button class="tab" onclick="showTab('rehber')" id="tab-rehber">📖 Rehber</button>
+  <button class="tab" onclick="showTab('settings')" id="tab-settings">⚙️ Ayarlar</button>
+</div>
+
+<!-- ── MAIN TAB ─────────────────────────────────────────────────────────── -->
+<div id="main-view">
+  <div class="card">
+    <div class="zikir-selector">
+      <div class="zikir-label">Zikir Seç</div>
+      <select class="zikir-select" id="zikirSelect" onchange="Counter.selectById(this.value)"></select>
+    </div>
+    <div class="arabic-display">
+      <div class="arabic-text" id="arabicText">سُبْحَانَ اللهِ</div>
+      <div class="turkish-text" id="turkishText">Sübhanallah</div>
+      <div class="meaning-text" id="meaningText">Allah noksanlardan münezzehtir.</div>
+    </div>
+    <div class="zikir-label" style="margin-bottom:8px">Hedef</div>
+    <div class="targets">
+      <button class="target-btn active" onclick="Counter.setTarget(33)" id="t33">33</button>
+      <button class="target-btn" onclick="Counter.setTarget(99)" id="t99">99</button>
+      <button class="target-btn" onclick="Counter.setTarget(100)" id="t100">100</button>
+      <button class="target-btn" onclick="Counter.setTarget(1000)" id="t1000">1000</button>
+      <input class="custom-input" id="customTarget" type="number" placeholder="Özel" min="1" max="9999" oninput="Counter.setCustomTarget()" style="flex:1.2">
+    </div>
+    <div class="complete-badge" id="completeBadge">✨ Tebrikler! Hedefine ulaştın!</div>
+    <div class="counter-wrap">
+      <div class="circle-outer" onclick="Counter.tap()">
+        <svg class="ring-svg" viewBox="0 0 220 220">
+          <circle class="ring-track" cx="110" cy="110" r="100"/>
+          <circle class="ring-fill" id="ringFill" cx="110" cy="110" r="100" stroke-dasharray="628.3" stroke-dashoffset="628.3"/>
+        </svg>
+        <div class="circle-bg" id="circleBg">
+          <div class="count-number" id="countNum">0</div>
+          <div class="count-target" id="countTarget">/ 33</div>
+        </div>
+      </div>
+      <div class="remaining-text" id="remainingText">33 zikir kaldı</div>
+    </div>
+    <div class="action-row">
+      <button class="action-btn" onclick="Counter.undo()">↩ Geri Al</button>
+      <button class="action-btn reset-btn" onclick="Counter.reset()">↺ Sıfırla</button>
+    </div>
+    <div class="total-row">
+      <span class="total-label">Toplam Zikir</span>
+      <span class="total-value" id="totalCount">0</span>
+    </div>
+  </div>
+</div>
+
+<!-- ── REHBER TAB ───────────────────────────────────────────────────────── -->
+<div id="rehber-view">
+  <div class="rehber-topbar">
+    <input class="rehber-search" type="text" placeholder="Zikir ara..." oninput="Rehber.render(this.value)">
+    <button class="add-zikir-btn" onclick="ZikirModal.open(null)" title="Yeni Zikir Ekle">＋</button>
+  </div>
+  <div class="rehber-segs">
+    <button class="seg-btn active" onclick="Rehber.setSegment('hepsi',this)">Hepsi</button>
+    <button class="seg-btn" onclick="Rehber.setSegment('varsayilan',this)">Varsayılan</button>
+    <button class="seg-btn" onclick="Rehber.setSegment('ozel',this)">⭐ Özel</button>
+    <button class="seg-btn" onclick="Rehber.setSegment('esma',this)">Esmaül Hüsna</button>
+  </div>
+  <div class="rehber-list" id="rehberList"></div>
+</div>
+
+<!-- ── SETTINGS TAB ─────────────────────────────────────────────────────── -->
+<div id="settings-view">
+  <!-- Tema -->
+  <div class="settings-section">
+    <div class="settings-section-title">🎨 Tema</div>
+    <div class="theme-grid" id="themeGrid">
+      <div class="theme-swatch active" data-theme="default" style="background:linear-gradient(135deg,#0f1a14,#2e7d4f)" onclick="ThemeMgr.set('default',this)" title="Orman">🌿</div>
+      <div class="theme-swatch" data-theme="ocean" style="background:linear-gradient(135deg,#0a1520,#1a6fa8)" onclick="ThemeMgr.set('ocean',this)" title="Okyanus">🌊</div>
+      <div class="theme-swatch" data-theme="desert" style="background:linear-gradient(135deg,#1a1008,#9c6120)" onclick="ThemeMgr.set('desert',this)" title="Çöl">🏜️</div>
+      <div class="theme-swatch" data-theme="midnight" style="background:linear-gradient(135deg,#0a0a1a,#5533cc)" onclick="ThemeMgr.set('midnight',this)" title="Gece">🌙</div>
+      <div class="theme-swatch" data-theme="rose" style="background:linear-gradient(135deg,#1a0a10,#c0336a)" onclick="ThemeMgr.set('rose',this)" title="Gül">🌹</div>
+    </div>
+  </div>
+
+  <!-- Ses & Titreşim -->
+  <div class="settings-section">
+    <div class="settings-section-title">🔔 Ses & Titreşim</div>
+    <div class="setting-row">
+      <div><div class="setting-label">Ses Efekti</div><div class="setting-desc">Her zikir basışında ses çıkar</div></div>
+      <button class="toggle on" id="soundToggle" onclick="SoundMgr.toggle()"></button>
+    </div>
+    <div class="setting-row">
+      <div><div class="setting-label">Titreşim</div><div class="setting-desc">Dokunsal geri bildirim</div></div>
+      <button class="toggle on" id="hapticToggle" onclick="HapticMgr.toggle()"></button>
+    </div>
+    <div class="setting-row">
+      <div><div class="setting-label">Milestone Titreşimi</div><div class="setting-desc">Her 10'da çift, hedefte uzun titreşim</div></div>
+      <button class="toggle on" id="milestoneToggle" onclick="HapticMgr.toggleMilestone()"></button>
+    </div>
+  </div>
+
+  <!-- Veri -->
+  <div class="settings-section">
+    <div class="settings-section-title">💾 Veri Yönetimi</div>
+    <button class="data-btn" onclick="DataMgr.export()">
+      <span style="font-size:18px">📤</span>
+      <div><div style="font-size:14px;font-weight:700;color:var(--text)">Yedekle (JSON indir)</div><div style="font-size:11px;color:var(--text-dim)">Tüm özel zikirler ve ayarlar</div></div>
+    </button>
+    <button class="data-btn" onclick="DataMgr.triggerImport()">
+      <span style="font-size:18px">📥</span>
+      <div><div style="font-size:14px;font-weight:700;color:var(--text)">Geri Yükle (JSON yükle)</div><div style="font-size:11px;color:var(--text-dim)">Mevcut veriyle birleştirilir</div></div>
+    </button>
+    <button class="data-btn danger" onclick="DataMgr.clearAll()">
+      <span style="font-size:18px">🗑️</span>
+      <div><div style="font-size:14px;font-weight:700">Tüm Veriyi Sil</div><div style="font-size:11px;color:var(--text-dim)">Özel zikirler ve sayaçlar sıfırlanır</div></div>
+    </button>
+    <input type="file" id="importFile" accept=".json" style="display:none" onchange="DataMgr.import(event)">
+  </div>
+
+  <!-- PWA -->
+  <div class="settings-section">
+    <div class="settings-section-title">📱 Uygulama</div>
+    <div class="setting-row">
+      <div><div class="setting-label">Ana Ekrana Ekle</div><div class="setting-desc">Offline çalışır, uygulama gibi açılır</div></div>
+      <button class="action-btn" style="padding:8px 16px;font-size:12px" onclick="installPWA()" id="pwaInstallBtn">Ekle</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── ZIKIR MODAL ──────────────────────────────────────────────────────── -->
+<div class="modal-overlay" id="modalOverlay" onclick="ZikirModal.closeOutside(event)">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="modalTitle">➕ Yeni Zikir Ekle</div>
+      <button class="modal-close" onclick="ZikirModal.close()">✕</button>
+    </div>
+    <div class="form-group">
+      <div class="form-label">Zikir Adı *</div>
+      <input class="form-input" id="fName" placeholder="örn. Estağfurullah" type="text">
+    </div>
+    <div class="form-group">
+      <div class="form-label">Arapça Yazım</div>
+      <input class="form-input form-arabic" id="fArabic" placeholder="أَسْتَغْفِرُ اللهَ" type="text" dir="rtl">
+    </div>
+    <div class="form-group">
+      <div class="form-label">Okunuş</div>
+      <input class="form-input" id="fOkunus" placeholder="örn. Estağfirullah" type="text">
+    </div>
+    <div class="form-group">
+      <div class="form-label">Anlamı</div>
+      <input class="form-input" id="fAnlam" placeholder="örn. Allah'tan bağışlanma dilerim." type="text">
+    </div>
+    <div class="form-group">
+      <div class="form-label">Fazilet / Hadis (isteğe bağlı)</div>
+      <textarea class="form-textarea" id="fHadis" placeholder="Bu zikrin fazileti veya ilgili hadis..."></textarea>
+    </div>
+    <div class="form-group">
+      <div class="form-label">Varsayılan Hedef</div>
+      <input class="form-input" id="fTarget" type="number" placeholder="33" min="1" max="9999" value="33">
+    </div>
+    <button class="save-btn" onclick="ZikirModal.save()" id="saveBtn">Kaydet</button>
+  </div>
+</div>
+
+<script>
+'use strict';
+// ═══════════════════════════════════════════════════════════════════════════
+// DATA
+// ═══════════════════════════════════════════════════════════════════════════
+const DEFAULT_ZIKIRLER = [
+  {id:'z0',name:'Sübhanallah',arabic:'سُبْحَانَ اللهِ',okunuş:'Sübhanallah',anlam:"Allah noksanlardan münezzehtir.",hadis:'Her namazdan sonra 33 kere okunması tavsiye edilmiştir. (Müslim, Mesacid: 146)',defaultTarget:33},
+  {id:'z1',name:'Elhamdülillah',arabic:'اَلْحَمْدُ لِلّٰهِ',okunuş:'Elhamdülillah',anlam:"Şükür Allah'adır, hamd Allah'adır.",hadis:'"Elhamdülillah" kelimesi mizanı doldurur. (Müslim)',defaultTarget:33},
+  {id:'z2',name:'Allahu Ekber',arabic:'اَللهُ اَكْبَرُ',okunuş:'Allahu ekber',anlam:'Allah en büyüktür.',hadis:'Her namazdan sonra 33 kere okunması tavsiye edilmiştir. (Müslim, Mesacid: 146)',defaultTarget:33},
+  {id:'z3',name:'Lâ ilâhe illallah',arabic:'لَا اِلٰهَ اِلَّا اللهُ',okunuş:"Lâ ilâhe illallah",anlam:"Allah'tan başka ilah yoktur.",hadis:'"İmânınızı yenilemek için Lâ ilâhe illallah zikrî çok yapınız." (İbn Hanbel, II, 359)',defaultTarget:100},
+  {id:'z4',name:'Sübhanallâhi ve bihamdihi',arabic:'سُبْحَانَ اللهِ وَبِحَمْدِهِ',okunuş:'Sübhanallâhi ve bihamdihi',anlam:"Allah'ı hamd ile tesbih ederim.",hadis:'"Her kim günde yüz kere okursa hataları deniz köpüğü kadar da olsa dökülür." (Buhârî, Deavât, 65)',defaultTarget:100},
+  {id:'z5',name:"Sübhanallahi'l azîm",arabic:'سُبْحَانَ اللهِ وَبِحَمْدِهِ سُبْحَانَ اللهِ الْعَظِيمِ',okunuş:"Sübhanallâhi ve bihamdihi sübhanallâhi'l azîm",anlam:"Allah'ı hamd ile tesbîh ederim, büyük Allah'ı tesbîh ederim.",hadis:'"Lisanda hafif, mîzanda ağır iki kelime..." (Buhârî, Deavât, 65)',defaultTarget:100},
+  {id:'z6',name:'Sübhanallahi Velhamdülillahi...',arabic:'سُبْحَانَ اللهِ وَالْحَمْدُ لِلّٰهِ وَلَا اِلٰهَ اِلَّا اللهُ وَاللهُ اَكْبَرُ',okunuş:'Sübhanallahi velhamdülillahi velâ ilâhe illallahü vallahü ekber',anlam:"Allah eksik sıfatlardan beridir. Hamd Allah'adır. Allah'tan başka ilah yoktur ve Allah en büyüktür.",hadis:'"Hiçbir nebi bu tesbihten daha efdal bir kelime ile tesbih etmemiştir." (Ali el-Müttâkî, no: 2015)',defaultTarget:33},
+  {id:'z7',name:"Lâ havle ve lâ kuvvete illâ billâh",arabic:'لَا حَوْلَ وَلَا قُوَّةَ اِلَّا بِاللهِ',okunuş:"Lâ havle ve lâ kuvvete illâ billâh",anlam:"Günahlardan korunmaya güç yetirmek ve taate kuvvet bulmak, ancak Allah'ın yardımıyladır.",hadis:'"Bu zikri çok ediniz. Zîrâ o, cennetin hazinesindedir." (Buhârî, Deavât, 50)',defaultTarget:99},
+  {id:'z8',name:"Hasbünallahü ve ni'melvekîl",arabic:'حَسْبُنَا اللهُ وَنِعْمَ الْوَكِيلُ',okunuş:"Hasbünallahü ve ni'melvekîl",anlam:'Allah bana yeter. O ne güzel vekildir.',hadis:'Bütün korkan kimselerin emniyetli sığınağıdır.',defaultTarget:99},
+  {id:'z9',name:'Salavat',arabic:'اَللّٰهُمَّ صَلِّ عَلٰى سَيِّدِنَا مُحَمَّدٍ',okunuş:'Allahümme salli alâ seyyidinâ Muhammed',anlam:"Allah'ım! Efendimiz Muhammed'e rahmet et.",hadis:'"Bana bir kez salavat getirene Allah on kez rahmet eder." (Nesâî)',defaultTarget:100},
+];
+
+const ESMA_DATA=[
+  {arabic:'اَللّٰهْ',tr:'Allah',anlam:'Varlığı zorunlu olan, bütün övgülere layık.'},
+  {arabic:'اَلرَّحْمٰنُ',tr:'er-Rahmân',anlam:'Bütün mahlûkâta merhamet eden.'},
+  {arabic:'اَلرَّح۪يمُ',tr:'er-Rahîm',anlam:"Pek ziyâde merhamet edici, mü'minlere rahmet eden."},
+  {arabic:'اَلْمَلِكُ',tr:'el-Melik',anlam:'Görünen ve görünmeyen âlemlerin sahibi.'},
+  {arabic:'اَلْقُدُّوسُ',tr:'el-Kuddûs',anlam:'Her türlü eksiklikten münezzeh, pek temiz.'},
+  {arabic:'اَلسَّلَامُ',tr:'es-Selâm',anlam:'Kullarını selâmete çıkaran, esenlik bahşeden.'},
+  {arabic:'اَلْمُؤْمِنُ',tr:"el-Mü'min",anlam:'Gönüllerde îman ışığı yakan, güven veren.'},
+  {arabic:'اَلْمُهَيْمِنُ',tr:'el-Müheymin',anlam:'Kâinâtın bütün işlerini gözetip yöneten.'},
+  {arabic:'اَلْعَز۪يزُ',tr:'el-Azîz',anlam:'Yenilmeyen yegâne gâlip.'},
+  {arabic:'اَلْجَبّٰارُ',tr:'el-Cebbâr',anlam:'Kırılanları onaran, irâdesini yürüten.'},
+  {arabic:'اَلْمُتَكَبِّرُ',tr:'el-Mütekebbir',anlam:'Her şeyde büyüklüğünü gösteren.'},
+  {arabic:'اَلْخَالِقُ',tr:'el-Hâlık',anlam:'Her şeyi yoktan var eden.'},
+  {arabic:'اَلْبَارِئُ',tr:"el-Bâri'",anlam:'Canlıları bir örneği olmaksızın yaratan.'},
+  {arabic:'اَلْمُصَوِّرُ',tr:'el-Musavvir',anlam:'Her şeye bir şekil ve hususiyet veren.'},
+  {arabic:'اَلْغَفَّارُ',tr:'el-Ğaffâr',anlam:'Mağfireti pek bol olan.'},
+  {arabic:'اَلْقَهَّارُ',tr:'el-Kahhâr',anlam:'Her şeye istediğini yapacak surette hâkim.'},
+  {arabic:'اَلْوَهَّابُ',tr:'el-Vehhâb',anlam:'Çeşit çeşit nimetleri devamlı bağışlayan.'},
+  {arabic:'اَلرَّزَّاقُ',tr:'er-Rezzâk',anlam:'Bedenlerin ve ruhların gıdasını yaratıp veren.'},
+  {arabic:'اَلْفَتَّاحُ',tr:'el-Fettâh',anlam:'Her türlü müşkülleri açan ve kolaylaştıran.'},
+  {arabic:'اَلْعَل۪يمُ',tr:'el-Alîm',anlam:'Her şeyi hakkıyla bilen.'},
+  {arabic:'اَلْقَابِضُ',tr:'el-Kâbıd',anlam:'Sıkan, daraltan.'},
+  {arabic:'اَلْبَاسِطُ',tr:'el-Bâsıt',anlam:'Açan, genişleten, rızkı bollaştıran.'},
+  {arabic:'اَلْخَافِضُ',tr:'el-Hâfıd',anlam:'Yukarıdan aşağıya indiren, alçaltan.'},
+  {arabic:'اَلرَّافِعُ',tr:"er-Râfi'",anlam:'Yukarı kaldıran, yükselten, yücelten.'},
+  {arabic:'اَلْمُعِزُّ',tr:"el-Mu'izz",anlam:'İzzet ve şeref veren.'},
+  {arabic:'اَلْمُذِلُّ',tr:'el-Müzill',anlam:'Zillete düşüren.'},
+  {arabic:'اَلسَّم۪يعُ',tr:"es-Semi'",anlam:'Hakkıyla işiten.'},
+  {arabic:'اَلْبَص۪يرُ',tr:'el-Basîr',anlam:'Hakkıyla gören.'},
+  {arabic:'اَلْحَكَمُ',tr:'el-Hakem',anlam:'Hükmeden, hakkı yerine getiren.'},
+  {arabic:'اَلْعَدْلُ',tr:'el-Adl',anlam:'Mutlak adâlet sahibi.'},
+  {arabic:'اَللَّط۪يفُ',tr:'el-Latîf',anlam:'En ince işlerin bütün inceliklerini bilen.'},
+  {arabic:'اَلْخَب۪يرُ',tr:'el-Habîr',anlam:'Her şeyin gizli taraflarından haberdar olan.'},
+  {arabic:'اَلْحَل۪يمُ',tr:'el-Halîm',anlam:'Suçlulara rağmen yumuşak davranan.'},
+  {arabic:'اَلْعَظ۪يمُ',tr:'el-Azîm',anlam:'Bütün büyüklüklerin sâhibi.'},
+  {arabic:'اَلْغَفُورُ',tr:'el-Ğafûr',anlam:'Mağfireti çok olan, bütün günahları bağışlayan.'},
+  {arabic:'اَلشَّكُورُ',tr:'eş-Şekûr',anlam:'Sâlih amelleri daha ziyâdesiyle karşılayan.'},
+  {arabic:'اَلْعَلِيُّ',tr:'el-Aliyy',anlam:'Her hususta, her şeyden yüce olan.'},
+  {arabic:'اَلْكَب۪يرُ',tr:'el-Kebîr',anlam:'Büyüklükte kendisinden daha büyüğü düşünülemeyen.'},
+  {arabic:'اَلْحَف۪يظُ',tr:'el-Hafîz',anlam:'Her şeyi belli vaktine kadar koruyan.'},
+  {arabic:'اَلْمُق۪يتُ',tr:'el-Mukît',anlam:'Her yaratılmışın azığını tayin eden.'},
+  {arabic:'اَلْحَس۪يبُ',tr:'el-Hasîb',anlam:'Herkesin hesabını bilen, herkese kâfi gelen.'},
+  {arabic:'اَلْجَل۪يلُ',tr:'el-Celîl',anlam:'Celâdet, azamet ve heybet sâhibi.'},
+  {arabic:'اَلْكَر۪يمُ',tr:'el-Kerîm',anlam:'Keremi, lütuf ve ihsânı bol olan.'},
+  {arabic:'اَلرَّق۪يبُ',tr:'er-Rakîb',anlam:'Bütün varlıklar üzerinde gözcü.'},
+  {arabic:'اَلْمُج۪يبُ',tr:'el-Mücîb',anlam:'Duâları işitip cevap veren.'},
+  {arabic:'اَلْوَاسِعُ',tr:"el-Vâsi'",anlam:'Rahmeti, kudreti her şeyi kaplayan.'},
+  {arabic:'اَلْحَك۪يمُ',tr:'el-Hakîm',anlam:'Bütün emirleri ve işleri hikmetli.'},
+  {arabic:'اَلْوَدُودُ',tr:'el-Vedûd',anlam:'İyi kullarını seven.'},
+  {arabic:'اَلْمَج۪يدُ',tr:'el-Mecîd',anlam:"Zâtı şerefli, ef'âli güzel olan."},
+  {arabic:'اَلْبَاعِثُ',tr:'el-Bâis',anlam:'Ölüleri diriltip kabirlerinden kaldıran.'},
+  {arabic:'اَلشَّه۪يدُ',tr:'eş-Şehîd',anlam:'Her zaman ve her şeyi gözlemiş olarak bilen.'},
+  {arabic:'اَلْحَقُّ',tr:'el-Hakk',anlam:'Fiilen var olan, varlığı hiç değişmeden duran.'},
+  {arabic:'اَلْوَك۪يلُ',tr:'el-Vekîl',anlam:'Güvenilip dayanılan, tevekkül edilen.'},
+  {arabic:'اَلْقَوِيُّ',tr:'el-Kaviyy',anlam:'Çok kuvvetli, her şeye gücü yeten.'},
+  {arabic:'اَلْمَت۪ينُ',tr:'el-Metîn',anlam:'Çok sağlam, kuvveti çok ve şiddetli.'},
+  {arabic:'اَلْوَلِيُّ',tr:'el-Veliyy',anlam:'İyi kullarına dost olan, yardım eden.'},
+  {arabic:'اَلْحَم۪يدُ',tr:'el-Hamîd',anlam:'Ancak kendisine hamd ü senâ olunan.'},
+  {arabic:'اَلْمُحْص۪ي',tr:'el-Muhsî',anlam:'Her şeyin sayısını ve miktarını bilen.'},
+  {arabic:'اَلْمُبْدِئُ',tr:"el-Mübdi'",anlam:'Mahlûkatı ilk baştan yaratan.'},
+  {arabic:'اَلْمُع۪يدُ',tr:"el-Mu'îd",anlam:'Yaratılmışları yok ettikten sonra tekrar yaratan.'},
+  {arabic:'اَلْمُحْي۪',tr:'el-Muhyî',anlam:'Hayat veren, can bağışlayan.'},
+  {arabic:'اَلْمُم۪يتُ',tr:'el-Mümît',anlam:'Canlı bir mahlûkun ölümünü yaratan.'},
+  {arabic:'اَلْحَيُّ',tr:'el-Hayy',anlam:'Dâimâ diri; her şeyi bilen.'},
+  {arabic:'اَلْقَيُّومُ',tr:'el-Kayyûm',anlam:'Gökleri, yeri, her şeyi ayakta tutan.'},
+  {arabic:'اَلْوَاجِدُ',tr:'el-Vâcid',anlam:'Hiçbir şeye ihtiyacı olmayan.'},
+  {arabic:'اَلْمَاجِدُ',tr:'el-Mâcid',anlam:'Kadr ü şânı büyük, kerem ve semâhati bol.'},
+  {arabic:'اَلْوَاحِدُ',tr:'el-Vâhid',anlam:'Tek, zâtında ortağı ve benzeri bulunmayan.'},
+  {arabic:'اَلصَّمَدُ',tr:'es-Samed',anlam:"Hâcetlerin bitirilmesi için tek merci'."},
+  {arabic:'اَلْقَادِرُ',tr:'el-Kâdir',anlam:'İstediğini, istediği gibi yapmaya gücü yeten.'},
+  {arabic:'اَلْمُقْتَدِرُ',tr:'el-Muktedir',anlam:'Kuvvet sâhipleri üzerinde tasarruf eden.'},
+  {arabic:'اَلْمُقَدِّمُ',tr:'el-Mukaddim',anlam:'İstediğini ileri geçiren, öne alan.'},
+  {arabic:'اَلْمُؤَخِّرُ',tr:'el-Muahhir',anlam:'İstediğini geri koyan, arkaya bırakan.'},
+  {arabic:'اَلْاَوَّلُ',tr:'el-Evvel',anlam:'Başlangıcı olmayan.'},
+  {arabic:'اَلْاٰخِرُ',tr:'el-Âhir',anlam:'Varlığının sonu olmayan.'},
+  {arabic:'اَلظَّاهِرُ',tr:'ez-Zâhir',anlam:"Âşikâr olan, kat'î delillerle bilinen."},
+  {arabic:'اَلْبَاطِنُ',tr:'el-Bâtın',anlam:'Gizli olan; duyu organları ile idrâk edilemeyen.'},
+  {arabic:'اَلْوٰالى',tr:'el-Vâlî',anlam:'Mahlûkatın işlerini yoluna koyan.'},
+  {arabic:'اَلْمُتَعَال۪ى',tr:'el-Müteâlî',anlam:'İzzet ve hükümranlık bakımından en yüce.'},
+  {arabic:'اَلْبَرُّ',tr:'el-Berr',anlam:'Kulları hakkında kolaylık isteyen, iyiliği bol.'},
+  {arabic:'اَلتَّوَّابُ',tr:'et-Tevvâb',anlam:'Kullarını tevbeye sevkeden, tevbeleri kabûl eden.'},
+  {arabic:'اَلْمُنْتَقِمُ',tr:'el-Müntekım',anlam:'Suçluları adâleti ile cezaya çarptıran.'},
+  {arabic:'اَلْعَفُوُّ',tr:'el-Afüvv',anlam:'Affı çok, günahları kökünden kazıyan.'},
+  {arabic:'اَلرَّؤُۧفُ',tr:'er-Raûf',anlam:"Çok re'fet ve şefkat sâhibi."},
+  {arabic:'مَالِكُ الْمُلْكِ',tr:"Mâlikü'l-Mülk",anlam:'Bütün mülkün mâliki ve hâkimi.'},
+  {arabic:'ذُو الْجَلَالِ وَالْاِكْرَامِ',tr:"Zü'l-Celâli ve'l-İkrâm",anlam:'Hem büyüklük, hem fazl u kerem sâhibi.'},
+  {arabic:'اَلْمُقْسِطُ',tr:'el-Muksit',anlam:'Bütün işleri denk ve yerli yerinde yapan.'},
+  {arabic:'اَلْجَامِعُ',tr:"el-Câmi'",anlam:'İstediğini, istediği yerde toplayan.'},
+  {arabic:'اَلْغَنِيُّ',tr:'el-Ğaniyy',anlam:'Çok zengin ve her şeyden müstağnî.'},
+  {arabic:'اَلْمُغْن۪ي',tr:'el-Muğnî',anlam:'İstediğini zengin eden.'},
+  {arabic:'اَلْمَانِعُ',tr:"el-Mâni'",anlam:'Dilemediği şeyin gerçekleşmesine müsaade etmeyen.'},
+  {arabic:'اَلضَّآرُّ',tr:'ed-Dârr',anlam:'Elem ve zarar verici şeyleri yaratan.'},
+  {arabic:'اَلنَّافِعُ',tr:"en-Nâfi'",anlam:'Hayır ve menfaat verici şeyleri yaratan.'},
+  {arabic:'اَلنُّورُ',tr:'en-Nûr',anlam:'Âlemleri nurlandıran, nûr kaynağı.'},
+  {arabic:'اَلْهَاد۪ى',tr:'el-Hâdî',anlam:'Hidâyeti yaratan, yol gösteren.'},
+  {arabic:'اَلْبَد۪يعُ',tr:"el-Bedî'",anlam:'Örneksiz, acîb ve hayret verici âlemler îcad eden.'},
+  {arabic:'اَلْبَاق۪ي',tr:'el-Bâkî',anlam:'Varlığı devamlı olan, sonu olmayan.'},
+  {arabic:'اَلْوَارِثُ',tr:'el-Vâris',anlam:'Her şeyin hakikî sâhibi olan.'},
+  {arabic:'اَلرَّش۪يدُ',tr:'er-Reşîd',anlam:'Bütün işleri hikmet üzere âkıbetine ulaştıran.'},
+  {arabic:'اَلصَّبُورُ',tr:'es-Sabûr',anlam:'Çok sabırlı.'},
+];
+
+// ═══════════════════════════════════════════════════════════════════════════
+// StorageManager — tüm kalıcı veri işlemleri
+// ═══════════════════════════════════════════════════════════════════════════
+const StorageMgr = {
+  KEY_CUSTOM: 'zmk_custom',
+  KEY_SETTINGS: 'zmk_settings',
+  KEY_TOTAL: 'zmk_total',
+
+  saveCustom(data){
+    try{
+      localStorage.setItem(this.KEY_CUSTOM, JSON.stringify(data));
+    }catch(e){
+      // QuotaExceededError — kullanıcıya görünür uyarı ver
+      if(e.name==='QuotaExceededError'||e.name==='NS_ERROR_DOM_QUOTA_REACHED'||e.code===22){
+        // notify fonksiyonu bu noktada henüz tanımlı olmayabilir; güvenli çağır
+        if(typeof notify==='function'){
+          notify('⚠️ Depolama alanı dolu! Yedekle → Sil yaparak yer aç.');
+        } else {
+          alert('Depolama alanı dolu! Zikirmatik Ayarlar > Yedekle seçeneğiyle önce yedek alın.');
+        }
+      }
+    }
+  },
+  loadCustom(){ try{const d=localStorage.getItem(this.KEY_CUSTOM);return d?JSON.parse(d):[];}catch(e){return [];} },
+
+  saveSettings(obj){ try{localStorage.setItem(this.KEY_SETTINGS, JSON.stringify(obj));}catch(e){} },
+  loadSettings(){ try{const d=localStorage.getItem(this.KEY_SETTINGS);return d?JSON.parse(d):{};}catch(e){return {};} },
+
+  saveTotal(n){ try{localStorage.setItem(this.KEY_TOTAL, n);}catch(e){} },
+  loadTotal(){ try{return parseInt(localStorage.getItem(this.KEY_TOTAL))||0;}catch(e){return 0;} },
+
+  clearAll(){
+    try{
+      localStorage.removeItem(this.KEY_CUSTOM);
+      localStorage.removeItem(this.KEY_TOTAL);
+    }catch(e){}
+  }
+};
+
+// ═══════════════════════════════════════════════════════════════════════════
+// SoundManager — Singleton AudioContext (her tıkta yeniden oluşturmaz)
+// ═══════════════════════════════════════════════════════════════════════════
+const SoundMgr = {
+  enabled: true,
+  _ctx: null, // Singleton — yalnızca bir kez oluşturulur
+
+  // AudioContext'i tembel (lazy) başlat: kullanıcı etkileşiminden sonra çağrılır
+  _getCtx(){
+    if(!this._ctx){
+      try{ this._ctx = new(window.AudioContext||window.webkitAudioContext)(); }
+      catch(e){ return null; }
+    }
+    // iOS/Safari bazı durumlarda context'i "suspended" bırakır; resume et
+    if(this._ctx.state === 'suspended') this._ctx.resume();
+    return this._ctx;
+  },
+
+  toggle(){
+    this.enabled = !this.enabled;
+    document.getElementById('soundBtn').textContent = this.enabled ? '🔔' : '🔕';
+    document.getElementById('soundToggle').classList.toggle('on', this.enabled);
+    this._saveSettings();
+  },
+
+  tick(){
+    if(!this.enabled) return;
+    const c = this._getCtx(); if(!c) return;
+    try{
+      const o=c.createOscillator(), g=c.createGain();
+      o.connect(g); g.connect(c.destination); o.type='sine';
+      o.frequency.setValueAtTime(880, c.currentTime);
+      o.frequency.exponentialRampToValueAtTime(660, c.currentTime+.08);
+      g.gain.setValueAtTime(.15, c.currentTime);
+      g.gain.exponentialRampToValueAtTime(.001, c.currentTime+.1);
+      o.start(); o.stop(c.currentTime+.1);
+    }catch(e){}
+  },
+
+  complete(){
+    if(!this.enabled) return;
+    const c = this._getCtx(); if(!c) return;
+    try{
+      [523,659,784,1047].forEach((f,i)=>{
+        const o=c.createOscillator(), g=c.createGain();
+        o.connect(g); g.connect(c.destination); o.type='sine'; o.frequency.value=f;
+        g.gain.setValueAtTime(0, c.currentTime+i*.1);
+        g.gain.linearRampToValueAtTime(.12, c.currentTime+i*.1+.05);
+        g.gain.exponentialRampToValueAtTime(.001, c.currentTime+i*.1+.3);
+        o.start(c.currentTime+i*.1); o.stop(c.currentTime+i*.1+.3);
+      });
+    }catch(e){}
+  },
+
+  _saveSettings(){ const s=StorageMgr.loadSettings(); s.sound=this.enabled; StorageMgr.saveSettings(s); }
+};
+
+// ═══════════════════════════════════════════════════════════════════════════
+// HapticManager — gelişmiş titreşim desenleri
+// ═══════════════════════════════════════════════════════════════════════════
+const HapticMgr = {
+  enabled: true,
+  milestoneEnabled: true,
+
+  toggle(){
+    this.enabled=!this.enabled;
+    document.getElementById('hapticToggle').classList.toggle('on',this.enabled);
+    this._save();
+  },
+  toggleMilestone(){
+    this.milestoneEnabled=!this.milestoneEnabled;
+    document.getElementById('milestoneToggle').classList.toggle('on',this.milestoneEnabled);
+    this._save();
+  },
+  tick(){
+    if(!this.enabled||!navigator.vibrate) return;
+    navigator.vibrate(25);
+  },
+  milestone10(){
+    // Her 10'da çift kısa titreşim — "motorcu vuruşu"
+    if(!this.enabled||!this.milestoneEnabled||!navigator.vibrate) return;
+    navigator.vibrate([40,60,40]);
+    // Görsel flash
+    const cb=document.getElementById('circleBg');
+    cb.classList.remove('milestone'); void cb.offsetWidth; cb.classList.add('milestone');
+    setTimeout(()=>cb.classList.remove('milestone'),400);
+  },
+  complete(){
+    // Tamamlanmada uzun titreşim
+    if(!this.enabled||!navigator.vibrate) return;
+    navigator.vibrate([80,50,80,50,200]);
+  },
+  _save(){ const s=StorageMgr.loadSettings(); s.haptic=this.enabled; s.hapticMilestone=this.milestoneEnabled; StorageMgr.saveSettings(s); }
+};
+
+// ═══════════════════════════════════════════════════════════════════════════
+// ThemeManager
+// ═══════════════════════════════════════════════════════════════════════════
+const ThemeMgr = {
+  current: 'default',
+  set(theme, el){
+    this.current = theme;
+    document.documentElement.setAttribute('data-theme', theme==='default'?'':theme);
+    document.querySelectorAll('.theme-swatch').forEach(s=>s.classList.remove('active'));
+    if(el) el.classList.add('active');
+    // meta theme-color
+    const colors={default:'#0f1a14',ocean:'#0a1520',desert:'#1a1008',midnight:'#0a0a1a',rose:'#1a0a10'};
+    document.querySelector('meta[name=theme-color]').content = colors[theme]||colors.default;
+    const s=StorageMgr.loadSettings(); s.theme=theme; StorageMgr.saveSettings(s);
+  },
+  load(){
+    const s=StorageMgr.loadSettings();
+    if(s.theme){
+      const el=document.querySelector(`.theme-swatch[data-theme="${s.theme}"]`);
+      this.set(s.theme, el);
+    }
+  }
+};
+
+// ═══════════════════════════════════════════════════════════════════════════
+// DataManager — import / export / clear
+// ═══════════════════════════════════════════════════════════════════════════
+const DataMgr = {
+  export(){
+    const payload = {
+      version: 1,
+      exportDate: new Date().toISOString(),
+      customZikirler: StorageMgr.loadCustom(),
+      settings: StorageMgr.loadSettings(),
+      totalCount: StorageMgr.loadTotal()
+    };
+    const blob = new Blob([JSON.stringify(payload, null, 2)], {type:'application/json'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href=url; a.download=`zikirmatik-yedek-${new Date().toISOString().slice(0,10)}.json`;
+    a.click(); URL.revokeObjectURL(url);
+    notify('📤 Yedek dosyası indirildi');
+  },
+  triggerImport(){
+    document.getElementById('importFile').click();
+  },
+  import(event){
+    const file = event.target.files[0];
+    if(!file) return;
+    const reader = new FileReader();
+    reader.onload = e => {
+      try{
+        const data = JSON.parse(e.target.result);
+        if(!data.version) throw new Error('Geçersiz dosya');
+        // Birleştir — mevcut özel zikirlerle merge et
+        const existing = StorageMgr.loadCustom();
+        const incoming = data.customZikirler||[];
+        const existingIds = new Set(existing.map(z=>z.id));
+        const merged = [...existing, ...incoming.filter(z=>!existingIds.has(z.id))];
+        StorageMgr.saveCustom(merged);
+        ZikirStore.customZikirler = merged;
+        Counter.rebuildSelect();
+        if(data.totalCount) { Counter.total=data.totalCount; StorageMgr.saveTotal(data.totalCount); Counter.updateDisplay(); }
+        notify(`✅ ${incoming.length} zikir geri yüklendi`);
+        Rehber.render(Rehber.currentFilter);
+      }catch(err){
+        notify('⚠️ Dosya okunamadı: '+err.message);
+      }
+      event.target.value='';
+    };
+    reader.readAsText(file);
+  },
+  clearAll(){
+    if(!confirm('Tüm özel zikirler ve sayaç silinecek. Emin misiniz?\n\nÖnce yedeklemenizi öneririz!')) return;
+    StorageMgr.clearAll();
+    ZikirStore.customZikirler=[];
+    Counter.total=0; Counter.count=0; Counter.history=[];
+    Counter.rebuildSelect(); Counter.updateDisplay();
+    notify('🗑 Veriler temizlendi');
+    Rehber.render('');
+  }
+};
+
+// ═══════════════════════════════════════════════════════════════════════════
+// ZikirStore — tüm zikir verisi
+// ═══════════════════════════════════════════════════════════════════════════
+const ZikirStore = {
+  customZikirler: [],
+  getAll(){ return [...DEFAULT_ZIKIRLER, ...this.customZikirler]; },
+  findById(id){ return this.getAll().find(z=>z.id===id); },
+  load(){ this.customZikirler = StorageMgr.loadCustom(); },
+  save(){ StorageMgr.saveCustom(this.customZikirler); }
+};
+
+// ═══════════════════════════════════════════════════════════════════════════
+// Counter — sayaç mantığı
+// ═══════════════════════════════════════════════════════════════════════════
+const Counter = {
+  count: 0,
+  target: 33,
+  total: 0,
+  history: [],
+  currentId: 'z0',
+
+  tap(){
+    if(this.count >= this.target){ this._resetForNewRound(); return; }
+    this.history.push(this.count);
+    if(this.history.length>20) this.history.shift();
+    this.count++; this.total++;
+    StorageMgr.saveTotal(this.total);
+    this.updateDisplay();
+    SoundMgr.tick();
+    HapticMgr.tick();
+
+    // Milestone her 10'da
+    if(HapticMgr.milestoneEnabled && this.count % 10 === 0 && this.count < this.target)
+      HapticMgr.milestone10();
+
+    // Bump animasyonu
+    const el=document.getElementById('countNum');
+    el.classList.remove('bump'); void el.offsetWidth; el.classList.add('bump');
+    setTimeout(()=>el.classList.remove('bump'),150);
+
+    if(this.count >= this.target){
+      document.getElementById('completeBadge').classList.add('visible');
+      SoundMgr.complete(); HapticMgr.complete();
+      notify('🌟 Tamamlandı! '+this.target+' zikir');
+    }
+  },
+
+  undo(){
+    if(!this.history.length) return;
+    this.count=this.history.pop();
+    if(this.total>0){ this.total--; StorageMgr.saveTotal(this.total); }
+    document.getElementById('completeBadge').classList.remove('visible');
+    this.updateDisplay();
+  },
+
+  reset(){
+    this.count=0; this.history=[];
+    document.getElementById('completeBadge').classList.remove('visible');
+    this.updateDisplay();
+  },
+
+  _resetForNewRound(){
+    this.count=0; this.history=[];
+    document.getElementById('completeBadge').classList.remove('visible');
+    this.updateDisplay();
+  },
+
+  setTarget(n){
+    this.target=n; this.count=0; this.history=[];
+    document.getElementById('completeBadge').classList.remove('visible');
+    document.getElementById('customTarget').value='';
+    ['t33','t99','t100','t1000'].forEach(id=>{const e=document.getElementById(id);if(e)e.classList.remove('active');});
+    const b=document.getElementById('t'+n); if(b)b.classList.add('active');
+    this.updateDisplay();
+  },
+
+  setCustomTarget(){
+    const v=parseInt(document.getElementById('customTarget').value);
+    if(v>0&&v<=9999){
+      this.target=v; this.count=0; this.history=[];
+      document.getElementById('completeBadge').classList.remove('visible');
+      ['t33','t99','t100','t1000'].forEach(id=>{const e=document.getElementById(id);if(e)e.classList.remove('active');});
+      this.updateDisplay();
+    }
+  },
+
+  selectById(id){
+    const z=ZikirStore.findById(id); if(!z) return;
+    this.currentId=id;
+    document.getElementById('arabicText').textContent=z.arabic||'✍️';
+    document.getElementById('turkishText').textContent=z.okunuş||z.name;
+    document.getElementById('meaningText').textContent=z.anlam||'';
+    this.setTarget(z.defaultTarget||33);
+  },
+
+  rebuildSelect(){
+    const sel=document.getElementById('zikirSelect');
+    sel.innerHTML=ZikirStore.getAll().map(z=>`<option value="${z.id}">${z.isCustom?'⭐ ':''}${z.name}</option>`).join('');
+    sel.value=this.currentId;
+  },
+
+  updateDisplay(){
+    document.getElementById('countNum').textContent=this.count;
+    document.getElementById('countTarget').textContent='/ '+this.target;
+    document.getElementById('totalCount').textContent=this.total;
+    const rem=Math.max(0,this.target-this.count);
+    document.getElementById('remainingText').textContent=rem===0?'✅ Hedef tamamlandı!':rem+' zikir kaldı';
+    const pct=Math.min(this.count/this.target,1),circ=2*Math.PI*100;
+    const rf=document.getElementById('ringFill');
+    rf.style.strokeDashoffset=circ-pct*circ;
+    rf.style.stroke=pct>=1?'#e8c96a':'var(--accent-bright)';
+  }
+};
+
+// ═══════════════════════════════════════════════════════════════════════════
+// Rehber
+// ═══════════════════════════════════════════════════════════════════════════
+const Rehber = {
+  currentSegment:'hepsi',
+  currentFilter:'',
+
+  setSegment(seg,btn){
+    this.currentSegment=seg;
+    document.querySelectorAll('.seg-btn').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    this.render(this.currentFilter);
+  },
+
+  render(filter){
+    this.currentFilter=filter||'';
+    const fl=this.currentFilter.toLowerCase();
+    const list=document.getElementById('rehberList');
+    if(this.currentSegment==='esma'){this._renderEsma(fl);return;}
+    let items=[];
+    if(this.currentSegment!=='ozel')
+      items.push(...DEFAULT_ZIKIRLER.filter(z=>!fl||z.name.toLowerCase().includes(fl)||(z.okunuş||'').toLowerCase().includes(fl)||(z.anlam||'').toLowerCase().includes(fl)).map(z=>({...z,isCustom:false})));
+    if(this.currentSegment!=='varsayilan')
+      items.push(...ZikirStore.customZikirler.filter(z=>!fl||z.name.toLowerCase().includes(fl)||(z.okunuş||'').toLowerCase().includes(fl)||(z.anlam||'').toLowerCase().includes(fl)).map(z=>({...z,isCustom:true})));
+    if(!items.length){
+      list.innerHTML=`<div class="empty-state"><div class="empty-icon">${this.currentSegment==='ozel'?'📝':'🔍'}</div>${this.currentSegment==='ozel'?'Henüz özel zikir eklenmedi.<br>Sağ üstteki <b>＋</b> butonuyla ekleyebilirsiniz.':'Sonuç bulunamadı.'}</div>`;
+      return;
+    }
+    list.innerHTML=items.map(z=>`
+      <div class="rehber-card${z.isCustom?' custom-card':''}">
+        <div class="rehber-card-header">
+          <div class="rehber-card-title${z.isCustom?' custom-title':''}">${z.isCustom?'⭐ ':''}${z.name}</div>
+          <div class="card-actions">
+            <button class="use-btn" onclick="Counter.selectById('${z.id}');showTab('main')">Kullan</button>
+            ${z.isCustom?`<button class="icon-btn edit" onclick="ZikirModal.open('${z.id}')">✏️</button><button class="icon-btn del" onclick="ZikirModal.delete('${z.id}')">🗑</button>`:''}
+          </div>
+        </div>
+        ${z.arabic?`<div class="rehber-arabic">${z.arabic}</div>`:''}
+        ${z.okunuş?`<div class="rehber-okunuş">📖 ${z.okunuş}</div>`:''}
+        ${z.anlam?`<div class="rehber-anlam">💬 ${z.anlam}</div>`:''}
+        ${z.hadis?`<div class="rehber-extra" id="ex-${z.id}"><div class="rehber-hadis">📜 ${z.hadis}</div></div><button class="expand-btn" onclick="this.previousElementSibling.classList.toggle('open');this.textContent=this.previousElementSibling.classList.contains('open')?'▲ Gizle':'▼ Fazilet & Hadis'">▼ Fazilet & Hadis</button>`:''}
+      </div>
+    `).join('');
+  },
+
+  _renderEsma(fl){
+    const list=document.getElementById('rehberList');
+    const filtered=fl?ESMA_DATA.filter(e=>e.tr.toLowerCase().includes(fl)||e.anlam.toLowerCase().includes(fl)):ESMA_DATA;
+    if(!filtered.length){list.innerHTML=`<div class="empty-state"><div class="empty-icon">🔍</div>Sonuç bulunamadı.</div>`;return;}
+    list.innerHTML=`<div class="rehber-card" style="border-color:var(--gold);">
+      <div style="position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--gold);border-radius:3px 0 0 3px;"></div>
+      <div style="font-size:12px;font-weight:800;color:var(--gold-light);margin-bottom:12px;text-transform:uppercase;letter-spacing:1px;">Allah'ın 99 Güzel İsmi — Esmaü'l-Hüsna</div>
+      ${filtered.map((e,i)=>`<div style="border-bottom:1px solid var(--border);padding:9px 0;display:flex;align-items:center;gap:12px;"><div style="font-size:11px;font-weight:800;color:var(--text-dim);min-width:24px;text-align:right;">${fl?'':(ESMA_DATA.indexOf(e)+1)+'.'}</div><div style="flex:1;"><div style="font-family:'Amiri',serif;font-size:18px;color:var(--gold-light);direction:rtl;text-align:right;line-height:1.8;">${e.arabic}</div><div style="font-size:12px;font-weight:800;color:var(--accent-bright);">${e.tr}</div><div style="font-size:11px;color:var(--text-dim);">${e.anlam}</div></div></div>`).join('')}
+      <div style="font-size:11px;color:var(--text-dim);margin-top:10px;font-style:italic;padding-top:8px;border-top:1px solid var(--border);">"Allah Teâlâ'nın doksan dokuz ismi vardır. Kim bunları bellerse cennete girer." (Buhârî, Deavât, 68)</div>
+    </div>`;
+  }
+};
+
+// ═══════════════════════════════════════════════════════════════════════════
+// ZikirModal — ekle / düzenle / sil
+// ═══════════════════════════════════════════════════════════════════════════
+const ZikirModal = {
+  editingId: null,
+
+  open(id){
+    this.editingId=id||null;
+    document.getElementById('modalTitle').textContent=id?'✏️ Zikiri Düzenle':'➕ Yeni Zikir Ekle';
+    document.getElementById('saveBtn').textContent=id?'Güncelle':'Kaydet';
+    if(id){
+      const z=ZikirStore.customZikirler.find(z=>z.id===id);
+      if(z){
+        document.getElementById('fName').value=z.name||'';
+        document.getElementById('fArabic').value=z.arabic||'';
+        document.getElementById('fOkunus').value=z.okunuş||'';
+        document.getElementById('fAnlam').value=z.anlam||'';
+        document.getElementById('fHadis').value=z.hadis||'';
+        document.getElementById('fTarget').value=z.defaultTarget||33;
+      }
+    }else{
+      ['fName','fArabic','fOkunus','fAnlam','fHadis'].forEach(fid=>document.getElementById(fid).value='');
+      document.getElementById('fTarget').value=33;
+    }
+    document.getElementById('modalOverlay').classList.add('open');
+    setTimeout(()=>document.getElementById('fName').focus(),300);
+  },
+
+  close(){ document.getElementById('modalOverlay').classList.remove('open'); this.editingId=null; },
+  closeOutside(e){ if(e.target===document.getElementById('modalOverlay'))this.close(); },
+
+  save(){
+    const name=document.getElementById('fName').value.trim();
+    if(!name){notify('⚠️ Zikir adı gerekli!');return;}
+    const z={
+      id:this.editingId||('c'+Date.now()),
+      name,
+      arabic:document.getElementById('fArabic').value.trim(),
+      okunuş:document.getElementById('fOkunus').value.trim(),
+      anlam:document.getElementById('fAnlam').value.trim(),
+      hadis:document.getElementById('fHadis').value.trim(),
+      defaultTarget:parseInt(document.getElementById('fTarget').value)||33,
+      isCustom:true
+    };
+    if(this.editingId){
+      const idx=ZikirStore.customZikirler.findIndex(x=>x.id===this.editingId);
+      if(idx>=0) ZikirStore.customZikirler[idx]=z;
+    }else{
+      ZikirStore.customZikirler.push(z);
+    }
+    ZikirStore.save();
+    Counter.rebuildSelect();
+    this.close();
+    notify(this.editingId?'✅ Güncellendi!':'✅ Zikir eklendi!');
+    Rehber.render(Rehber.currentFilter);
+  },
+
+  delete(id){
+    if(!confirm('Bu zikiri silmek istediğinize emin misiniz?')) return;
+    ZikirStore.customZikirler=ZikirStore.customZikirler.filter(z=>z.id!==id);
+    if(Counter.currentId===id){ Counter.currentId='z0'; Counter.selectById('z0'); }
+    ZikirStore.save(); Counter.rebuildSelect();
+    notify('🗑 Zikir silindi');
+    Rehber.render(Rehber.currentFilter);
+  }
+};
+
+// ═══════════════════════════════════════════════════════════════════════════
+// UI helpers
+// ═══════════════════════════════════════════════════════════════════════════
+function showTab(tab){
+  ['main','rehber','settings'].forEach(t=>{
+    document.getElementById(t+'-view').classList.toggle('hidden',false);
+    document.getElementById(t+'-view').classList.remove('visible');
+    document.getElementById(t+'-view').style.display='none';
+    const tabEl=document.getElementById('tab-'+t);
+    if(tabEl) tabEl.classList.remove('active');
+  });
+  document.getElementById(tab+'-view').style.display='block';
+  if(tab!=='main') document.getElementById(tab+'-view').classList.add('visible');
+  document.getElementById('main-view').style.display = tab==='main'?'block':'none';
+  const tabEl=document.getElementById('tab-'+tab); if(tabEl) tabEl.classList.add('active');
+  if(tab==='rehber') Rehber.render(Rehber.currentFilter);
+}
+
+let _notifTimer=null;
+function notify(msg){
+  const el=document.getElementById('notif');
+  el.textContent=msg; el.classList.add('show');
+  clearTimeout(_notifTimer);
+  _notifTimer=setTimeout(()=>el.classList.remove('show'),2600);
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// PWA
+// ═══════════════════════════════════════════════════════════════════════════
+let _pwaPrompt=null;
+window.addEventListener('beforeinstallprompt', e=>{
+  e.preventDefault(); _pwaPrompt=e;
+  document.getElementById('installBanner').classList.add('visible');
+});
+window.addEventListener('appinstalled',()=>{
+  document.getElementById('installBanner').classList.remove('visible');
+  notify('📱 Ana ekrana eklendi!');
+});
+function installPWA(){
+  if(_pwaPrompt){ _pwaPrompt.prompt(); _pwaPrompt.userChoice.then(()=>{ _pwaPrompt=null; document.getElementById('installBanner').classList.remove('visible'); }); }
+  else{ notify('ℹ️ Tarayıcı menüsünden "Ana ekrana ekle" seçeneğini kullanın'); }
+}
+function dismissInstall(){ document.getElementById('installBanner').classList.remove('visible'); }
+
+// Service Worker (PWA offline support)
+if('serviceWorker' in navigator){
+  const sw=`
+const CACHE='zmk-v1';
+const FILES=['${location.href}'];
+self.addEventListener('install',e=>e.waitUntil(caches.open(CACHE).then(c=>c.addAll(FILES))));
+self.addEventListener('fetch',e=>e.respondWith(caches.match(e.request).then(r=>r||fetch(e.request).catch(()=>caches.match('${location.href}')))));
+`;
+  const blob=new Blob([sw],{type:'application/javascript'});
+  const swUrl=URL.createObjectURL(blob);
+  navigator.serviceWorker.register(swUrl).catch(()=>{});
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// Keyboard
+// ═══════════════════════════════════════════════════════════════════════════
+document.addEventListener('keydown',e=>{
+  if(document.getElementById('modalOverlay').classList.contains('open')) return;
+  if(['INPUT','TEXTAREA','SELECT'].includes(e.target.tagName)) return;
+  if(e.code==='Space'||e.code==='Enter'){e.preventDefault();Counter.tap();}
+  if(e.code==='Backspace') Counter.undo();
+  if(e.code==='KeyR') Counter.reset();
+});
+
+// ═══════════════════════════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════════════════════════
+(function init(){
+  ZikirStore.load();
+  Counter.total = StorageMgr.loadTotal();
+
+  // Ayarları yükle
+  const s = StorageMgr.loadSettings();
+  if(s.sound===false){ SoundMgr.enabled=false; document.getElementById('soundBtn').textContent='🔕'; document.getElementById('soundToggle').classList.remove('on'); }
+  if(s.haptic===false){ HapticMgr.enabled=false; document.getElementById('hapticToggle').classList.remove('on'); }
+  if(s.hapticMilestone===false){ HapticMgr.milestoneEnabled=false; document.getElementById('milestoneToggle').classList.remove('on'); }
+
+  ThemeMgr.load();
+  Counter.rebuildSelect();
+  Counter.selectById('z0');
+  Counter.updateDisplay();
+
+  // Tab init
+  ['rehber-view','settings-view'].forEach(id=>document.getElementById(id).style.display='none');
+  document.getElementById('main-view').style.display='block';
+})();
+</script>
+</body>
+</html>

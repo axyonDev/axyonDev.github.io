@@ -1,0 +1,13 @@
+AXYON.DEV Marvel v3.2 yayın paketi
+
+Değişen canlı klasör:
+- /marvel/  → Marvel İzleme Ağacı v3.2
+
+v3.2 düzeltmesi:
+- Telefon tarayıcısı 800–980 CSS px bildirse bile mobil arayüz zorlanır.
+- Sağ boş alan kaldırıldı.
+- Üst görünüm sekmeleri 2×2 mobil düzene geçer.
+- Zaman çizgisi kartları ekranın tam genişliğini kullanır.
+- CSS/JS bağlantılarında v3.2 cache-busting vardır.
+
+Mevcut gizli AXYON site haritası ve sitemap.xml korunmuştur.

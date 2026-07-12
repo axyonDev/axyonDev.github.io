@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="tr" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kur'an Duaları</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Scheherazade+New:wght@400;700&family=Lora:ital,wght@0,400;0,600;1,400;1,600&family=Raleway:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+/* ── THEMES ─────────────────────────────────────────── */
+[data-theme="gold-night"]{--bg:#0f0d0a;--bg2:#1c1812;--bg3:#252018;--accent:#c9a84c;--accent-light:#e8c97a;--accent-dim:#7a6230;--text:#f0e6cc;--text-muted:#b8a98a;--text-dim:#6e6048;--border:rgba(201,168,76,0.18);--border-hi:rgba(201,168,76,0.38);--glow-a:rgba(201,168,76,0.07);--glow-b:rgba(201,168,76,0.04);--dot-bg:#6e6048;--dot-act:#c9a84c;--list-hover:rgba(201,168,76,0.05)}
+[data-theme="midnight-blue"]{--bg:#08101a;--bg2:#0e1a28;--bg3:#132234;--accent:#5ba3d4;--accent-light:#8dc5e8;--accent-dim:#2f6a96;--text:#ddeeff;--text-muted:#8aaac4;--text-dim:#3d5c74;--border:rgba(91,163,212,0.15);--border-hi:rgba(91,163,212,0.35);--glow-a:rgba(91,163,212,0.07);--glow-b:rgba(30,80,140,0.06);--dot-bg:#3d5c74;--dot-act:#5ba3d4;--list-hover:rgba(91,163,212,0.05)}
+[data-theme="emerald"]{--bg:#080f0a;--bg2:#0d1a10;--bg3:#122016;--accent:#4dab6e;--accent-light:#7ecb98;--accent-dim:#256640;--text:#d8f0e0;--text-muted:#7aaa8e;--text-dim:#355c44;--border:rgba(77,171,110,0.15);--border-hi:rgba(77,171,110,0.35);--glow-a:rgba(77,171,110,0.07);--glow-b:rgba(20,80,40,0.06);--dot-bg:#355c44;--dot-act:#4dab6e;--list-hover:rgba(77,171,110,0.05)}
+[data-theme="paper"]{--bg:#f5f0e8;--bg2:#fdfaf4;--bg3:#ede8dc;--accent:#8b5e2a;--accent-light:#a97840;--accent-dim:#c4a070;--text:#2a1f10;--text-muted:#6e5030;--text-dim:#a08060;--border:rgba(139,94,42,0.16);--border-hi:rgba(139,94,42,0.34);--glow-a:rgba(139,94,42,0.05);--glow-b:rgba(200,160,100,0.04);--dot-bg:#c4a070;--dot-act:#8b5e2a;--list-hover:rgba(139,94,42,0.05)}
+[data-theme="pearl"]{--bg:#f0f4f8;--bg2:#ffffff;--bg3:#e4eaf0;--accent:#3a6fa8;--accent-light:#5590cc;--accent-dim:#90b4d8;--text:#101c2c;--text-muted:#3a5070;--text-dim:#809ab4;--border:rgba(58,111,168,0.14);--border-hi:rgba(58,111,168,0.32);--glow-a:rgba(58,111,168,0.05);--glow-b:rgba(100,150,200,0.04);--dot-bg:#90b4d8;--dot-act:#3a6fa8;--list-hover:rgba(58,111,168,0.05)}
+[data-theme="rose"]{--bg:#f9f0ee;--bg2:#fffbfa;--bg3:#f0e4e0;--accent:#9b4050;--accent-light:#c0606e;--accent-dim:#d4949a;--text:#2a1018;--text-muted:#7a3040;--text-dim:#c09098;--border:rgba(155,64,80,0.15);--border-hi:rgba(155,64,80,0.32);--glow-a:rgba(155,64,80,0.05);--glow-b:rgba(200,120,130,0.04);--dot-bg:#d4949a;--dot-act:#9b4050;--list-hover:rgba(155,64,80,0.05)}
+
+/* ── BASE ────────────────────────────────────────────── */
+body{background:var(--bg);color:var(--text);font-family:'Lora',serif;min-height:100vh;display:flex;flex-direction:column;align-items:center;overflow-x:hidden;transition:background .4s,color .4s}
+body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 60% 40% at 50% 0%,var(--glow-a) 0%,transparent 70%),radial-gradient(ellipse 40% 60% at 80% 100%,var(--glow-b) 0%,transparent 60%);pointer-events:none;z-index:0;transition:background .4s}
+.wrapper{position:relative;z-index:1;width:100%;max-width:780px;padding:2rem 1.5rem 4rem;display:flex;flex-direction:column;align-items:center}
+
+/* ── THEME BAR ───────────────────────────────────────── */
+.theme-bar{display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:1.2rem;flex-wrap:wrap}
+.theme-group-label{font-size:.6rem;font-weight:500;letter-spacing:.2em;text-transform:uppercase;color:var(--text-dim);padding:0 4px}
+.theme-swatch{width:26px;height:26px;border-radius:50%;border:2px solid transparent;cursor:pointer;transition:transform .18s,border-color .18s;position:relative;outline:none}
+.theme-swatch:hover{transform:scale(1.15)}
+.theme-swatch.active{border-color:var(--text);transform:scale(1.18)}
+.theme-swatch::after{content:attr(data-label);position:absolute;bottom:-20px;left:50%;transform:translateX(-50%);font-size:.55rem;white-space:nowrap;color:var(--text-dim);opacity:0;transition:opacity .15s;pointer-events:none}
+.theme-swatch:hover::after{opacity:1}
+.theme-divider{width:1px;height:20px;background:var(--border-hi);margin:0 4px}
+
+/* ── HEADER ──────────────────────────────────────────── */
+.header{text-align:center;padding:1.5rem 0 2rem;width:100%}
+.header-ornament{font-size:1.2rem;color:var(--accent);letter-spacing:.4em;opacity:.65;margin-bottom:.7rem;display:block}
+.header h1{font-family:'Lora',serif;font-size:1.6rem;font-weight:600;color:var(--accent-light);letter-spacing:.12em;text-transform:uppercase;transition:color .4s}
+.header-line{width:100px;height:1px;background:linear-gradient(90deg,transparent,var(--accent),transparent);margin:.9rem auto 0;transition:background .4s}
+
+/* ── CARD ────────────────────────────────────────────── */
+.card{width:100%;background:var(--bg2);border:1px solid var(--border);border-radius:4px;overflow:hidden;transition:opacity .28s ease,background .4s,border-color .4s}
+.card.fade{opacity:0}
+
+.source-bar{display:flex;align-items:center;justify-content:space-between;padding:.9rem 1.8rem;border-bottom:1px solid var(--border);background:var(--bg3);transition:background .4s,border-color .4s}
+.source-ref{font-size:.72rem;font-weight:500;letter-spacing:.16em;text-transform:uppercase;color:var(--accent);transition:color .4s}
+.counter{font-size:.68rem;font-weight:300;letter-spacing:.1em;color:var(--text-dim)}
+
+
+/* ── ARABIC ──────────────────────────────────────────── */
+.arabic-section{padding:2.4rem 2rem 2rem;text-align:right;border-bottom:1px solid var(--border);position:relative;transition:border-color .4s}
+.arabic-section::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent 25%,var(--accent-dim),transparent 75%);opacity:.35}
+.arabic-text{font-family:'Scheherazade New',serif;font-size:clamp(2rem,5vw,2.9rem);line-height:2.05;color:var(--text);font-weight:400;direction:rtl;transition:color .4s}
+
+/* ── TRANSLIT / MEANING ──────────────────────────────── */
+.section-label{font-size:.6rem;font-weight:500;letter-spacing:.25em;text-transform:uppercase;color:var(--accent-dim);margin-bottom:.55rem;display:block;transition:color .4s}
+.translit-section{padding:1.1rem 2rem;border-bottom:1px solid var(--border);transition:border-color .4s}
+.translit-text{font-family:'Lora',serif;font-style:italic;font-size:1.5rem;line-height:1.95;color:var(--text-muted);transition:color .4s}
+.meaning-section{padding:1.3rem 2rem 1.8rem}
+.meaning-text{font-family:'Lora',serif;font-size:1.55rem;font-weight:400;line-height:1.9;color:var(--text);transition:color .4s}
+
+/* ── NAV ─────────────────────────────────────────────── */
+.nav{display:flex;align-items:center;justify-content:space-between;width:100%;margin-top:2rem;gap:1rem}
+.nav-btn{display:flex;align-items:center;gap:.4rem;background:none;border:1px solid var(--border);color:var(--accent);font-family:'Raleway',sans-serif;font-size:.74rem;font-weight:500;letter-spacing:.12em;text-transform:uppercase;padding:.68rem 1.3rem;cursor:pointer;transition:all .2s;border-radius:2px;min-width:100px}
+.nav-btn:hover{background:var(--list-hover);border-color:var(--border-hi)}
+.nav-btn:disabled{color:var(--text-dim);border-color:var(--border);opacity:.4;cursor:default}
+.nav-btn:disabled:hover{background:none}
+.nav-btn.next{justify-content:flex-end}
+
+.progress{display:flex;align-items:center;gap:5px;flex-wrap:wrap;justify-content:center;max-width:260px}
+.dot{width:5px;height:5px;border-radius:50%;background:var(--dot-bg);opacity:.4;transition:all .3s;cursor:pointer}
+.dot.active{background:var(--dot-act);opacity:1;transform:scale(1.5)}
+.dot:hover{opacity:.7}
+
+/* ── LIST ────────────────────────────────────────────── */
+.list-toggle{margin-top:2rem;background:none;border:none;color:var(--text-dim);font-family:'Raleway',sans-serif;font-size:.68rem;letter-spacing:.15em;text-transform:uppercase;cursor:pointer;text-decoration:underline;text-underline-offset:4px;transition:color .2s}
+.list-toggle:hover{color:var(--accent)}
+.all-list{width:100%;margin-top:.8rem;display:none;flex-direction:column;border:1px solid var(--border);border-radius:4px;overflow:hidden;transition:border-color .4s}
+.all-list.open{display:flex}
+.list-item{padding:.72rem 1.4rem;font-size:.8rem;font-weight:300;color:var(--text-muted);border-bottom:1px solid var(--border);cursor:pointer;display:flex;justify-content:space-between;align-items:center;transition:background .15s,color .15s;gap:1rem}
+.list-item:last-child{border-bottom:none}
+.list-item:hover{background:var(--list-hover);color:var(--text)}
+.list-item.active-item{color:var(--accent);background:var(--list-hover)}
+.list-item-ref{font-size:.63rem;color:var(--text-dim);letter-spacing:.06em;white-space:nowrap;flex-shrink:0}
+
+
+/* ── BIG CARD (Besmele / Sadaka) ─────────────────────────── */
+.card.big-card .arabic-text{font-size:clamp(2.8rem,8vw,4.4rem);line-height:2.0}
+.card.big-card .translit-text{font-size:clamp(1.5rem,3.5vw,2.1rem);line-height:1.85}
+.card.big-card .meaning-text{font-size:clamp(1.4rem,3.2vw,2rem);line-height:1.85}
+.card.big-card .arabic-section{padding:3rem 2rem 2.5rem}
+.card.big-card .translit-section,.card.big-card .meaning-section{padding:1.6rem 2rem 2rem}
+
+.hint{margin-top:2.2rem;font-size:.63rem;font-weight:300;letter-spacing:.1em;color:var(--text-dim);opacity:.45;text-align:center}
+
+@media(max-width:600px){
+  .arabic-text{font-size:1.85rem}
+  .arabic-section,.translit-section,.meaning-section{padding:1.4rem 1.2rem}
+  .source-bar{padding:.75rem 1.2rem}
+  .nav-btn{min-width:80px;padding:.55rem .9rem;font-size:.66rem}
+}
+</style>
+</head>
+<body data-theme="gold-night">
+<div class="wrapper">
+
+  <!-- Theme swatches -->
+  <div class="theme-bar">
+    <span class="theme-group-label">Dark</span>
+    <button class="theme-swatch active" data-theme="gold-night" data-label="Altın Gece" style="background:linear-gradient(135deg,#0f0d0a 50%,#c9a84c 50%)" title="Altın Gece" aria-label="Altin Gece"></button>
+    <button class="theme-swatch" data-theme="midnight-blue" data-label="Gece Mavisi" style="background:linear-gradient(135deg,#08101a 50%,#5ba3d4 50%)" title="Gece Mavisi" aria-label="Gece Mavisi"></button>
+    <button class="theme-swatch" data-theme="emerald" data-label="Zümrüt" style="background:linear-gradient(135deg,#080f0a 50%,#4dab6e 50%)" title="Zümrüt" aria-label="Zumrut"></button>
+    <div class="theme-divider"></div>
+    <span class="theme-group-label">Light</span>
+    <button class="theme-swatch" data-theme="paper" data-label="Kâğıt" style="background:linear-gradient(135deg,#f5f0e8 50%,#8b5e2a 50%)" title="Kâğıt" aria-label="Kagit"></button>
+    <button class="theme-swatch" data-theme="pearl" data-label="Sedef" style="background:linear-gradient(135deg,#f0f4f8 50%,#3a6fa8 50%)" title="Sedef" aria-label="Sedef"></button>
+    <button class="theme-swatch" data-theme="rose" data-label="Gülkurusu" style="background:linear-gradient(135deg,#f9f0ee 50%,#9b4050 50%)" title="Gülkurusu" aria-label="Gulkurusu"></button>
+  </div>
+
+  <!-- Header -->
+  <header class="header">
+    <span class="header-ornament">&#10022; &#10022; &#10022;</span>
+    <h1>Kur'an'dan Dualar</h1>
+    <div class="header-line"></div>
+  </header>
+
+  <!-- Card -->
+  <div class="card" id="card">
+    <div class="source-bar">
+      <span class="source-ref" id="source"></span>
+      <span class="counter" id="counter"></span>
+    </div>
+      </div>
+    </div>
+
+    <div class="arabic-section">
+      <p class="arabic-text" id="arabic"></p>
+    </div>
+    <div class="translit-section">
+      <span class="section-label">Okunuş</span>
+      <p class="translit-text" id="translit"></p>
+    </div>
+    <div class="meaning-section">
+      <span class="section-label">Meâl</span>
+      <p class="meaning-text" id="meaning"></p>
+    </div>
+  </div>
+
+  <!-- Nav -->
+  <nav class="nav">
+    <button class="nav-btn prev" id="prevBtn" onclick="go(-1)">&#8592; Onceki</button>
+    <div class="progress" id="progress"></div>
+    <button class="nav-btn next" id="nextBtn" onclick="go(1)">Sonraki &#8594;</button>
+  </nav>
+
+  <button class="list-toggle" id="listToggle" onclick="toggleList()">Tüm duaları göster</button>
+  <div class="all-list" id="allList"></div>
+  <p class="hint">&#8592; &#8594; klavye veya kaydırma ile geçiş yapabilirsiniz</p>
+</div>
+
+<script>
+const prayers = [
+  {source:"Besmele",ayahs:[],big:true,
+   arabic:"بِسْمِ اللَّهِ الرَّحْمَّنِ الرَّحِيمِ",
+   translit:"Bismillâhirrahmânirrahîm.",
+   meaning:"Rahman ve Rahim olan Allah'ın adıyla."},
+
+  {source:"Fâtiha, 5-7",ayahs:[{s:1,a:5},{s:1,a:6},{s:1,a:7}],
+   arabic:"\u0625\u0650\u064a\u064e\u0651\u0627\u0643\u064e \u0646\u064e\u0639\u0652\u0628\u064f\u062f\u064f \u0648\u064e\u0625\u0650\u064a\u064e\u0651\u0627\u0643\u064e \u0646\u064e\u0633\u0652\u062a\u064e\u0639\u0650\u064a\u0646\u064f \u06dd \u0627\u0650\u0647\u0652\u062f\u0650\u0646\u064e\u0627 \u0627\u0644\u0635\u0651\u0650\u0631\u064e\u0627\u0637\u064e \u0627\u0644\u0652\u0645\u064f\u0633\u0652\u062a\u064e\u0642\u0650\u064a\u0645\u064e \u06dd \u0635\u0650\u0631\u064e\u0627\u0637\u064e \u0627\u0644\u064e\u0651\u0630\u0650\u064a\u0646\u064e \u0623\u064e\u0646\u0652\u0639\u064e\u0645\u0652\u062a\u064e \u0639\u064e\u0644\u064e\u064a\u0652\u0647\u0650\u0645\u0652 \u063a\u064e\u064a\u0652\u0631\u0650 \u0627\u0644\u0652\u0645\u064e\u063a\u0652\u0636\u064f\u0648\u0628\u0650 \u0639\u064e\u0644\u064e\u064a\u0652\u0647\u0650\u0645\u0652 \u0648\u064e\u0644\u064e\u0627 \u0627\u0644\u0636\u064e\u0651\u0627\u0644\u0651\u0650\u064a\u0646\u064e",
+   meaning:"Yalnız Sana kulluk eder, yalnız Senden yardım dileriz. Bizi dosdoğru yola ilet. Kendilerine nimet verdiklerinin yoluna; gazaba uğrayanların ve sapmışların yoluna değil.",
+   translit:"İyyâke na'budu ve iyyâke nesta'în. İhdine's-sırâta'l-mustakîm. Sırâta'l-lezîne en'amte aleyhim, ğayri'l-mağdûbi aleyhim ve le'd-dâllîn."},
+
+  {source:"Âl-i İmrân, 8",ayahs:[{s:3,a:8}],
+   arabic:"\u0631\u064e\u0628\u064e\u0651\u0646\u064e\u0627 \u0644\u064e\u0627 \u062a\u064f\u0632\u0650\u063a\u0652 \u0642\u064f\u0644\u064f\u0648\u0628\u064e\u0646\u064e\u0627 \u0628\u064e\u0639\u0652\u062f\u064e \u0625\u0650\u0630\u0652 \u0647\u064e\u062f\u064e\u064a\u0652\u062a\u064e\u0646\u064e\u0627 \u0648\u064e\u0647\u064e\u0628\u0652 \u0644\u064e\u0646\u064e\u0627 \u0645\u0650\u0646\u0652 \u0644\u064e\u062f\u064f\u0646\u0652\u0643\u064e \u0631\u064e\u062d\u0652\u0645\u064e\u0629\u064b \u06da \u0625\u0650\u0646\u064e\u0651\u0643\u064e \u0623\u064e\u0646\u0652\u062a\u064e \u0627\u0644\u0652\u0648\u064e\u0647\u064e\u0651\u0627\u0628\u064f",
+   meaning:"Rabbimiz! Bizi doğru yola eriştirdikten sonra kalplerimizi saptırma. Katından bize rahmet bağışla. Şüphesiz Sen lütfu bol olansın.",
+   translit:"Rabbenâ lâ tuziğ kulûbenâ ba'de iz hedeytenâ ve heb lenâ min ledunke rahmeh. İnneke ente'l-vehhâb."},
+
+  {source:"A'râf, 23",ayahs:[{s:7,a:23}],
+   arabic:"\u0631\u064e\u0628\u064e\u0651\u0646\u064e\u0627 \u0638\u064e\u0644\u064e\u0645\u0652\u0646\u064e\u0627 \u0623\u064e\u0646\u0652\u0641\u064f\u0633\u064e\u0646\u064e\u0627 \u0648\u064e\u0625\u0650\u0646\u0652 \u0644\u064e\u0645\u0652 \u062a\u064e\u063a\u0652\u0641\u0650\u0631\u0652 \u0644\u064e\u0646\u064e\u0627 \u0648\u064e\u062a\u064e\u0631\u0652\u062d\u064e\u0645\u0652\u0646\u064e\u0627 \u0644\u064e\u0646\u064e\u0643\u064f\u0648\u0646\u064e\u0646\u064e\u0651 \u0645\u0650\u0646\u064e \u0627\u0644\u0652\u062e\u064e\u0627\u0633\u0650\u0631\u0650\u064a\u0646\u064e",
+   meaning:"Rabbimiz! Biz kendimize zulmettik. Eğer bizi bağışlamaz ve bize merhamet etmezsen mutlaka ziyana uğrayanlardan oluruz.",
+   translit:"Rabbenâ zalemnâ enfüsenâ ve in lem tağfir lenâ ve terhamnâ le nekûnenne mine'l-hâsirîn."},
+
+  {source:"Bakara, 201",ayahs:[{s:2,a:201}],
+   arabic:"\u0631\u064e\u0628\u064e\u0651\u0646\u064e\u0627 \u0622\u062a\u0650\u0646\u064e\u0627 \u0641\u0650\u064a \u0627\u0644\u062f\u064f\u0651\u0646\u0652\u064a\u064e\u0627 \u062d\u064e\u0633\u064e\u0646\u064e\u0629\u064b \u0648\u064e\u0641\u0650\u064a \u0627\u0644\u0652\u0622\u062e\u0650\u0631\u064e\u0629\u0650 \u062d\u064e\u0633\u064e\u0646\u064e\u0629\u064b \u0648\u064e\u0642\u0650\u0646\u064e\u0627 \u0639\u064e\u0630\u064e\u0627\u0628\u064e \u0627\u0644\u0646\u064e\u0651\u0627\u0631\u0650",
+   meaning:"Rabbimiz! Bize dünyada da iyilik ver, ahirette de iyilik ver ve bizi ateş azabından koru.",
+   translit:"Rabbenâ âtinâ fi'd-dünyâ haseneten ve fi'l-âhireti haseneten ve kınâ azâbe'n-nâr."},
+
+  {source:"Furkân, 74",ayahs:[{s:25,a:74}],
+   arabic:"\u0631\u064e\u0628\u064e\u0651\u0646\u064e\u0627 \u0647\u064e\u0628\u0652 \u0644\u064e\u0646\u064e\u0627 \u0645\u0650\u0646\u0652 \u0623\u064e\u0632\u0652\u0648\u064e\u0627\u062c\u0650\u0646\u064e\u0627 \u0648\u064e\u0630\u064f\u0631\u0651\u0650\u064a\u064e\u0651\u0627\u062a\u0650\u0646\u064e\u0627 \u0642\u064f\u0631\u064e\u0651\u0629\u064e \u0623\u064e\u0639\u0652\u064a\u064f\u0646\u0652 \u0648\u064e\u0627\u062c\u0652\u0639\u064e\u0644\u0652\u0646\u064e\u0627 \u0644\u0650\u0644\u0652\u0645\u064f\u062a\u064e\u0651\u0642\u0650\u064a\u0646\u064e \u0625\u0650\u0645\u064e\u0627\u0645\u064b\u0627",
+   meaning:"Rabbimiz! Bize eşlerimizden ve neslimizden göz aydınlığı olacak kimseler bağışla. Bizi takva sahiplerine önder eyle.",
+   translit:"Rabbenâ heb lenâ min ezvâcinâ ve zürriyyâtinâ kurrate a'yünin vec'alnâ li'l-müttakîne imâmâ."},
+
+  {source:"Haşr, 10",ayahs:[{s:59,a:10}],
+   arabic:"\u0631\u064e\u0628\u064e\u0651\u0646\u064e\u0627 \u0627\u063a\u0652\u0641\u0650\u0631\u0652 \u0644\u064e\u0646\u064e\u0627 \u0648\u064e\u0644\u0650\u0625\u0650\u062e\u0652\u0648\u064e\u0627\u0646\u0650\u0646\u064e\u0627 \u0627\u0644\u064e\u0651\u0630\u0650\u064a\u0646\u064e \u0633\u064e\u0628\u064e\u0642\u064f\u0648\u0646\u064e\u0627 \u0628\u0650\u0627\u0644\u0652\u0625\u0650\u064a\u0645\u064e\u0627\u0646\u0650 \u0648\u064e\u0644\u064e\u0627 \u062a\u064e\u062c\u0652\u0639\u064e\u0644\u0652 \u0641\u0650\u064a \u0642\u064f\u0644\u064f\u0648\u0628\u0650\u0646\u064e\u0627 \u063a\u0650\u0644\u064b\u0651\u0627 \u0644\u0650\u0644\u064e\u0651\u0630\u0650\u064a\u0646\u064e \u0622\u0645\u064e\u0646\u064f\u0648\u0627 \u06da \u0631\u064e\u0628\u064e\u0651\u0646\u064e\u0627 \u0625\u0650\u0646\u064e\u0651\u0643\u064e \u0631\u064e\u0621\u064f\u0648\u0641\u064c \u0631\u064e\u062d\u0650\u064a\u0645\u064c",
+   meaning:"Rabbimiz! Bizi ve bizden önce iman etmiş kardeşlerimizi bağışla. Kalplerimizde iman edenlere karşı kin bırakma. Rabbimiz! Şüphesiz Sen çok şefkatlisin, çok merhametlisin.",
+   translit:"Rabbenâğfir lenâ ve li-ihvânine'l-lezîne sebekûnâ bi'l-îmân. Ve lâ tec'al fî kulûbinâ ğıllen li'l-lezîne âmenû. Rabbenâ inneke raûfun rahîm."},
+
+  {source:"Enbiyâ, 83",ayahs:[{s:21,a:83}],
+   arabic:"\u0623\u064e\u0646\u0651\u0650\u064a \u0645\u064e\u0633\u064e\u0651\u0646\u0650\u064a\u064e \u0627\u0644\u0636\u064f\u0651\u0631\u064f\u0651 \u0648\u064e\u0623\u064e\u0646\u0652\u062a\u064e \u0623\u064e\u0631\u0652\u062d\u064e\u0645\u064f \u0627\u0644\u0631\u064e\u0651\u0627\u062d\u0650\u0645\u0650\u064a\u0646\u064e",
+   meaning:"Başıma dert geldi; Sen merhametlilerin en merhametlisisin.",
+   translit:"Ennî messeniye'd-durru ve ente erhamu'r-râhimîn."},
+
+  {source:"Tâhâ, 114",ayahs:[{s:20,a:114}],
+   arabic:"\u0631\u064e\u0628\u0651\u0650 \u0632\u0650\u062f\u0652\u0646\u0650\u064a \u0639\u0650\u0644\u0652\u0645\u064b\u0627",
+   meaning:"Rabbim! İlmimi artır.",
+   translit:"Rabbi zidnî ilmâ."},
+
+  {source:"Tâhâ, 25-28",ayahs:[{s:20,a:25},{s:20,a:26},{s:20,a:27},{s:20,a:28}],
+   arabic:"\u0631\u064e\u0628\u0651\u0650 \u0627\u0634\u0652\u0631\u064e\u062d\u0652 \u0644\u0650\u064a \u0635\u064e\u062f\u0652\u0631\u0650\u064a \u06dd \u0648\u064e\u064a\u064e\u0633\u0651\u0650\u0631\u0652 \u0644\u0650\u064a \u0623\u064e\u0645\u0652\u0631\u0650\u064a \u06dd \u0648\u064e\u0627\u062d\u0652\u0644\u064f\u0644\u0652 \u0639\u064f\u0642\u0652\u062f\u064e\u0629\u064b \u0645\u0651\u0650\u0646\u0652 \u0644\u0651\u0650\u0633\u064e\u0627\u0646\u0650\u064a \u06dd \u064a\u064e\u0641\u0652\u0642\u064e\u0647\u064f\u0648\u0627 \u0642\u064e\u0648\u0652\u0644\u0650\u064a",
+   meaning:"Rabbim! Göğsüme ferahlık ver. İşimi kolaylaştır. Dilimdeki düğümü çöz ki sözümü anlasınlar.",
+   translit:"Rabbişrah lî sadrî. Ve yessir lî emrî. Vahlul ukdeten min lisânî. Yefkahû kavlî."},
+
+  {source:"Şuarâ, 83-84",ayahs:[{s:26,a:83},{s:26,a:84}],
+   arabic:"\u0631\u064e\u0628\u0651\u0650 \u0647\u064e\u0628\u0652 \u0644\u0650\u064a \u062d\u064f\u0643\u0652\u0645\u064b\u0627 \u0648\u064e\u0623\u064e\u0644\u0652\u062d\u0650\u0642\u0652\u0646\u0650\u064a \u0628\u0650\u0627\u0644\u0635\u064e\u0651\u0627\u0644\u0650\u062d\u0650\u064a\u0646\u064e \u06dd \u0648\u064e\u0627\u062c\u0652\u0639\u064e\u0644\u0652 \u0644\u0650\u064a \u0644\u0650\u0633\u064e\u0627\u0646\u064e \u0635\u0650\u062f\u0652\u0642\u0652 \u0641\u0650\u064a \u0627\u0644\u0652\u0622\u062e\u0650\u0631\u0650\u064a\u0646\u064e",
+   meaning:"Rabbim! Bana hikmet ver ve beni iyiler arasına kat. Sonra gelecekler içinde beni doğrulukla ve hayırla anılanlardan eyle.",
+   translit:"Rabbi heb lî hukmen ve elhıknî bi's-sâlihîn. Vec'al lî lisâne sıdkın fi'l-âhirîn."},
+
+  {source:"İsrâ, 80",ayahs:[{s:17,a:80}],
+   arabic:"\u0631\u064e\u0628\u0651\u0650 \u0623\u064e\u062f\u0652\u062e\u0650\u0644\u0652\u0646\u0650\u064a \u0645\u064f\u062f\u0652\u062e\u064e\u0644\u064e \u0635\u0650\u062f\u0652\u0642\u0652 \u0648\u064e\u0623\u064e\u062e\u0652\u0631\u0650\u062c\u0652\u0646\u0650\u064a \u0645\u064f\u062e\u0652\u0631\u064e\u062c\u064e \u0635\u0650\u062f\u0652\u0642\u0652 \u0648\u064e\u0627\u062c\u0652\u0639\u064e\u0644\u0652 \u0644\u0650\u064a \u0645\u0650\u0646\u0652 \u0644\u064e\u062f\u064f\u0646\u0652\u0643\u064e \u0633\u064f\u0644\u0652\u0637\u064e\u0627\u0646\u064b\u0627 \u0646\u064e\u0635\u0650\u064a\u0631\u064b\u0627",
+   meaning:"Rabbim! Gireceğim yere doğrulukla girmemi, çıkacağım yerden doğrulukla çıkmamı sağla. Katından bana yardımcı bir güç ver.",
+   translit:"Rabbi edhılnî mudhale sıdkın ve ahricnî muhrace sıdkın vec'al lî min ledunke sultânen nasîrâ."},
+
+  {source:"Kehf, 10",ayahs:[{s:18,a:10}],
+   arabic:"\u0631\u064e\u0628\u064e\u0651\u0646\u064e\u0627 \u0622\u062a\u0650\u0646\u064e\u0627 \u0645\u0650\u0646\u0652 \u0644\u064e\u062f\u064f\u0646\u0643\u064e \u0631\u064e\u062d\u0652\u0645\u064e\u0629\u064b \u0648\u064e\u0647\u064e\u064a\u0651\u0650\u0626\u0652 \u0644\u064e\u0646\u064e\u0627 \u0645\u0650\u0646\u0652 \u0623\u064e\u0645\u0652\u0631\u0650\u0646\u064e\u0627 \u0631\u064e\u0634\u064e\u062f\u064b\u0627",
+   meaning:"Rabbimiz! Bize katından rahmet ver ve işimizde bize doğru bir çıkış yolu hazırla.",
+   translit:"Rabbenâ âtinâ min ledunke rahmeten ve heyyi' lenâ min emrinâ raşedâ."},
+
+  {source:"Kasas, 24",ayahs:[{s:28,a:24}],
+   arabic:"\u0631\u064e\u0628\u0651\u0650 \u0625\u0650\u0646\u0651\u0650\u064a \u0644\u0650\u0645\u064e\u0627 \u0623\u064e\u0646\u0632\u064e\u0644\u0652\u062a\u064e \u0625\u0650\u0644\u064e\u064a\u064e\u0651 \u0645\u0650\u0646\u0652 \u062e\u064e\u064a\u0652\u0631\u0652 \u0641\u064e\u0642\u0650\u064a\u0631\u064c",
+   meaning:"Rabbim! Bana lütfedeceğin her türlü hayra muhtacım.",
+   translit:"Rabbi innî limâ enzelte ileyye min hayrin fakîr."},
+
+  {source:"Mâide, 114",ayahs:[{s:5,a:114}],
+   arabic:"\u0648\u064e\u0627\u0631\u0652\u0632\u064f\u0642\u0652\u0646\u064e\u0627 \u0648\u064e\u0623\u064e\u0646\u0652\u062a\u064e \u062e\u064e\u064a\u0652\u0631\u064f \u0627\u0644\u0631\u064e\u0651\u0627\u0632\u0650\u0642\u0650\u064a\u0646\u064e",
+   meaning:"Bizi rızıklandır. Sen rızık verenlerin en hayırlısısın.",
+   translit:"Verzuknâ ve ente hayru'r-râzikîn."},
+
+  {source:"Bakara, 250",ayahs:[{s:2,a:250}],
+   arabic:"\u0631\u064e\u0628\u064e\u0651\u0646\u064e\u0627 \u0623\u064e\u0641\u0652\u0631\u0650\u063a\u0652 \u0639\u064e\u0644\u064e\u064a\u0652\u0646\u064e\u0627 \u0635\u064e\u0628\u0652\u0631\u064b\u0627 \u0648\u064e\u062b\u064e\u0628\u0651\u0650\u062a\u0652 \u0623\u064e\u0642\u0652\u062f\u064e\u0627\u0645\u064e\u0646\u064e\u0627 \u0648\u064e\u0627\u0646\u0652\u0635\u064f\u0631\u0652\u0646\u064e\u0627 \u0639\u064e\u0644\u064e\u0649 \u0627\u0644\u0652\u0642\u064e\u0648\u0652\u0645\u0650 \u0627\u0644\u0652\u0643\u064e\u0627\u0641\u0650\u0631\u0650\u064a\u0646\u064e",
+   meaning:"Rabbimiz! Üzerimize sabır yağdır, ayaklarımızı sağlam bastır ve inkârcı topluluğa karşı bize yardım et.",
+   translit:"Rabbenâ efriğ aleynâ sabran ve sebbit akdâmenâ vensurnâ ale'l-kavmi'l-kâfirîn."},
+
+  {source:"Bakara, 286",ayahs:[{s:2,a:286}],
+   arabic:"\u0631\u064e\u0628\u064e\u0651\u0646\u064e\u0627 \u0644\u064e\u0627 \u062a\u064f\u0624\u064e\u0627\u062e\u0650\u0630\u0652\u0646\u064e\u0627 \u0625\u0650\u0646\u0652 \u0646\u064e\u0633\u0650\u064a\u0646\u064e\u0627 \u0623\u064e\u0648\u0652 \u0623\u064e\u062e\u0652\u0637\u064e\u0623\u0652\u0646\u064e\u0627 \u06da \u0631\u064e\u0628\u064e\u0651\u0646\u064e\u0627 \u0648\u064e\u0644\u064e\u0627 \u062a\u064e\u062d\u0652\u0645\u0650\u0644\u0652 \u0639\u064e\u0644\u064e\u064a\u0652\u0646\u064e\u0627 \u0625\u0650\u0635\u0652\u0631\u064b\u0627 \u0643\u064e\u0645\u064e\u0627 \u062d\u064e\u0645\u064e\u0644\u0652\u062a\u064e\u0647\u064f \u0639\u064e\u0644\u064e\u0649 \u0627\u0644\u064e\u0651\u0630\u0650\u064a\u0646\u064e \u0645\u0650\u0646\u0652 \u0642\u064e\u0628\u0652\u0644\u0650\u0646\u064e\u0627 \u06da \u0631\u064e\u0628\u064e\u0651\u0646\u064e\u0627 \u0648\u064e\u0644\u064e\u0627 \u062a\u064f\u062d\u064e\u0645\u0651\u0650\u0644\u0652\u0646\u064e\u0627 \u0645\u064e\u0627 \u0644\u064e\u0627 \u0637\u064e\u0627\u0642\u064e\u0629\u064e \u0644\u064e\u0646\u064e\u0627 \u0628\u0650\u0647\u0650 \u06d6 \u0648\u064e\u0627\u0639\u0652\u0641\u064f \u0639\u064e\u0646\u064e\u0651\u0627 \u0648\u064e\u0627\u063a\u0652\u0641\u0650\u0631\u0652 \u0644\u064e\u0646\u064e\u0627 \u0648\u064e\u0627\u0631\u0652\u062d\u064e\u0645\u0652\u0646\u064e\u0627 \u06da \u0623\u064e\u0646\u0652\u062a\u064e \u0645\u064e\u0648\u0652\u0644\u064e\u0627\u0646\u064e\u0627 \u0641\u064e\u0627\u0646\u0652\u0635\u064f\u0631\u0652\u0646\u064e\u0627 \u0639\u064e\u0644\u064e\u0649 \u0627\u0644\u0652\u0642\u064e\u0648\u0652\u0645\u0650 \u0627\u0644\u0652\u0643\u064e\u0627\u0641\u0650\u0631\u0650\u064a\u0646\u064e",
+   meaning:"Rabbimiz! Unutur veya yanılırsak bizi sorumlu tutma. Rabbimiz! Bizden öncekilere yüklediğin gibi bize ağır yük yükleme. Rabbimiz! Gücümüzün yetmediği şeyi bize yükleme. Bizi affet, bizi bağışla, bize merhamet et. Sen bizim Mevlâmızsın; inkârcı topluluğa karşı bize yardım et.",
+   translit:"Rabbenâ lâ tuâhıznâ in nesînâ ev ahta'nâ. Rabbenâ ve lâ tahmil aleynâ ısran kemâ hameltehû ale'l-lezîne min kablinâ. Rabbenâ ve lâ tuhammilnâ mâ lâ tâkate lenâ bih. Va'fu annâ, vağfir lenâ, verhamnâ. Ente mevlânâ fensurnâ ale'l-kavmi'l-kâfirîn."},
+
+  {source:"Mü'minûn, 97-98",ayahs:[{s:23,a:97},{s:23,a:98}],
+   arabic:"\u0631\u064e\u0628\u0651\u0650 \u0623\u064e\u0639\u064f\u0648\u0630\u064f \u0628\u0650\u0643\u064e \u0645\u0650\u0646\u0652 \u0647\u064e\u0645\u064e\u0632\u064e\u0627\u062a\u0650 \u0627\u0644\u0634\u064e\u0651\u064a\u064e\u0627\u0637\u0650\u064a\u0646\u064e \u06dd \u0648\u064e\u0623\u064e\u0639\u064f\u0648\u0630\u064f \u0628\u0650\u0643\u064e \u0631\u064e\u0628\u0651\u0650 \u0623\u064e\u0646\u0652 \u064a\u064e\u062d\u0652\u0636\u064f\u0631\u064f\u0648\u0646\u0650",
+   meaning:"Rabbim! Şeytanların gizli kışkırtmalarından Sana sığınırım. Onların yanımda bulunmalarından da Sana sığınırım Rabbim.",
+   translit:"Rabbi eûzü bike min hemezâti'ş-şeyâtîn. Ve eûzü bike rabbi en yahdurûn."},
+
+  {source:"Hatim",ayahs:[],big:true,
+   arabic:"صَدَقَ اللَّهُ الْعَظِيمُ",
+   translit:"Sadakallâhü'l-azîm.",
+   meaning:"Yüce Allah doğru söyledi."},
+
+  {source:"Tüm Dualar (Besmele - Hatim)",ayahs:[],
+   arabic:"بِسْمِ اللَّهِ الرَّحْمَّنِ الرَّحِيمِ ۩ إِيَّاكَ نَعْبُدُ وَإِيَّاكَ نَسْتَعِينُ ۝ اِهْدِنَا الصِّرَاطَ الْمُسْتَقِيمَ ۝ صِرَاطَ الَّذِينَ أَنْعَمْتَ عَلَيْهِمْ غَيْرِ الْمَغْضُوبِ عَلَيْهِمْ وَلَا الضَّالِّينَ ۩ رَبَّنَا لَا تُزِغْ قُلُوبَنَا بَعْدَ إِذْ هَدَيْتَنَا وَهَبْ لَنَا مِنْ لَدُنْكَ رَحْمَةً ۚ إِنَّكَ أَنْتَ الْوَهَّابُ ۩ رَبَّنَا ظَلَمْنَا أَنْفُسَنَا وَإِنْ لَمْ تَغْفِرْ لَنَا وَتَرْحَمْنَا لَنَكُونَنَّ مِنَ الْخَاسِرِينَ ۩ رَبَّنَا آتِنَا فِي الدُّنْيَا حَسَنَةً وَفِي الْآخِرَةِ حَسَنَةً وَقِنَا عَذَابَ النَّارِ ۩ رَبَّنَا هَبْ لَنَا مِنْ أَزْوَاجِنَا وَذُرِّيَّاتِنَا قُرَّةَ أَعْيُنْ وَاجْعَلْنَا لِلْمُتَّقِينَ إِمَامًا ۩ رَبَّنَا اغْفِرْ لَنَا وَلِإِخْوَانِنَا الَّذِينَ سَبَقُونَا بِالْإِيمَانِ وَلَا تَجْعَلْ فِي قُلُوبِنَا غِلًّا لِلَّذِينَ آمَنُوا ۚ رَبَّنَا إِنَّكَ رَءُوفٌ رَحِيمٌ ۩ أَنِّي مَسَّنِيَ الضُّرُّ وَأَنْتَ أَرْحَمُ الرَّاحِمِينَ ۩ رَبِّ زِدْنِي عِلْمًا ۩ رَبِّ اشْرَحْ لِي صَدْرِي ۝ وَيَسِّرْ لِي أَمْرِي ۝ وَاحْلُلْ عُقْدَةً مِّنْ لِّسَانِي ۝ يَفْقَهُوا قَوْلِي ۩ رَبِّ هَبْ لِي حُكْمًا وَأَلْحِقْنِي بِالصَّالِحِينَ ۝ وَاجْعَلْ لِي لِسَانَ صِدْقْ فِي الْآخِرِينَ ۩ رَبِّ أَدْخِلْنِي مُدْخَلَ صِدْقْ وَأَخْرِجْنِي مُخْرَجَ صِدْقْ وَاجْعَلْ لِي مِنْ لَدُنْكَ سُلْطَانًا نَصِيرًا ۩ رَبَّنَا آتِنَا مِنْ لَدُنكَ رَحْمَةً وَهَيِّئْ لَنَا مِنْ أَمْرِنَا رَشَدًا ۩ رَبِّ إِنِّي لِمَا أَنزَلْتَ إِلَيَّ مِنْ خَيْرْ فَقِيرٌ ۩ وَارْزُقْنَا وَأَنْتَ خَيْرُ الرَّازِقِينَ ۩ رَبَّنَا أَفْرِغْ عَلَيْنَا صَبْرًا وَثَبِّتْ أَقْدَامَنَا وَانْصُرْنَا عَلَى الْقَوْمِ الْكَافِرِينَ ۩ رَبَّنَا لَا تُؤَاخِذْنَا إِنْ نَسِينَا أَوْ أَخْطَأْنَا ۚ رَبَّنَا وَلَا تَحْمِلْ عَلَيْنَا إِصْرًا كَمَا حَمَلْتَهُ عَلَى الَّذِينَ مِنْ قَبْلِنَا ۚ رَبَّنَا وَلَا تُحَمِّلْنَا مَا لَا طَاقَةَ لَنَا بِهِ ۖ وَاعْفُ عَنَّا وَاغْفِرْ لَنَا وَارْحَمْنَا ۚ أَنْتَ مَوْلَانَا فَانْصُرْنَا عَلَى الْقَوْمِ الْكَافِرِينَ ۩ رَبِّ أَعُوذُ بِكَ مِنْ هَمَزَاتِ الشَّيَاطِينَ ۝ وَأَعُوذُ بِكَ رَبِّ أَنْ يَحْضُرُونِ ۩ صَدَقَ اللَّهُ الْعَظِيمُ",
+   translit:"Bismillâhirrahmânirrahîm. İyyâke na'budu ve iyyâke nesta'în. İhdine's-sırâta'l-mustakîm. Sırâta'l-lezîne en'amte aleyhim, ğayri'l-mağdûbi aleyhim ve le'd-dâllîn. Rabbenâ lâ tuziğ kulûbenâ ba'de iz hedeytenâ ve heb lenâ min ledunke rahmeh. İnneke ente'l-vehhâb. Rabbenâ zalemnâ enfüsenâ ve in lem tağfir lenâ ve terhamnâ le nekûnenne mine'l-hâsirîn. Rabbenâ âtinâ fi'd-dünyâ haseneten ve fi'l-âhireti haseneten ve kınâ azâbe'n-nâr. Rabbenâ heb lenâ min ezvâcinâ ve zürriyyâtinâ kurrate a'yünin vec'alnâ li'l-müttakîne imâmâ. Rabbenâğfir lenâ ve li-ihvânine'l-lezîne sebekûnâ bi'l-îmân. Ve lâ tec'al fî kulûbinâ ğıllen li'l-lezîne âmenû. Rabbenâ inneke raûfun rahîm. Ennî messeniye'd-durru ve ente erhamu'r-râhimîn. Rabbi zidnî ilmâ. Rabbişrah lî sadrî. Ve yessir lî emrî. Vahlul ukdeten min lisânî. Yefkahû kavlî. Rabbi heb lî hukmen ve elhıknî bi's-sâlihîn. Vec'al lî lisâne sıdkın fi'l-âhirîn. Rabbi edhılnî mudhale sıdkın ve ahricnî muhrace sıdkın vec'al lî min ledunke sultânen nasîrâ. Rabbenâ âtinâ min ledunke rahmeten ve heyyi' lenâ min emrinâ raşedâ. Rabbi innî limâ enzelte ileyye min hayrin fakîr. Verzuknâ ve ente hayru'r-râzikîn. Rabbenâ efriğ aleynâ sabran ve sebbit akdâmenâ vensurnâ ale'l-kavmi'l-kâfirîn. Rabbenâ lâ tuâhıznâ in nesînâ ev ahta'nâ. Rabbenâ ve lâ tahmil aleynâ ısran kemâ hameltehû ale'l-lezîne min kablinâ. Rabbenâ ve lâ tuhammilnâ mâ lâ tâkate lenâ bih. Va'fu annâ, vağfir lenâ, verhamnâ. Ente mevlânâ fensurnâ ale'l-kavmi'l-kâfirîn. Rabbi eûzü bike min hemezâti'ş-şeyâtîn. Ve eûzü bike rabbi en yahdurûn. Sadakallâhü'l-azîm.",
+   meaning:"Rahman ve Rahim olan Allah'ın adıyla. Yalnız Sana kulluk eder, yalnız Senden yardım dileriz. Bizi dosdoğru yola ilet. Kendilerine nimet verdiklerinin yoluna; gazaba uğrayanların ve sapmışların yoluna değil. Rabbimiz! Bizi doğru yola eriştirdikten sonra kalplerimizi saptırma. Katından bize rahmet bağışla. Şüphesiz Sen lütfu bol olansın. Rabbimiz! Biz kendimize zulmettik. Eğer bizi bağışlamaz ve bize merhamet etmezsen mutlaka ziyana uğrayanlardan oluruz. Rabbimiz! Bize dünyada da iyilik ver, ahirette de iyilik ver ve bizi ateş azabından koru. Rabbimiz! Bize eşlerimizden ve neslimizden göz aydınlığı olacak kimseler bağışla. Bizi takva sahiplerine önder eyle. Rabbimiz! Bizi ve bizden önce iman etmiş kardeşlerimizi bağışla. Kalplerimizde iman edenlere karşı kin bırakma. Rabbimiz! Şüphesiz Sen çok şefkatlisin, çok merhametlisin. Başıma dert geldi; Sen merhametlilerin en merhametlisisin. Rabbim! İlmimi artır. Rabbim! Göğsüme ferahlık ver. İşimi kolaylaştır. Dilimdeki düğümü çöz ki sözümü anlasınlar. Rabbim! Bana hikmet ver ve beni iyiler arasına kat. Sonra gelecekler içinde beni doğrulukla ve hayırla anılanlardan eyle. Rabbim! Gireceğim yere doğrulukla girmemi, çıkacağım yerden doğrulukla çıkmamı sağla. Katından bana yardımcı bir güç ver. Rabbimiz! Bize katından rahmet ver ve işimizde bize doğru bir çıkış yolu hazırla. Rabbim! Bana lütfedeceğin her türlü hayra muhtacım. Bizi rızıklandır. Sen rızık verenlerin en hayırlısısın. Rabbimiz! Üzerimize sabır yağdır, ayaklarımızı sağlam bastır ve inkârcı topluluğa karşı bize yardım et. Rabbimiz! Unutur veya yanılırsak bizi sorumlu tutma. Rabbimiz! Bizden öncekilere yüklediğin gibi bize ağır yük yükleme. Rabbimiz! Gücümüzün yetmediği şeyi bize yükleme. Bizi affet, bizi bağışla, bize merhamet et. Sen bizim Mevlâmızsın; inkârcı topluluğa karşı bize yardım et. Rabbim! Şeytanların gizli kışkırtmalarından Sana sığınırım. Onların yanımda bulunmalarından da Sana sığınırım Rabbim. Yüce Allah doğru söyledi."}
+];
+
+let currentIdx = 0;
+
+// ── RENDER ────────────────────────────────────────────
+function render(idx, animate) {
+  const p = prayers[idx];
+  if (animate) {
+    const card = document.getElementById('card');
+    card.classList.add('fade');
+    setTimeout(() => { fill(p, idx); card.classList.remove('fade'); }, 240);
+  } else { fill(p, idx); }
+}
+
+function fill(p, idx) {
+  document.getElementById('arabic').textContent   = p.arabic;
+  document.getElementById('translit').textContent = p.translit;
+  document.getElementById('meaning').textContent  = p.meaning;
+  document.getElementById('source').textContent   = p.source;
+  document.getElementById('card').classList.toggle('big-card', !!p.big);
+  document.getElementById('counter').textContent  = (idx+1) + ' / ' + prayers.length;
+  document.getElementById('prevBtn').disabled = idx === 0;
+  document.getElementById('nextBtn').disabled = idx === prayers.length-1;
+  document.querySelectorAll('.dot').forEach((d,i) => d.classList.toggle('active', i===idx));
+  document.querySelectorAll('.list-item').forEach((el,i) => el.classList.toggle('active-item', i===idx));
+}
+
+function go(dir) {
+  const n = currentIdx + dir;
+  if (n < 0 || n >= prayers.length) return;
+  currentIdx = n;
+  render(currentIdx, true);
+}
+
+function jump(idx) { currentIdx=idx; render(currentIdx,true); }
+
+function toggleList() {
+  const l = document.getElementById('allList');
+  l.classList.toggle('open');
+  document.getElementById('listToggle').textContent =
+    l.classList.contains('open') ? 'Listeyi gizle' : 'Tüm duaları göster';
+}
+
+function applyTheme(t) {
+  document.body.setAttribute('data-theme', t);
+  document.querySelectorAll('.theme-swatch').forEach(s => s.classList.toggle('active', s.dataset.theme===t));
+  localStorage.setItem('dua-theme', t);
+}
+
+// ── BUILD DOM ─────────────────────────────────────────
+const prog = document.getElementById('progress');
+prayers.forEach((_,i) => {
+  const d = document.createElement('div'); d.className='dot';
+  d.onclick = () => jump(i); prog.appendChild(d);
+});
+
+const list = document.getElementById('allList');
+prayers.forEach((p,i) => {
+  const el = document.createElement('div'); el.className='list-item';
+  el.innerHTML = '<span>' + p.meaning.substring(0,55) + '...</span><span class="list-item-ref">' + p.source + '</span>';
+  el.onclick = () => jump(i); list.appendChild(el);
+});
+
+document.querySelectorAll('.theme-swatch').forEach(btn =>
+  btn.addEventListener('click', () => applyTheme(btn.dataset.theme)));
+
+document.addEventListener('keydown', e => {
+  if (e.key==='ArrowRight'||e.key==='ArrowDown') go(1);
+  if (e.key==='ArrowLeft'||e.key==='ArrowUp') go(-1);
+});
+let tx=0;
+document.addEventListener('touchstart', e => tx=e.touches[0].clientX, {passive:true});
+document.addEventListener('touchend', e => { if(Math.abs(tx-e.changedTouches[0].clientX)>50) go(tx>e.changedTouches[0].clientX?1:-1); }, {passive:true});
+
+applyTheme(localStorage.getItem('dua-theme')||'gold-night');
+render(0, false);
+</script>
+</body>
+</html>

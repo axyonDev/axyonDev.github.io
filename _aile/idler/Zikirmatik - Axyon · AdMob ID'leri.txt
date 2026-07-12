@@ -1,0 +1,12 @@
+Zikirmatik - Axyon · AdMob ID'leri
+TürIDApp ID
+ca-app-pub-4333799416035537~6139237821
+
+Banner
+ca-app-pub-4333799416035537/9695339450
+
+Interstitial
+ca-app-pub-4333799416035537/8441967532
+
+Rewarded
+ca-app-pub-4333799416035537/3363841180

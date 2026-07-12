@@ -1,0 +1,193 @@
+:root {
+  --c-bg: #04060f;
+  --c-deep: #070c1a;
+  --c-crystal: #5bc8f5;
+  --c-crystal-glow: rgba(91, 200, 245, 0.35);
+  --c-gold: #f0b429;
+  --c-white: #e8f0ff;
+  --c-grid: rgba(91, 200, 245, 0.06);
+  --c-border: rgba(91, 200, 245, 0.18);
+  --char-color: #5bc8f5;
+  --char-glow: rgba(91, 200, 245, 0.3);
+  --char-bg: rgba(91, 200, 245, 0.08);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  width: 100%; min-height: 100%;
+  background: var(--c-bg);
+  color: var(--c-white);
+  font-family: 'Rajdhani', sans-serif;
+  overflow-x: hidden;
+}
+
+#bg-canvas { position: fixed; inset: 0; z-index: 0; pointer-events: none; }
+.grid-overlay {
+  position: fixed; inset: 0; z-index: 1; pointer-events: none;
+  background-image: linear-gradient(var(--c-grid) 1px, transparent 1px), linear-gradient(90deg, var(--c-grid) 1px, transparent 1px);
+  background-size: 60px 60px;
+  mask-image: radial-gradient(ellipse 80% 80% at 50% 50%, black 30%, transparent 100%);
+}
+.scanline {
+  position: fixed; inset: 0; z-index: 2; pointer-events: none;
+  background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.03) 2px, rgba(0,0,0,0.03) 4px);
+}
+
+.page {
+  position: relative; z-index: 10;
+  max-width: 860px; margin: 0 auto;
+  padding: 0 20px 80px;
+}
+
+/* HEADER */
+.p-header {
+  display: flex; align-items: center; gap: 20px;
+  padding: clamp(30px, 6vw, 60px) 0 clamp(24px, 4vw, 40px);
+  border-bottom: 1px solid var(--c-border);
+  margin-bottom: 32px;
+}
+
+.back-btn {
+  display: flex; align-items: center; gap: 8px;
+  font-family: 'Orbitron', monospace; font-size: 11px; font-weight: 700;
+  letter-spacing: 0.15em; text-transform: uppercase; text-decoration: none;
+  color: rgba(255,255,255,0.4); border: 1px solid rgba(255,255,255,0.1);
+  padding: 10px 18px; border-radius: 8px;
+  background: rgba(255,255,255,0.03);
+  transition: all 0.25s ease; white-space: nowrap;
+}
+.back-btn:hover { color: var(--char-color); border-color: var(--char-color); background: var(--char-bg); }
+
+.char-title {
+  font-family: 'Orbitron', monospace; font-size: clamp(22px, 6vw, 48px);
+  font-weight: 900; letter-spacing: 0.08em; text-transform: uppercase;
+  color: transparent;
+  background: linear-gradient(180deg, #fff 0%, var(--char-color) 70%);
+  -webkit-background-clip: text; background-clip: text;
+  filter: drop-shadow(0 0 16px var(--char-glow));
+}
+
+.char-emoji { font-size: clamp(28px, 6vw, 48px); }
+
+/* PROGRESS BAR */
+.progress-wrap {
+  background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 12px; padding: 18px 22px; margin-bottom: 28px;
+  display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
+}
+.progress-label {
+  font-family: 'Orbitron', monospace; font-size: 11px; letter-spacing: 0.15em;
+  color: rgba(255,255,255,0.4); white-space: nowrap;
+}
+.progress-bar-outer {
+  flex: 1; min-width: 120px; height: 6px; background: rgba(255,255,255,0.08);
+  border-radius: 3px; overflow: hidden;
+}
+.progress-bar-inner {
+  height: 100%; width: 0%; background: var(--char-color);
+  border-radius: 3px; transition: width 0.4s ease;
+  box-shadow: 0 0 8px var(--char-glow);
+}
+.progress-count {
+  font-family: 'Orbitron', monospace; font-size: 13px; font-weight: 700;
+  color: var(--char-color); white-space: nowrap;
+}
+.progress-done-badge {
+  display: none; font-family: 'Orbitron', monospace; font-size: 10px;
+  font-weight: 700; letter-spacing: 0.15em; padding: 6px 14px;
+  border-radius: 20px; background: rgba(76, 202, 128, 0.15);
+  border: 1px solid rgba(76, 202, 128, 0.4); color: #4cca80;
+}
+.progress-done-badge.visible { display: block; }
+
+/* SECTION */
+.prompt-section {
+  background: rgba(10,15,28,0.6); border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 14px; margin-bottom: 16px; overflow: hidden;
+  backdrop-filter: blur(8px);
+}
+
+.section-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 16px 22px; cursor: pointer;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+  transition: background 0.2s ease;
+}
+.section-header:hover { background: rgba(255,255,255,0.03); }
+
+.section-title {
+  font-family: 'Orbitron', monospace; font-size: 12px; font-weight: 700;
+  letter-spacing: 0.2em; text-transform: uppercase; color: var(--char-color);
+}
+
+.section-meta {
+  display: flex; align-items: center; gap: 10px;
+}
+
+.section-done-badge {
+  display: none; font-family: 'Orbitron', monospace; font-size: 9px;
+  font-weight: 700; letter-spacing: 0.1em; padding: 4px 10px;
+  border-radius: 20px; background: rgba(76, 202, 128, 0.15);
+  border: 1px solid rgba(76, 202, 128, 0.4); color: #4cca80;
+}
+.section-done-badge.visible { display: block; }
+
+.section-toggle {
+  font-size: 12px; color: rgba(255,255,255,0.3); transition: transform 0.3s ease;
+}
+.prompt-section.open .section-toggle { transform: rotate(180deg); }
+
+.section-body {
+  max-height: 0; overflow: hidden;
+  transition: max-height 0.4s ease;
+}
+.prompt-section.open .section-body { max-height: 3000px; }
+
+/* PROMPT CARD */
+.prompt-card {
+  display: flex; align-items: flex-start; gap: 14px;
+  padding: 14px 22px;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+  transition: background 0.2s ease;
+}
+.prompt-card:last-child { border-bottom: none; }
+.prompt-card:hover { background: rgba(255,255,255,0.02); }
+.prompt-card.copied { background: rgba(76, 202, 128, 0.04); }
+
+.prompt-num {
+  font-family: 'Orbitron', monospace; font-size: 10px; font-weight: 700;
+  color: rgba(255,255,255,0.2); padding-top: 3px; white-space: nowrap; min-width: 28px;
+}
+
+.prompt-text {
+  flex: 1; font-size: 13px; font-weight: 400; line-height: 1.6;
+  color: rgba(220,230,255,0.65); word-break: break-word;
+}
+.prompt-card.copied .prompt-text { color: rgba(220,230,255,0.45); }
+
+.copy-btn {
+  flex-shrink: 0; display: flex; align-items: center; gap: 6px;
+  font-family: 'Orbitron', monospace; font-size: 9px; font-weight: 700;
+  letter-spacing: 0.12em; text-transform: uppercase;
+  padding: 8px 14px; border-radius: 7px; cursor: pointer;
+  border: 1px solid var(--char-color); color: var(--char-color);
+  background: var(--char-bg);
+  transition: all 0.2s ease; white-space: nowrap;
+}
+.copy-btn:hover { background: rgba(255,255,255,0.1); box-shadow: 0 0 10px var(--char-glow); }
+.copy-btn.done {
+  border-color: rgba(76, 202, 128, 0.5); color: #4cca80;
+  background: rgba(76, 202, 128, 0.1); cursor: default;
+}
+.copy-btn.flash {
+  border-color: #4cca80; color: #4cca80;
+  background: rgba(76, 202, 128, 0.2);
+  box-shadow: 0 0 14px rgba(76, 202, 128, 0.4);
+}
+
+.divider {
+  width: 100%; height: 1px;
+  background: linear-gradient(90deg, transparent, var(--c-border), transparent);
+  margin: 4px 0 28px;
+}

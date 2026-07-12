@@ -1,0 +1,2 @@
+#target illustrator
+try { if(app.documents.length == 0) throw "Dosya yok"; if(app.selection.length == 0) { alert('Önce örnek bir obje seçmelisin.'); } else { app.executeMenuCommand('Find Stroke Color menu item'); } } catch(e) { alert('Hata: ' + e); }

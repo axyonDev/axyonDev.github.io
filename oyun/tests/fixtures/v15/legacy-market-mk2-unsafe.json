@@ -1,0 +1,75 @@
+{
+  "version": 15,
+  "coins": 9007199254740993123456789,
+  "totalEarned": 10000000000000000000000000,
+  "runEarned": 456789012345678901234,
+  "topScore": 777777777777777777777,
+  "inventory": {
+    "ironOre": 999999999999999999999999,
+    "copperOre": 1200,
+    "alphaCore": 55
+  },
+  "flow": {
+    "ironOre": 12345678901234567890,
+    "copperOre": 3.5
+  },
+  "storageLevel": {"ironOre": 3},
+  "machines": {"ironMine": {"count": 8, "automationLevel": 2}},
+  "plants": {"coalPlant": {"count": 2}},
+  "machineLevels": {"ironMine": 3},
+  "plantLevels": {"coalPlant": 2},
+  "researched": {
+    "basics": true,
+    "steel": true,
+    "electronics": true,
+    "marketSatellite": true
+  },
+  "repeatResearch": {"industrialEfficiency": 8},
+  "researchProgress": {"active": null, "queue": []},
+  "sectorsOpened": 12,
+  "questIndex": 4,
+  "achievements": {},
+  "stats": {
+    "playTimeSec": 123456,
+    "battlesWon": 9,
+    "produced": {
+      "ironOre": 999999999999999999999,
+      "steel": 45000000000000000000
+    }
+  },
+  "settings": {"theme": "dark"},
+  "planet": {"type": "temperate", "startRegion": "center"},
+  "grid": {"entities": {}, "conveyors": [], "powerLines": [], "nextId": 19},
+  "map": {"openSectors": {}, "nodes": {}, "nodeNextSeed": 17},
+  "market": {
+    "enabled": true,
+    "keepPct": 50,
+    "level": 2,
+    "nextDispatchAt": 1780000000000,
+    "lastDispatchAt": 1779999990000,
+    "lastRevenue": 55555555555555555555,
+    "lastUnits": 4500,
+    "totalRevenue": 444444444444444444444
+  },
+  "galaxy": {
+    "ships": {"lightFighter": 2500000, "cruiser": 120000},
+    "defenses": {"ballisticTurret": 400000},
+    "targets": [],
+    "shipQueue": [],
+    "missions": [],
+    "reports": [],
+    "colonies": 4,
+    "frontierDepth": 3,
+    "frontierGenerated": 8,
+    "nextRaidAt": 1780001000000,
+    "scanCooldownUntil": 0
+  },
+  "maintenance": {
+    "integrity": {"planet": 92, "orbital": 88, "satellite": 95},
+    "facilities": {},
+    "damagedShips": {"lightFighter": 12345678901234567890},
+    "damagedDefenses": {"ballisticTurret": 25000},
+    "repairQueue": []
+  },
+  "lastSeen": 1780000000000
+}

@@ -1,0 +1,4 @@
+cd C:\Users\axy20\Desktop\TEST
+
+node crystal_merge_bot.js
+node crystal_drop_bot.js

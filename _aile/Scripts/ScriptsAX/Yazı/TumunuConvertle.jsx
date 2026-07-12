@@ -1,0 +1,2 @@
+#target illustrator
+try{ if(app.documents.length==0) throw 'Dosya yok'; var doc=app.documents[0]; var t=doc.textFrames; var c=0; for(var i=t.length-1;i>=0;i--){ try{t[i].createOutline(); c++;}catch(e){} } app.redraw(); alert(c+' adet yazı convertlendi.'); }catch(e){alert('Hata: '+e); }

@@ -1,0 +1,2 @@
+#target illustrator
+try { if(app.documents.length == 0) throw 'Dosya yok!'; var doc = app.activeDocument; var deletedCount = 0; doc.selection = null; for (var i = doc.artboards.length - 1; i >= 0; i--) { if (doc.artboards.length <= 1) break; doc.artboards.setActiveArtboardIndex(i); doc.selectObjectsOnActiveArtboard(); if (doc.selection.length == 0) { try { doc.artboards[i].remove(); deletedCount++; } catch(err) {} } doc.selection = null; } alert('Temizlik bitti. ' + deletedCount + ' adet boş sayfa silindi.'); } catch(e) { alert('Hata: ' + e); }

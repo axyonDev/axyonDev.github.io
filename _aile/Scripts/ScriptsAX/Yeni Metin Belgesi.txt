@@ -1,0 +1,9 @@
+Bu dosyayı şablon olarak kullan: [AI_Illustrator_Sablon.jsx içeriği]
+Şimdi şunu yap: ...
+Şablonun içinde ne var:
+
+Çalışan #target + #targetengine yapısı
+BridgeTalk iskelet kodu — sadece iş mantığını doldur
+getTrueVisualBounds() — her durumda çalışan clip detection
+Seçimi kaybetmemek için snap[] pattern'i
+Dosya sonunda hızlı başvuru tablosu — tüm kurallar tek yerde
