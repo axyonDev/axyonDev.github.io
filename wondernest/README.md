@@ -22,12 +22,14 @@ No build step, Node.js or external library is required.
 ## Live links already configured
 - Etsy: https://www.etsy.com/shop/AxyonWonderNest
 - Pinterest: https://tr.pinterest.com/axyonwondernest/
+- Instagram: https://www.instagram.com/axyonwondernest/
+- Facebook: https://www.facebook.com/profile.php?id=axyonwondernest
 - Email: axyonwondernest@gmail.com
 
 ## What to update later
 1. Replace “Coming soon” cards with real product cards.
 2. Add real Etsy listing URLs when products go live.
-3. Pinterest hesabı eklendi. Instagram açıldığında aynı sosyal alanına ekleyin.
+3. Etsy, Pinterest, Instagram, Facebook ve e-posta bağlantıları resmi kanal setine göre güncellendi.
 4. Add privacy/legal pages before collecting newsletter data or analytics.
 5. Optimize exported images once the visual identity is locked.
 
